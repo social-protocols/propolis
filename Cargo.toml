@@ -1,0 +1,13 @@
+[package]
+name = "propolis"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.25.0", features = ["full"] }
+axum = "0.6.6"
+sqlx = { version = "0.6.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
+dotenvy = "0.15.6"
+serde = { version = "1.0.152", features = ["derive"] }
