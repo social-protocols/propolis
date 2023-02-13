@@ -4,13 +4,16 @@ use axum::{
     routing::{get},
     Router, Extension,
     http::StatusCode,
-    Json,
+    Json, response::Html, extract::Path,
 };
 
 use std::net::SocketAddr;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 
 use serde::Serialize;
+use askama::Template;
+
+// TODO: Login with user secret and cookie
 
 #[tokio::main]
 async fn main() {
@@ -25,6 +28,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/next", get(root))
+        .route("/hello/:name", get(hello))
         .layer(Extension(pool));
 
     let addr = SocketAddr::from(([127, 0 , 0, 1], 8000));
@@ -34,6 +38,20 @@ async fn main() {
         .await
         .unwrap();
 
+}
+
+
+
+#[derive(Template)]
+#[template(path = "hello.html")]
+
+struct HelloTemplate<'a> {
+    name: &'a str,
+}
+
+async fn hello(Path(name): Path<String>) -> Html<String> {
+    let template = HelloTemplate { name: &name };
+    Html(template.render().unwrap())
 }
 
 #[derive(Serialize)]
