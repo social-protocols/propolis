@@ -1,0 +1,12 @@
+* Impl
+** TODO User can add new statements
+** TODO View own voting history
+** TODO View own statements overview
+* UI
+** TODO Center stuff
+** TODO Classless css framework
+* Refactor
+** TODO Split main.rs up
+* Infra
+** TODO Rust-fmt aufsetzen
+** TODO CI & tests
