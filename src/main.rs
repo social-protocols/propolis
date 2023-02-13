@@ -1,5 +1,6 @@
 use dotenvy::dotenv;
 use std::env;
+use tower_cookies::{Cookie, CookieManagerLayer, Cookies};
 use axum::{
     Form,
     routing::{get, post},
@@ -13,6 +14,16 @@ use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 
 use serde::{Deserialize, Serialize};
 use askama::{Template};
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+
+fn generate_secret() -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(16)
+        .map(char::from)
+        .collect()
+}
 
 // TODO: Login with user secret and cookie
 
@@ -32,7 +43,9 @@ async fn main() {
         .route("/", post(index_post))
         .route("/next", get(root))
         .route("/hello/:name", get(hello))
-        .layer(Extension(pool));
+        .layer(Extension(pool))
+        .layer(CookieManagerLayer::new())
+        ;
 
     let addr = SocketAddr::from(([127, 0 , 0, 1], 8000));
     println!("listening on {}", addr);
@@ -74,11 +87,12 @@ struct UserStatementSelection {
 }
 
 async fn index_post(
+    cookies: Cookies,
     Extension(pool):Extension<SqlitePool>,
     Form(selection): Form<UserStatementSelection>) -> Html<String>
 {
-    let user_id = 1;
-    let statement_id = 1;
+    let user = ensure_auth(&cookies, &pool).await;
+    let statement_id = selection.statement_id;
     let opinion = match selection.selection.as_str() {
         "y" => { 1 }
         "n" => { -1 }
@@ -87,16 +101,66 @@ async fn index_post(
 
     let query = sqlx::query!(
         "INSERT INTO opinions (user_id, statement_id, opinion) VALUES (?, ?, ?)",
-        user_id, statement_id, opinion)
+        user.id, statement_id, opinion)
         .execute(&pool).await;
     query.expect("Database problem");
 
-    index(Extension(pool)).await
+    index(cookies, Extension(pool)).await
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+struct User {
+    id: i64,
+    secret: String,
+}
+
+async fn create_user(pool: &SqlitePool) -> User {
+    let secret = generate_secret();
+    let user = sqlx::query_as::<_, User>(
+        "INSERT INTO users (secret) VALUES (?) RETURNING id, secret")
+        .bind(secret)
+        .fetch_one(pool).await.expect("Must be valid");
+
+    user
+}
+
+async fn ensure_auth(cookies: &Cookies,
+                     pool: &SqlitePool) -> User {
+    if let Some(secret) = cookies.get("secret") {
+        let secret = secret.value().to_string();
+        let query = sqlx::query_as!(User, "SELECT id, secret from users WHERE secret = ?", secret);
+
+        let result = query.fetch_optional(pool).await.expect("Must be valid");
+
+        match result {
+            Some(result) => {
+                User {
+                    id: result.id,
+                    secret: secret.to_string(),
+                }
+            }
+            None => {
+                let user = create_user(pool).await;
+                cookies.add(Cookie::new("secret", user.secret.to_owned()));
+
+                user
+            }
+        }
+    }
+    else
+    {
+        let user = create_user(pool).await;
+        cookies.add(Cookie::new("secret", user.secret.to_owned()));
+
+        user
+    }
 }
 
 
 // Display one statement at random
-async fn index(Extension(pool):Extension<SqlitePool>) -> Html<String> {
+async fn index(
+    cookies: Cookies,
+    Extension(pool):Extension<SqlitePool>) -> Html<String> {
 
     let query = sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
     let result = query.fetch_one(&pool).await.expect("Must be valid");
