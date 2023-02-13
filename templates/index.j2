@@ -1,0 +1,18 @@
+<form method="post" action="/">
+
+	<input type="hidden" value="{{ statement.id }}" name="statement_id" />
+	<div>
+		Do you agree with?
+	</div>
+
+	<p>
+		{{ statement.text }}
+	</p>
+
+	<div>
+		<button name="selection" value="y">Yes</button>
+		<button name="selection" value="0">Skip</button>
+		<button name="selection" value="n">No</button>
+	</div>
+
+</form>
