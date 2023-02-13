@@ -35,6 +35,7 @@ create table negations (
   negation integer not null references statements(id)
 );
 
+/* Pro/Contra arguments for a statement */
 create table supports (
   premise integer not null references statements(id),
   conclusion integer not null references statements(id)
