@@ -7,6 +7,3 @@
 ** TODO Classless css framework
 * Refactor
 ** TODO Split main.rs up
-* Infra
-** TODO Rust-fmt aufsetzen
-** TODO CI & tests
