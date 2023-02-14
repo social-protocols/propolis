@@ -86,7 +86,7 @@ async fn index_post(
     .await;
     query.expect("Database problem");
 
-    index(cookies, Extension(pool)).await
+    index(Extension(pool)).await
 }
 
 #[derive(Serialize, sqlx::FromRow)]
