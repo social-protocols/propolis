@@ -47,3 +47,6 @@ jobs:
 
       - name: build 
         run: cargo build
+
+      - name: Check formatting
+        run: cargo fmt --check
