@@ -1,7 +1,7 @@
 create table statements (
   id integer not null primary key,
-  text text not null,
-  lang text not null
+  text text not null
+  -- lang text not null
 );
 
 create table users (

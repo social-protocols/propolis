@@ -3,9 +3,9 @@
 ```
 sqlx database create
 sqlx migrate run
-sqlite3 data/data.sqlite 'insert into statements (text) values ("this is great.");'
+sqlite3 data/data.sqlite 'insert into statements (text) values ("This is great."), ("The earth is flat.");'
 
 cargo run
-curl localhost:8000/next
 ```
+open browser https://localhost:8000
 
