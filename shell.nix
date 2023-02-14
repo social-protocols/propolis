@@ -7,6 +7,7 @@ let
 in pkgs.mkShell {
   buildInputs = [ 
     pkgs.cargo
+    pkgs.rustfmt
     pkgs.rustc
     pkgs.rust-analyzer # for language server
     pkgs.sqlx-cli
