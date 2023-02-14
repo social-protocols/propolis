@@ -35,6 +35,12 @@ jobs:
         with:
           crate: sqlx-cli
           version: latest
+          use-tool-cache: true
+
+      - name: Prepare database
+        run: |
+          sqlx database create
+          sqlx migrate run
 
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check
