@@ -68,27 +68,22 @@ struct Statement {
 }
 
 #[derive(Deserialize)]
-struct UserStatementSelection {
+struct UserStatementVote {
     statement_id: i64,
-    selection: String
+    vote: i32,
 }
 
 async fn index_post(
     cookies: Cookies,
     Extension(pool):Extension<SqlitePool>,
-    Form(selection): Form<UserStatementSelection>) -> Html<String>
+    Form(vote): Form<UserStatementVote>) -> Html<String>
 {
     let user = ensure_auth(&cookies, &pool).await;
-    let statement_id = selection.statement_id;
-    let opinion = match selection.selection.as_str() {
-        "y" => { 1 }
-        "n" => { -1 }
-        _ => { 0 }
-    };
+    let statement_id = vote.statement_id;
 
     let query = sqlx::query!(
-        "INSERT INTO opinions (user_id, statement_id, opinion) VALUES (?, ?, ?)",
-        user.id, statement_id, opinion)
+        "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)",
+        user.id, statement_id, vote.vote)
         .execute(&pool).await;
     query.expect("Database problem");
 
