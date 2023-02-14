@@ -1,0 +1,37 @@
+{
+  "db": "SQLite",
+  "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "secret",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT id, secret from users WHERE secret = ?"
+  },
+  "d3b1203b920276d3ddda8dfaa239a7f01300995694cbe6dbe936ed9cbdb94bc2": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)"
+  }
+}
