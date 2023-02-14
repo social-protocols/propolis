@@ -27,15 +27,15 @@ jobs:
           # This is correct, because we're using a merge queue (mergify) which only merges when built against the latest target branch.
           # https://docs.mergify.com/actions/queue/
           ref: ${{ github.event.pull_request.head.sha }}
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
 
-      - uses: actions-rs/install@v0.1
-        with:
-          crate: sqlx-cli
-          version: latest
-          use-tool-cache: true
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install tools
+        run: cargo install sqlx-cli
 
       - name: Prepare database
         run: |
