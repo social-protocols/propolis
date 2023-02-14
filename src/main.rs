@@ -1,7 +1,7 @@
 use axum::{
     response::Html,
     routing::{get, post},
-    Extension, Form, Json, Router,
+    Extension, Form, Router,
 };
 use dotenvy::dotenv;
 use std::env;
