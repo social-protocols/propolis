@@ -41,8 +41,6 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/", post(index_post))
-        .route("/next", get(root))
-        .route("/hello/:name", get(hello))
         .layer(Extension(pool))
         .layer(CookieManagerLayer::new())
         ;
@@ -61,17 +59,6 @@ async fn main() {
 #[template(path = "index.j2")]
 struct IndexTemplate<'a> {
     statement: &'a Statement,
-}
-
-#[derive(Template)]
-#[template(path = "hello.html")]
-struct HelloTemplate<'a> {
-    name: &'a str,
-}
-
-async fn hello(Path(name): Path<String>) -> Html<String> {
-    let template = HelloTemplate { name: &name };
-    Html(template.render().unwrap())
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -174,12 +161,3 @@ async fn index(
 }
 
 
-async fn root(Extension(pool):Extension<SqlitePool>) -> Result<Json<Statement>,StatusCode> {
-    let row: Result<Statement, sqlx::Error> = sqlx::query_as!(Statement,"SELECT id, text from statements limit 1")
-        .fetch_one(&pool).await;
-
-    match row {
-        Ok(row) => Ok(Json(row)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-    }
-}
