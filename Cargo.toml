@@ -17,4 +17,4 @@ rand = "0.8.5"
 
 [profile.dev.package.sqlx-macros]
 # speed up compile time verification (https://github.com/launchbadge/sqlx#compile-time-verification)
-opt-level = 3
+# opt-level = 3
