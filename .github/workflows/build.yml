@@ -21,8 +21,8 @@ jobs:
   build:
     name: "Build"
     runs-on: ubuntu-22.04
-    # env:
-    #   RUSTFLAGS: --deny warnings # fatal warnings disabled, because of caching
+    env:
+      RUSTFLAGS: --deny warnings # fatal warnings
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
       - name: Rust build cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "v2-rust" # because v0 cache problems...
+          prefix-key: "v3-rust" # because v0 cache problems...
 
       - name: Install tools
         run: cargo install sqlx-cli
