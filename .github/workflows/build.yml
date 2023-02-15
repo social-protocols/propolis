@@ -32,13 +32,13 @@ jobs:
           # https://docs.mergify.com/actions/queue/
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Rust build cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "v1-rust" # because v0 cache problems...
-
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+          prefix-key: "v2-rust" # because v0 cache problems...
 
       - name: Install tools
         run: cargo install sqlx-cli
