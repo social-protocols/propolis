@@ -1,5 +1,4 @@
 * Impl
-** TODO User can add new statements
 ** TODO View own voting history
 ** TODO View own statements overview
 * UI

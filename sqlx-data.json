@@ -1,5 +1,15 @@
 {
   "db": "SQLite",
+  "81f9d1c5bcf27b1c612d1e60238ba0384a7f7f08c8cbe40c32e2f6fadd0c03a1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "INSERT INTO statements (text) VALUES (?)"
+  },
   "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
     "describe": {
       "columns": [
