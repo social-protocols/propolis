@@ -1,18 +1,16 @@
-<form method="post" action="/">
+{% if let Some(statement) = statement %}
+<div>Do you agree with?</div>
 
-	<input type="hidden" value="{{ statement.id }}" name="statement_id" />
-	<div>
-		Do you agree with?
-	</div>
+<p>{{ statement.text }}</p>
 
-	<p>
-		{{ statement.text }}
-	</p>
-
-	<div>
-		<button name="vote" value="1">Yes</button>
-		<button name="vote" value="0">Skip</button>
-		<button name="vote" value="-1">No</button>
-	</div>
-
-</form>
+<div>
+  <form method="post" action="/">
+    <input type="hidden" value="{{ statement.id }}" name="statement_id" />
+    <button name="vote" value="1">Yes</button>
+    <button name="vote" value="0">Skip</button>
+    <button name="vote" value="-1">No</button>
+  </form>
+</div>
+{% else %}
+<div>There are no statements to vote on.</div>
+{% endif %}

@@ -53,7 +53,7 @@ async fn main() {
 #[derive(Template)]
 #[template(path = "index.j2")]
 struct IndexTemplate<'a> {
-    statement: &'a Statement,
+    statement: &'a Option<Statement>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -142,7 +142,7 @@ async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
 async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let query =
         sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
-    let result = query.fetch_one(&pool).await.expect("Must be valid");
+    let result = query.fetch_optional(&pool).await.expect("Must be valid");
 
     let template = IndexTemplate { statement: &result };
 
