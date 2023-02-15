@@ -5,6 +5,7 @@ on:
     branches: ["main"]
   pull_request:
     types: [opened, synchronize]
+  merge_group:
   workflow_dispatch:
 
 permissions:
@@ -49,7 +50,8 @@ jobs:
         run: cargo sqlx prepare --check
 
       - name: Build 
-        run: cargo build
+        # build with fatal warnings
+        run: RUSTFLAGS="--deny warnings" cargo build
 
       - name: Check formatting
         run: cargo fmt --check

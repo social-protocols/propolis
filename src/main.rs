@@ -1,9 +1,7 @@
 use axum::{
-    extract::Path,
-    http::StatusCode,
     response::Html,
     routing::{get, post},
-    Extension, Form, Json, Router,
+    Extension, Form, Router,
 };
 use dotenvy::dotenv;
 use std::env;
@@ -88,7 +86,7 @@ async fn index_post(
     .await;
     query.expect("Database problem");
 
-    index(cookies, Extension(pool)).await
+    index(Extension(pool)).await
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -141,7 +139,7 @@ async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
 }
 
 // Display one statement at random
-async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
+async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let query =
         sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
     let result = query.fetch_one(&pool).await.expect("Must be valid");
