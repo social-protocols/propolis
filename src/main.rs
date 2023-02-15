@@ -166,7 +166,6 @@ struct AddStatementForm {
 }
 
 async fn new_statement_post(
-    cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(add_statement): Form<AddStatementForm>,
 ) -> Redirect {
