@@ -43,20 +43,31 @@ async fn main() {
         .unwrap();
 }
 
-#[derive(Template)]
-#[template(path = "index.j2")]
-struct IndexTemplate<'a> {
-    statement: &'a Option<Statement>,
-}
-
 #[derive(Serialize, sqlx::FromRow)]
 struct Statement {
     id: i64,
     text: String,
 }
 
+#[derive(Template)]
+#[template(path = "index.j2")]
+struct IndexTemplate<'a> {
+    statement: &'a Option<Statement>,
+}
+
+// Display one statement at random
+async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
+    let query =
+        sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
+    let result = query.fetch_optional(&pool).await.expect("Must be valid");
+
+    let template = IndexTemplate { statement: &result };
+
+    Html(template.render().unwrap())
+}
+
 #[derive(Deserialize)]
-struct UserStatementVote {
+struct VoteForm {
     statement_id: i64,
     vote: i32,
 }
@@ -64,7 +75,7 @@ struct UserStatementVote {
 async fn index_post(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-    Form(vote): Form<UserStatementVote>,
+    Form(vote): Form<VoteForm>,
 ) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
 
@@ -79,17 +90,6 @@ async fn index_post(
     query.expect("Database problem");
 
     index(Extension(pool)).await
-}
-
-// Display one statement at random
-async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
-    let query =
-        sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
-    let result = query.fetch_optional(&pool).await.expect("Must be valid");
-
-    let template = IndexTemplate { statement: &result };
-
-    Html(template.render().unwrap())
 }
 
 #[derive(Template)]
