@@ -12,13 +12,14 @@ create table users (
 create table votes (
   user_id integer not null references users(id),
   statement_id integer not null references statements(id),
-  timestamp timestamp not null default CURRENT_TIMESTAMP,
+  timestamp integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   vote integer not null check (vote in (-1, 0, 1)), -- or separate table with skipped statements?
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (statement_id) REFERENCES statements(id) ON DELETE CASCADE
 );
 
 
+-- TODO: sqlite strict tables
 
 -- create table translations (
 --   original integer not null references statements(id),

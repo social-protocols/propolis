@@ -14,6 +14,8 @@ serde = { version = "1.0.152", features = ["derive"] }
 askama = "0.11.1"
 tower-cookies = "0.9.0"
 rand = "0.8.5"
+timediff = "0.2.3"
+chrono = "0.4.23"
 
 [profile.dev.package.sqlx-macros]
 # speed up compile time verification (https://github.com/launchbadge/sqlx#compile-time-verification)

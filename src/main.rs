@@ -14,7 +14,9 @@ use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use std::net::SocketAddr;
 
 use askama::Template;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use timediff::*;
 
 #[tokio::main]
 async fn main() {
@@ -32,6 +34,7 @@ async fn main() {
         .route("/", post(index_post))
         .route("/new", get(new_statement))
         .route("/new", post(new_statement_post))
+        .route("/history", get(history))
         .layer(Extension(pool))
         .layer(CookieManagerLayer::new());
 
@@ -120,4 +123,38 @@ async fn new_statement_post(
     query.expect("Database problem");
 
     Redirect::to("/")
+}
+
+#[derive(sqlx::FromRow)]
+struct VoteHistoryItem {
+    statement_id: i64,
+    statement_text: String,
+    timestamp: i64,
+    vote: i64,
+}
+
+#[derive(Template)]
+#[template(path = "history.j2")]
+struct HistoryTemplate {
+    history: Vec<VoteHistoryItem>,
+}
+
+impl HistoryTemplate {
+    fn human_relative_time(&self, timestamp: &i64) -> String {
+        let now: i64 = Utc::now().timestamp();
+        let string = format!("{}s", timestamp - now); // TODO: WTF? How to calculate a relative
+                                                      // duration without constructing and parsing a string?
+        TimeDiff::to_diff(string).parse().unwrap()
+    }
+}
+
+async fn history(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
+    let user = ensure_auth(&cookies, &pool).await;
+    let query =
+        sqlx::query_as!(VoteHistoryItem, "select s.id as statement_id, s.text as statement_text, timestamp, vote from votes v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc", user.id);
+    let result = query.fetch_all(&pool).await.expect("Must be valid");
+
+    let template = HistoryTemplate { history: result };
+
+    Html(template.render().unwrap())
 }
