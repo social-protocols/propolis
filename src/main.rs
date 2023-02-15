@@ -1,5 +1,5 @@
 use axum::{
-    response::Html,
+    response::{Html, Redirect},
     routing::{get, post},
     Extension, Form, Router,
 };
@@ -39,6 +39,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/", post(index_post))
+        .route("/new", get(new_statement))
+        .route("/new", post(new_statement_post))
         .layer(Extension(pool))
         .layer(CookieManagerLayer::new());
 
@@ -53,7 +55,7 @@ async fn main() {
 #[derive(Template)]
 #[template(path = "index.j2")]
 struct IndexTemplate<'a> {
-    statement: &'a Statement,
+    statement: &'a Option<Statement>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -74,12 +76,11 @@ async fn index_post(
     Form(vote): Form<UserStatementVote>,
 ) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
-    let statement_id = vote.statement_id;
 
     let query = sqlx::query!(
         "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)",
         user.id,
-        statement_id,
+        vote.statement_id,
         vote.vote
     )
     .execute(&pool)
@@ -142,9 +143,42 @@ async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
 async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let query =
         sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
-    let result = query.fetch_one(&pool).await.expect("Must be valid");
+    let result = query.fetch_optional(&pool).await.expect("Must be valid");
 
     let template = IndexTemplate { statement: &result };
 
     Html(template.render().unwrap())
+}
+
+#[derive(Template)]
+#[template(path = "new_statement.j2")]
+struct NewStatementTemplate {}
+
+async fn new_statement() -> Html<String> {
+    let template = NewStatementTemplate {};
+
+    Html(template.render().unwrap())
+}
+
+#[derive(Deserialize)]
+struct AddStatementForm {
+    statement_text: String,
+}
+
+async fn new_statement_post(
+    cookies: Cookies,
+    Extension(pool): Extension<SqlitePool>,
+    Form(add_statement): Form<AddStatementForm>,
+) -> Redirect {
+    let user = ensure_auth(&cookies, &pool).await;
+
+    let query = sqlx::query!(
+        "INSERT INTO statements (text) VALUES (?)",
+        add_statement.statement_text
+    )
+    .execute(&pool)
+    .await;
+    query.expect("Database problem");
+
+    Redirect::to("/")
 }
