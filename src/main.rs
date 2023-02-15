@@ -170,8 +170,6 @@ async fn new_statement_post(
     Extension(pool): Extension<SqlitePool>,
     Form(add_statement): Form<AddStatementForm>,
 ) -> Redirect {
-    let user = ensure_auth(&cookies, &pool).await;
-
     let query = sqlx::query!(
         "INSERT INTO statements (text) VALUES (?)",
         add_statement.statement_text
