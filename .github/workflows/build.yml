@@ -34,6 +34,8 @@ jobs:
 
       - name: Rust build cache
         uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "v1-rust" # because v0 cache problems...
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
