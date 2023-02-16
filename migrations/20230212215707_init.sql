@@ -9,6 +9,15 @@ create table users (
   secret text not null
 );
 
+create table authors (
+  -- if two statements are the same and were merged, there are multiple authors for one statement
+  user_id integer not null references users(id),
+  statement_id integer not null references statements(id),
+  timestamp integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (statement_id) REFERENCES statements(id) ON DELETE CASCADE
+);
+
 create table votes (
   user_id integer not null references users(id),
   statement_id integer not null references statements(id),
