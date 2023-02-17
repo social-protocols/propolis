@@ -28,7 +28,6 @@ create table votes (
 ) strict;
 
 
--- TODO: sqlite strict tables
 
 -- create table translations (
 --   original integer not null references statements(id),
