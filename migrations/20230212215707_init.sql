@@ -27,6 +27,11 @@ create table votes (
   FOREIGN KEY (statement_id) REFERENCES statements(id) ON DELETE CASCADE
 ) strict;
 
+create table queue (
+  user_id integer not null references users(id),
+  statement_id integer not null references statements(id),
+  timestamp integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+) strict; 
 
 
 -- create table translations (

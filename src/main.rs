@@ -60,12 +60,29 @@ struct IndexTemplate<'a> {
 }
 
 // Display one statement at random
-async fn index(Extension(pool): Extension<SqlitePool>) -> Html<String> {
-    let query =
-        sqlx::query_as::<_, Statement>("SELECT id, text from statements ORDER BY RANDOM() LIMIT 1");
-    let result = query.fetch_optional(&pool).await.expect("Must be valid");
+async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
+    let user = ensure_auth(&cookies, &pool).await;
+    // try to pick a statement from the user's personal queue
+    let statement =
+        sqlx::query_as!(Statement,"select s.id as id, s.text as text from queue q join statements s on s.id = q.statement_id where q.user_id = ? limit 1", user.id)
+            .fetch_optional(&pool)
+            .await
+            .expect("Must be valid");
 
-    let template = IndexTemplate { statement: &result };
+    // if there is no statement in the queue, pick a random statement
+    let statement: Option<Statement> = match statement {
+        Some(statement) => Some(statement),
+        None => sqlx::query_as::<_, Statement>(
+            "SELECT id, text from statements ORDER BY RANDOM() LIMIT 1",
+        )
+        .fetch_optional(&pool)
+        .await
+        .expect("Must be valid"),
+    };
+
+    let template = IndexTemplate {
+        statement: &statement,
+    };
 
     Html(template.render().unwrap())
 }
@@ -83,17 +100,26 @@ async fn index_post(
 ) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
 
-    let query = sqlx::query!(
+    sqlx::query!(
         "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)",
         user.id,
         vote.statement_id,
         vote.vote
     )
     .execute(&pool)
-    .await;
-    query.expect("Database problem");
+    .await
+    .expect("Database problem");
 
-    index(Extension(pool)).await
+    sqlx::query!(
+        "delete from queue where user_id = ? and statement_id = ?",
+        user.id,
+        vote.statement_id
+    )
+    .execute(&pool)
+    .await
+    .expect("Database problem");
+
+    index(cookies, Extension(pool)).await
 }
 
 #[derive(Template)]
@@ -135,7 +161,14 @@ async fn new_statement_post(
     .await;
     query.expect("Database problem");
 
-    // TODO: add statement to the user's queue, to vote on next
+    let query = sqlx::query!(
+        "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)",
+        user.id,
+        created_statement.id
+    )
+    .execute(&pool)
+    .await;
+    query.expect("Database problem");
 
     Redirect::to("/")
 }
