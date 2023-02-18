@@ -4,12 +4,6 @@
 <div style="margin-bottom: 20px">
   <div>{{ item.statement_text }}</div>
   <input type="hidden" value="{{ item.statement_id }}" />
-  {% if item.vote_timestamp != 0 %}
-  <div>
-    Your Vote: {% if item.vote == 1 %} Yes {% else if item.vote == -1 %} No {%
-    endif %}
-  </div>
-  {% endif %}
   <div>{{ self.human_relative_time(item.author_timestamp) }}</div>
 </div>
 {% endfor %}

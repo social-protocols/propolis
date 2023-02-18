@@ -101,7 +101,17 @@ async fn index_post(
     let user = ensure_auth(&cookies, &pool).await;
 
     sqlx::query!(
-        "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)",
+        "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?) on conflict (user_id, statement_id) do update set vote = excluded.vote",
+        user.id,
+        vote.statement_id,
+        vote.vote
+    )
+    .execute(&pool)
+    .await
+    .expect("Database problem");
+
+    sqlx::query!(
+        "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
         user.id,
         vote.statement_id,
         vote.vote
@@ -203,7 +213,7 @@ fn human_relative_time(timestamp: &i64) -> String {
 async fn history(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
     let query =
-        sqlx::query_as!(VoteHistoryItem, "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from votes v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc", user.id);
+        sqlx::query_as!(VoteHistoryItem, "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc", user.id);
     let result = query.fetch_all(&pool).await.expect("Must be valid");
 
     let template = HistoryTemplate { history: result };
@@ -216,8 +226,7 @@ struct SubmissionsItem {
     statement_id: i64,
     statement_text: String,
     author_timestamp: i64,
-    vote_timestamp: i64, // nullable
-    vote: i64,           // nullable
+    vote: i64, // nullable
 }
 
 #[derive(Template)]
@@ -235,7 +244,7 @@ impl SubmissionsTemplate {
 async fn submissions(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
     let query =
-        sqlx::query_as!(SubmissionsItem, "select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.timestamp as vote_timestamp, v.vote as vote from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id where a.user_id = ? order by a.timestamp desc", user.id);
+        sqlx::query_as!(SubmissionsItem, "select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.vote as vote from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id where a.user_id = ? order by a.timestamp desc", user.id);
     let result = query.fetch_all(&pool).await.expect("Must be valid");
 
     let template = SubmissionsTemplate {
