@@ -1,5 +1,15 @@
 {
   "db": "SQLite",
+  "491031582fe7ef3d527ba46dd1dec6c9528c3d48c8ea6f0d08588054753da070": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote"
+  },
   "7168ef2ac8e73b03960d5820b617c2e418bd635acaf0337ff8c3e43413581370": {
     "describe": {
       "columns": [
@@ -23,42 +33,6 @@
       }
     },
     "query": "select s.id as id, s.text as text from queue q join statements s on s.id = q.statement_id where q.user_id = ? limit 1"
-  },
-  "7d7b759c02a201de3c149358706d5751be35011072464e0a91bae60f4bbd83b2": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "statement_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "vote_timestamp",
-          "ordinal": 2,
-          "type_info": "Int64"
-        },
-        {
-          "name": "vote",
-          "ordinal": 3,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from votes v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc"
   },
   "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
     "describe": {
@@ -84,6 +58,42 @@
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
   },
+  "cb38dee824f284005bb65fd063b047e3ced0e555557d1afa3be7ee3386800baa": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "statement_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "vote_timestamp",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "vote",
+          "ordinal": 3,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc"
+  },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
       "columns": [],
@@ -94,7 +104,7 @@
     },
     "query": "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)"
   },
-  "d3b1203b920276d3ddda8dfaa239a7f01300995694cbe6dbe936ed9cbdb94bc2": {
+  "d38f1ea03d56233b70403c20b9c68c2fd1d7d87a6e1f04ab690e813c480ed1d6": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -102,7 +112,7 @@
         "Right": 3
       }
     },
-    "query": "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?)"
+    "query": "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)"
   },
   "eb249830a9036b2c77f7db1436bec513f4c4555a999bf05c4228ad4ddf14db05": {
     "describe": {
@@ -121,48 +131,6 @@
       }
     },
     "query": "INSERT INTO statements (text) VALUES (?) RETURNING id"
-  },
-  "f0e85679f87d7e944ca1993aba8870a1f548e645fc503a74486e1c0f4124aee0": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "statement_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "author_timestamp",
-          "ordinal": 2,
-          "type_info": "Int64"
-        },
-        {
-          "name": "vote_timestamp",
-          "ordinal": 3,
-          "type_info": "Int64"
-        },
-        {
-          "name": "vote",
-          "ordinal": 4,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.timestamp as vote_timestamp, v.vote as vote from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id where a.user_id = ? order by a.timestamp desc"
   },
   "f7b847cb2f6a602ac272f30c5b8bb2dffd9a139fce4f661138db7bd1328f1324": {
     "describe": {

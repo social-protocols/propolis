@@ -14,6 +14,7 @@ create table authors (
   user_id integer not null references users(id),
   statement_id integer not null references statements(id),
   timestamp integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+  primary key (user_id, statement_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (statement_id) REFERENCES statements(id) ON DELETE CASCADE
 ) strict;
@@ -21,10 +22,10 @@ create table authors (
 
 create table votes (
   -- the current vote of a user for a statement, because opinions can change
-  user_id integer not null references users(id),
   statement_id integer not null references statements(id),
+  user_id integer not null references users(id),
   vote integer not null check (vote in (-1, 0, 1)), -- or separate table with skipped statements?
-  primary key (user_id, statement_id),
+  primary key (statement_id, user_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (statement_id) REFERENCES statements(id) ON DELETE CASCADE
 ) strict, without rowid;

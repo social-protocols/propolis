@@ -73,6 +73,7 @@ async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html
     let statement: Option<Statement> = match statement {
         Some(statement) => Some(statement),
         None => sqlx::query_as::<_, Statement>(
+            // TODO: https://github.com/launchbadge/sqlx/issues/1524
             "SELECT id, text from statements ORDER BY RANDOM() LIMIT 1",
         )
         .fetch_optional(&pool)
@@ -101,9 +102,9 @@ async fn index_post(
     let user = ensure_auth(&cookies, &pool).await;
 
     sqlx::query!(
-        "INSERT INTO votes (user_id, statement_id, vote) VALUES (?, ?, ?) on conflict (user_id, statement_id) do update set vote = excluded.vote",
-        user.id,
+        "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote",
         vote.statement_id,
+        user.id,
         vote.vote
     )
     .execute(&pool)
@@ -226,7 +227,9 @@ struct SubmissionsItem {
     statement_id: i64,
     statement_text: String,
     author_timestamp: i64,
-    vote: i64, // nullable
+    vote: i64, // vote is nullable, should be Option<i64>, but TODO: https://github.com/djc/askama/issues/752
+    yes_count: i64,
+    no_count: i64,
 }
 
 #[derive(Template)]
@@ -243,9 +246,9 @@ impl SubmissionsTemplate {
 
 async fn submissions(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
     let user = ensure_auth(&cookies, &pool).await;
-    let query =
-        sqlx::query_as!(SubmissionsItem, "select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.vote as vote from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id where a.user_id = ? order by a.timestamp desc", user.id);
-    let result = query.fetch_all(&pool).await.expect("Must be valid");
+    let result =
+        // TODO: https://github.com/launchbadge/sqlx/issues/1524
+        sqlx::query_as::<_, SubmissionsItem>("select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.vote as vote, coalesce(sum(v_stats.vote == 1), 0) as yes_count, coalesce(sum(v_stats.vote == -1), 0) as no_count from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id left outer join votes v_stats on v_stats.statement_id = a.statement_id where a.user_id = ? group by a.statement_id order by a.timestamp desc").bind(user.id).fetch_all(&pool).await.expect("Must be valid");
 
     let template = SubmissionsTemplate {
         submissions: result,
