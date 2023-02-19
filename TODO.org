@@ -1,6 +1,3 @@
-* Impl
-** TODO View own voting history
-** TODO View own statements overview
 * UI
 ** TODO Center stuff
 ** TODO Classless css framework
