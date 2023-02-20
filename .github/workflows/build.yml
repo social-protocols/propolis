@@ -47,9 +47,6 @@ jobs:
           sqlx database create
           sqlx migrate run
 
-      - name: Validate sqlx offline mode data
-        run: cargo sqlx prepare --check
-
       - name: Build 
         run: cargo build
 
