@@ -12,5 +12,9 @@ in pkgs.mkShell {
     pkgs.rust-analyzer # for language server
     pkgs.sqlx-cli
     pkgs.sqlite-interactive
+
+    # http benchmarking
+    pkgs.wrk
+    pkgs.apacheHttpd # apache bench
   ];
 }

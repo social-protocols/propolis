@@ -1,3 +1,6 @@
+* Tasks
+** TODO if there is no user, don't create one and look into empty queue
+** TODO Use transactions
 * UI
 ** TODO Center stuff
 ** TODO Classless css framework

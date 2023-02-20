@@ -10,22 +10,48 @@ use dotenvy::dotenv;
 use std::env;
 use tower_cookies::{CookieManagerLayer, Cookies};
 
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
+    Pool, Sqlite, SqlitePool,
+};
 use std::net::SocketAddr;
 
 use askama::Template;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::{fs, str::FromStr};
 use timediff::*;
 
 #[tokio::main]
 async fn main() {
     dotenv().expect(".env file not found");
+    // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
-    let pool = SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
+    let connection_options = SqliteConnectOptions::from_str(&database_url)
+        .unwrap()
+        .create_if_missing(false)
+        .journal_mode(SqliteJournalMode::Wal)
+        .synchronous(SqliteSynchronous::Normal)
+        .busy_timeout(std::time::Duration::from_secs(30));
+
+    let sqlite_pool = SqlitePoolOptions::new()
+        .max_connections(8)
+        .acquire_timeout(std::time::Duration::from_secs(30))
+        .connect_with(connection_options)
+        .await
+        .unwrap();
+
+    sqlx::query("pragma temp_store = memory;")
+        .execute(&sqlite_pool)
+        .await
+        .unwrap();
+    sqlx::query("pragma mmap_size = 30000000000;")
+        .execute(&sqlite_pool)
+        .await
+        .unwrap();
+    sqlx::query("pragma page_size = 4096;")
+        .execute(&sqlite_pool)
         .await
         .unwrap();
 
@@ -36,7 +62,7 @@ async fn main() {
         .route("/new", post(new_statement_post))
         .route("/history", get(history))
         .route("/submissions", get(submissions))
-        .layer(Extension(pool))
+        .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new());
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
