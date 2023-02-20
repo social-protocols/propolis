@@ -12,14 +12,14 @@ use tower_cookies::{CookieManagerLayer, Cookies};
 
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
-    Pool, Sqlite, SqlitePool,
+    SqlitePool,
 };
 use std::net::SocketAddr;
 
 use askama::Template;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::{fs, str::FromStr};
+use std::str::FromStr;
 use timediff::*;
 
 #[tokio::main]
