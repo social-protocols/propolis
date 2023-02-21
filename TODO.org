@@ -1,8 +1,11 @@
 * Tasks
-** TODO if there is no user, don't create one and look into empty queue
+** DONE if there is no user, don't create one and look into empty queue
+CLOSED: [2023-02-21 Di 19:55]
 ** TODO Use transactions
 * UI
-** TODO Center stuff
-** TODO Classless css framework
+** DONE Center stuff
+CLOSED: [2023-02-21 Di 19:55]
+** DONE Classless css framework
+CLOSED: [2023-02-21 Di 19:55]
 * Refactor
 ** TODO Split main.rs up
