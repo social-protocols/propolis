@@ -17,5 +17,9 @@ in pkgs.mkShell {
     # http benchmarking
     pkgs.wrk
     pkgs.apacheHttpd # apache bench
+
+    # deployemnt
+    pkgs.flyctl
+    pkgs.docker
   ];
 }

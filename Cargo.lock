@@ -941,7 +941,6 @@ dependencies = [
  "askama",
  "axum",
  "chrono",
- "dotenvy",
  "rand",
  "serde",
  "sqlx",

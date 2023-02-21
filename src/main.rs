@@ -11,7 +11,6 @@ use axum::{
     routing::{get, post},
     Extension, Router,
 };
-use dotenvy::dotenv;
 use std::env;
 use tower_cookies::CookieManagerLayer;
 
@@ -23,14 +22,13 @@ use std::net::SocketAddr;
 
 use std::str::FromStr;
 
-
 async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let connection_options = SqliteConnectOptions::from_str(&database_url)
         .unwrap()
-        .create_if_missing(false)
+        .create_if_missing(true)
         .journal_mode(SqliteJournalMode::Wal)
         .synchronous(SqliteSynchronous::Normal)
         .busy_timeout(std::time::Duration::from_secs(30));
@@ -39,6 +37,12 @@ async fn setup_db() -> SqlitePool {
         .max_connections(8)
         .acquire_timeout(std::time::Duration::from_secs(30))
         .connect_with(connection_options)
+        .await
+        .unwrap();
+
+    #[cfg(feature = "embed_migrations")]
+    sqlx::migrate!("./migrations")
+        .run(&sqlite_pool)
         .await
         .unwrap();
 
@@ -60,8 +64,6 @@ async fn setup_db() -> SqlitePool {
 
 #[tokio::main]
 async fn main() {
-    dotenv().expect(".env file not found");
-
     let sqlite_pool = setup_db().await;
 
     let app = Router::new()
