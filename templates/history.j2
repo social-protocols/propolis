@@ -2,16 +2,24 @@
 
 {% block content %}
 
-  <div><b>Recent Votes</b></div>
+  <h1>Recent Votes</h1>
+
   {% for item in history %}
-    <div style="margin-bottom: 20px">
-      <div>{{ item.statement_text }}</div>
+    <div class="card info">
+      <p>{{ item.statement_text }}</p>
+
+      <p>
+        Your Vote:
+        {% if item.vote == 1 %}
+          Yes
+        {% else if item.vote == -1 %}
+          No
+        {% endif %}
+      </p>
+      <p>{{ self.human_relative_time(item.vote_timestamp) }}</p>
+
       <input type="hidden" value="{{ item.statement_id }}" />
-      <div>
-        Your Vote: {% if item.vote == 1 %} Yes {% else if item.vote == -1 %} No {%
-        endif %}
-      </div>
-      <div>{{ self.human_relative_time(item.vote_timestamp) }}</div>
+
     </div>
   {% endfor %}
 
