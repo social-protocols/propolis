@@ -8,6 +8,12 @@ cargo run
 ```
 open browser https://localhost:8000
 
+
+To reset database:
+```
+sqlx database drop; sqlx database create; sqlx migrate run
+```
+
 ## Benchmarking
 
 Start release web server:
