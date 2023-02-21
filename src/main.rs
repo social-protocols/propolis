@@ -22,9 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use timediff::*;
 
-#[tokio::main]
-async fn main() {
-    dotenv().expect(".env file not found");
+async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
@@ -54,6 +52,15 @@ async fn main() {
         .execute(&sqlite_pool)
         .await
         .unwrap();
+
+    sqlite_pool
+}
+
+#[tokio::main]
+async fn main() {
+    dotenv().expect(".env file not found");
+
+    let sqlite_pool = setup_db().await;
 
     let app = Router::new()
         .route("/", get(index))
