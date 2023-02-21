@@ -5,3 +5,6 @@ reset-db:
 
 start:
 	cargo run
+
+develop:
+	cargo watch -cx run
