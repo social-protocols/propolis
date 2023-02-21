@@ -1,12 +1,24 @@
-* Tasks
+* Core
 ** DONE if there is no user, don't create one and look into empty queue
 CLOSED: [2023-02-21 Di 19:55]
-** TODO Use transactions
+** TODO Display next unvoted statement on main page instead of random stmt
+** TODO Disable double voting
+** TODO Delete all personal data
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
 ** DONE Classless css framework
 CLOSED: [2023-02-21 Di 19:55]
+** TODO Pagination on history & submission pages
+** TODO Try out table based designs for history & submission pages
+** TODO Swiping based UI
+** TODO Graphs?
+- Votes over time
+- Votes across groups
+- Popularity over time
+- etc.
+** TODO Stats page
+- # statements, votes, etc.
 * Refactor
 ** DONE Split main.rs up
 CLOSED: [2023-02-21 Di 20:50]
