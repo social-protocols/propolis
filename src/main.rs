@@ -281,7 +281,23 @@ async fn submissions(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -
     let user = ensure_auth(&cookies, &pool).await;
     let result =
         // TODO: https://github.com/launchbadge/sqlx/issues/1524
-        sqlx::query_as::<_, SubmissionsItem>("select s.id as statement_id, s.text as statement_text, a.timestamp as author_timestamp, v.vote as vote, coalesce(sum(v_stats.vote == 1), 0) as yes_count, coalesce(sum(v_stats.vote == -1), 0) as no_count from authors a join statements s on s.id = a.statement_id left outer join votes v on s.id = v.statement_id and a.user_id = v.user_id left outer join votes v_stats on v_stats.statement_id = a.statement_id where a.user_id = ? group by a.statement_id order by a.timestamp desc").bind(user.id).fetch_all(&pool).await.expect("Must be valid");
+        sqlx::query_as::<_, SubmissionsItem>( "
+select
+  s.id as statement_id,
+  s.text as statement_text,
+  a.timestamp as author_timestamp,
+  v.vote as vote,
+  coalesce(sum(v_stats.vote == 1), 0) as yes_count,
+  coalesce(sum(v_stats.vote == -1), 0) as no_count
+from authors a
+join statements s on s.id = a.statement_id
+left outer join votes v on
+  s.id = v.statement_id and a.user_id = v.user_id
+left outer join votes v_stats on
+  v_stats.statement_id = a.statement_id
+where a.user_id = ?
+group by a.statement_id
+order by a.timestamp desc").bind(user.id).fetch_all(&pool).await.expect("Must be valid");
 
     let template = SubmissionsTemplate {
         submissions: result,
