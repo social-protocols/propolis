@@ -8,4 +8,5 @@ CLOSED: [2023-02-21 Di 19:55]
 ** DONE Classless css framework
 CLOSED: [2023-02-21 Di 19:55]
 * Refactor
-** TODO Split main.rs up
+** DONE Split main.rs up
+CLOSED: [2023-02-21 Di 20:50]
