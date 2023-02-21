@@ -1,20 +1,24 @@
-{% if let Some(statement) = statement %}
-<div>Do you agree with?</div>
+{% extends "base.j2" %}
 
-<p>{{ statement.text }}</p>
+{% block content %}
+  {% if let Some(statement) = statement %}
+    <div>Do you agree with?</div>
 
-<div>
-  <form method="post" action="/">
-    <input type="hidden" value="{{ statement.id }}" name="statement_id" />
-    <button name="vote" value="1">Yes</button>
-    <button name="vote" value="0">Skip</button>
-    <button name="vote" value="-1">No</button>
-  </form>
-</div>
-{% else %}
-<div>There are no statements to vote on.</div>
-{% endif %}
+    <p>{{ statement.text }}</p>
 
-<div></di><a href="/new">Add a statement</a></div>
+    <div>
+      <form method="post" action="/">
+        <input type="hidden" value="{{ statement.id }}" name="statement_id" />
+        <button name="vote" value="1">Yes</button>
+        <button name="vote" value="0">Skip</button>
+        <button name="vote" value="-1">No</button>
+      </form>
+    </div>
+  {% else %}
+    <div>There are no statements to vote on.</div>
+  {% endif %}
+
+  <div></di><a href="/new">Add a statement</a></div>
 <div><a href="/history">Your recent votes</a></div>
 <div><a href="/submissions">Your submissions</a></div>
+{% endblock %}

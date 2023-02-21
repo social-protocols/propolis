@@ -1,6 +1,12 @@
-<form method="post" action="/new">
-  <textarea name="statement_text"></textarea>
-  <div>
-    <button>Add Statement</button>
-  </div>
-</form>
+{% extends "base.j2" %}
+
+{% block content %}
+
+  <form method="post" action="/new">
+    <textarea name="statement_text"></textarea>
+    <div>
+      <button>Add Statement</button>
+    </div>
+  </form>
+
+{% endblock %}
