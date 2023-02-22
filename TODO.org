@@ -1,12 +1,14 @@
-Generate highly discussed topics and statements from different perspectives
-Script to Sync local with online db
-Create db via shell.nix
-read up on & generate rust docs
 * Core
 ** TODO index: if there is no user, don't create one and look into empty queue, just return a random statement instead
 ** TODO Display next unvoted statement on main page instead of random stmt
-** TODO Disable double voting -- double voting is fine, since opinions can change, we just need a smarter statement selection algorithm
-** TODO Delete all personal data -- which personal data? We don't have any?
+** TODO Better statement selection
+- Deprioritise already voted upon statements
+** TODO Add support to link to existing account on different device
+** TODO Delete all personal data
+- which personal data? We don't have any?
+  - but what about the votes that I have taken. How can I delete them? If we do
+    not provide a simple button, we might not conform to european standards and
+    get into trouble. A simple deletion of the cookie might suffice though.
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
