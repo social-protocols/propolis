@@ -5,6 +5,32 @@ INSERT INTO statements (text) VALUES ("Immigrants contribute to our economy and 
 INSERT INTO statements (text) VALUES ("The process for legal immigration is too complicated and needs to be reformed.");
 INSERT INTO statements (text) VALUES ("We need to find a solution for the Dreamers, who were brought to the US as children and have grown up here.");
 
+INSERT INTO statements (text) VALUES ("We need to secure our borders and enforce strict immigration laws to protect our citizens.");
+INSERT INTO statements (text) VALUES ("Refugees are fleeing war and persecution, and we have a moral obligation to help them.");
+INSERT INTO statements (text) VALUES ("Immigrants are taking jobs away from American workers and contributing to crime rates.");
+INSERT INTO statements (text) VALUES ("The immigration system is broken and needs a complete overhaul.");
+
+-- US China trade war
+INSERT INTO statements (text) VALUES ("The US-China trade war is necessary to protect American businesses and jobs.");
+INSERT INTO statements (text) VALUES ("The trade war is causing harm to both the US and China and needs to end.");
+INSERT INTO statements (text) VALUES ("The US is losing its economic dominance and needs to take aggressive action against China.");
+INSERT INTO statements (text) VALUES ("The global economy is at risk of recession due to the trade war and uncertainty it creates.");
+INSERT INTO statements (text) VALUES ("Free trade and open markets are essential to global economic growth and stability.");
+
+-- Brexit
+INSERT INTO statements (text) VALUES ("Brexit is necessary for the UK to regain control of its economy and borders.");
+INSERT INTO statements (text) VALUES ("The UK will suffer greatly from leaving the EU and should reconsider its decision.");
+INSERT INTO statements (text) VALUES ("Brexit will lead to the eventual breakup of the EU and the collapse of the European economy.");
+INSERT INTO statements (text) VALUES ("The EU needs to reform its policies to prevent other countries from leaving like the UK.");
+INSERT INTO statements (text) VALUES ("Brexit will lead to more economic opportunities for the UK and strengthen its global position.");
+
+-- Hong kong protests
+INSERT INTO statements (text) VALUES ("The protests in Hong Kong are fighting for democracy and freedom from Chinese influence.");
+INSERT INTO statements (text) VALUES ("China is violating human rights and suppressing the rights of Hong Kong citizens.");
+INSERT INTO statements (text) VALUES ("The protesters are causing chaos and damaging the economy of Hong Kong.");
+INSERT INTO statements (text) VALUES ("China has the right to protect its sovereignty and maintain control over Hong Kong.");
+INSERT INTO statements (text) VALUES ("The protests in Hong Kong are a part of a larger global movement for democracy and human rights.");
+
 -- Gun control
 INSERT INTO statements (text) VALUES ("We need stricter gun control laws to prevent mass shootings and reduce gun violence.");
 INSERT INTO statements (text) VALUES ("The Second Amendment guarantees the right to bear arms, and any attempts to restrict that right are unconstitutional.");
@@ -25,6 +51,12 @@ INSERT INTO statements (text) VALUES ("The science behind climate change is inco
 INSERT INTO statements (text) VALUES ("The Paris climate agreement is a flawed and ineffective treaty that unfairly burdens the US while letting other countries off the hook.");
 INSERT INTO statements (text) VALUES ("Renewable energy sources like wind and solar are the future, and we need to invest in them to reduce our dependence on fossil fuels.");
 INSERT INTO statements (text) VALUES ("Climate change is a global problem that requires a coordinated, international response.");
+
+INSERT INTO statements (text) VALUES ("The devastating effects of climate change are happening right now and we need to take immediate action.");
+INSERT INTO statements (text) VALUES ("We need to reduce our carbon footprint and transition to renewable energy sources to save the planet.");
+INSERT INTO statements (text) VALUES ("Climate change is a hoax created by the government to impose more regulations on businesses.");
+INSERT INTO statements (text) VALUES ("Environmental policies are hurting the economy and job growth.");
+INSERT INTO statements (text) VALUES ("Individual actions, like recycling and reducing plastic use, are not enough to combat climate change.");
 
 -- Social Media
 INSERT INTO statements (text) VALUES ("Social media platforms like Facebook and Twitter have too much power and influence over our lives, and we need to regulate them more closely.");
