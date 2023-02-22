@@ -7,6 +7,7 @@ let
 in pkgs.mkShell {
   buildInputs = [ 
     pkgs.cargo
+    pkgs.direnv
     pkgs.just
     pkgs.rustfmt
     pkgs.rustc
@@ -22,4 +23,8 @@ in pkgs.mkShell {
     pkgs.flyctl
     pkgs.docker
   ];
+
+  shellHook = ''
+eval "$(direnv hook $SHELL)"
+'';
 }
