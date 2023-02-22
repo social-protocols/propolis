@@ -3,20 +3,21 @@
 {% block content %}
   {% if let Some(statement) = statement %}
     <div class="card info">
-      <p>Do you agree with?</p>
-      <p>{{ statement.text }}</p>
-      <div>
-        <form method="post" action="/">
-          <input type="hidden" value="{{ statement.id }}" name="statement_id" />
-          <button name="vote" value="1">Yes</button>
-          <button name="vote" value="0">Skip</button>
-          <button name="vote" value="-1">No</button>
-        </form>
+      <p><b>{{ statement.text }}</b></p>
+      <div class="row" >
+        <div class="col">
+          <form method="post" action="/">
+            <input type="hidden" value="{{ statement.id }}" name="statement_id" />
+            <button name="vote" value="1">Agree</button>
+            <button name="vote" value="0">Skip</button>
+            <button name="vote" value="-1">Disagree</button>
+          </form>
+        </div>
       </div>
     </div>
 
-{% else %}
-  <div>There are no statements to vote on.</div>
-{% endif %}
+  {% else %}
+    <div>There are no statements to vote on.</div>
+  {% endif %}
 
 {% endblock %}
