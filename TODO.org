@@ -1,3 +1,7 @@
+Generate highly discussed topics and statements from different perspectives
+Script to Sync local with online db
+Create db via shell.nix
+read up on & generate rust docs
 * Core
 ** DONE if there is no user, don't create one and look into empty queue
 CLOSED: [2023-02-21 Di 19:55]
@@ -22,3 +26,7 @@ CLOSED: [2023-02-21 Di 19:55]
 * Refactor
 ** DONE Split main.rs up
 CLOSED: [2023-02-21 Di 20:50]
+* Utils
+** TODO Script to make local copy of hosted / online db
+** TODO Generate projects rust docs
+
