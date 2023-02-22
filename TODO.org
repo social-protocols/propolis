@@ -3,11 +3,10 @@ Script to Sync local with online db
 Create db via shell.nix
 read up on & generate rust docs
 * Core
-** DONE if there is no user, don't create one and look into empty queue
-CLOSED: [2023-02-21 Di 19:55]
+** TODO index: if there is no user, don't create one and look into empty queue, just return a random statement instead
 ** TODO Display next unvoted statement on main page instead of random stmt
-** TODO Disable double voting
-** TODO Delete all personal data
+** TODO Disable double voting -- double voting is fine, since opinions can change, we just need a smarter statement selection algorithm
+** TODO Delete all personal data -- which personal data? We don't have any?
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
