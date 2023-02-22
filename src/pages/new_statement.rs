@@ -1,3 +1,4 @@
+use super::base::{get_base_template, BaseTemplate};
 use crate::auth::ensure_auth;
 
 use askama::Template;
@@ -11,10 +12,17 @@ use tower_cookies::Cookies;
 
 #[derive(Template)]
 #[template(path = "new_statement.j2")]
-struct NewStatementTemplate {}
+struct NewStatementTemplate {
+    base: BaseTemplate,
+}
 
-pub async fn new_statement() -> Html<String> {
-    let template = NewStatementTemplate {};
+pub async fn new_statement(
+    cookies: Cookies,
+    Extension(pool): Extension<SqlitePool>,
+) -> Html<String> {
+    let template = NewStatementTemplate {
+        base: get_base_template(cookies, Extension(pool)),
+    };
 
     Html(template.render().unwrap())
 }
