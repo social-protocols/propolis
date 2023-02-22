@@ -26,5 +26,10 @@ in pkgs.mkShell {
 
   shellHook = ''
 eval "$(direnv hook $SHELL)"
+echo DATABASE_URL: $DATABASE_URL
+
+if [ ! $DATABASE_URL = "" ] && [ ! -e data ]; then
+   just create-db
+fi
 '';
 }
