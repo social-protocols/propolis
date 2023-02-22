@@ -27,9 +27,12 @@ async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
+    // if embed_migrations is enabled, we create the database if it doesn't exist
+    let create_database_if_missing = cfg!(feature = "embed_migrations");
+
     let connection_options = SqliteConnectOptions::from_str(&database_url)
         .unwrap()
-        .create_if_missing(true)
+        .create_if_missing(create_database_if_missing)
         .journal_mode(SqliteJournalMode::Wal)
         .synchronous(SqliteSynchronous::Normal)
         .busy_timeout(std::time::Duration::from_secs(30));
