@@ -1,5 +1,4 @@
 * Core
-** TODO index: if there is no user, don't create one and look into empty queue, just return a random statement instead
 ** TODO Display next unvoted statement on main page instead of random stmt
 ** TODO Better statement selection
 - Deprioritise already voted upon statements

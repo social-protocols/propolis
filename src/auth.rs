@@ -10,34 +10,39 @@ pub struct User {
     pub secret: String,
 }
 
+pub async fn logged_in_user(cookies: &Cookies, pool: &SqlitePool) -> Option<User> {
+    match cookies.get("secret") {
+        Some(secret) => user_for_secret(secret.to_string(), pool).await,
+        None => None,
+    }
+}
+
+pub async fn user_for_secret(secret: String, pool: &SqlitePool) -> Option<User> {
+    sqlx::query_as!(
+        User,
+        "SELECT id, secret from users WHERE secret = ?",
+        secret
+    )
+    .fetch_optional(pool)
+    .await
+    .expect("Must be valid")
+    .map(|user| User {
+        id: user.id,
+        secret: user.secret.to_string(),
+    })
+}
+
 pub async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
-    if let Some(secret) = cookies.get("secret") {
-        let secret = secret.value().to_string();
-        let query = sqlx::query_as!(
-            User,
-            "SELECT id, secret from users WHERE secret = ?",
-            secret
-        );
+    let existing_user: Option<User> = logged_in_user(cookies, pool).await;
 
-        let result = query.fetch_optional(pool).await.expect("Must be valid");
+    match existing_user {
+        Some(user) => user,
+        None => {
+            let user = create_user(pool).await;
+            cookies.add(Cookie::new("secret", user.secret.to_owned()));
 
-        match result {
-            Some(result) => User {
-                id: result.id,
-                secret: secret.to_string(),
-            },
-            None => {
-                let user = create_user(pool).await;
-                cookies.add(Cookie::new("secret", user.secret.to_owned()));
-
-                user
-            }
+            user
         }
-    } else {
-        let user = create_user(pool).await;
-        cookies.add(Cookie::new("secret", user.secret.to_owned()));
-
-        user
     }
 }
 
