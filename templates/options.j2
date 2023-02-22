@@ -1,0 +1,26 @@
+{% extends "base.j2" %}
+
+{% block content %}
+
+  <h1>Options</h1>
+
+  <fieldset>
+    <div class="row">
+      <div class="col">
+        <label for="user-secret" >user secret</label>
+        <input type="text" id="user-secret" value="{{ secret }}" readonly />
+      </div>
+      <div class="col">
+        <label for="qr-code" >qr code</label>
+        <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
+      </div>
+    </div>
+    <label for="theme" >theme</label>
+    <select id="theme">
+      <option>Bright</option>
+      <option>Dark</option>
+    </select>
+  </fieldset>
+
+
+{% endblock %}
