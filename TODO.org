@@ -27,6 +27,6 @@ CLOSED: [2023-02-21 Di 19:55]
 ** DONE Split main.rs up
 CLOSED: [2023-02-21 Di 20:50]
 * Utils
-** TODO Script to make local copy of hosted / online db
+** DONE Script to make local copy of hosted / online db
 ** TODO Generate projects rust docs
 

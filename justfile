@@ -32,3 +32,12 @@ develop:
 # Run HTTP benchmark against server running on localhost
 benchmark:
 	wrk -t8 -c100 -d20s --latency http://localhost:8000
+
+# delete local database, download production database
+download-prod-db:
+  rm -f data/data.sqlite
+  rm -f data/data.sqlite-shm
+  rm -f data/data.sqlite-wal
+  flyctl ssh sftp get data/data.sqlite
+  flyctl ssh sftp get data/data.sqlite-shm
+  flyctl ssh sftp get data/data.sqlite-wal
