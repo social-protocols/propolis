@@ -1,0 +1,41 @@
+{% extends "base.j2" %}
+
+{% block content %}
+
+  <h1>Options</h1>
+
+  <form method="post" action="/options">
+    <fieldset>
+
+      <div class="row">
+        <div class="col">
+          <label for="user-secret" >user secret</label>
+          <input type="text" id="user-secret" value="{{ secret }}" readonly />
+        </div>
+        <div class="col">
+          <label for="qr-code" >qr code</label>
+          <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
+        </div>
+      </div>
+
+      <label for="theme" >theme</label>
+      <select id="theme" name="theme">
+        <option value="bright" {% if base.theme == "bright" %}selected{% endif %}>Bright</option>
+        <option value="dark" {% if base.theme == "dark" %}selected{% endif %}>Dark</option>
+        <option value="sepia" {% if base.theme == "sepia" %}selected{% endif %}>Sepia</option>
+        <option value="milligram" {% if base.theme == "milligram" %}selected{% endif %}>Milligram</option>
+        <option value="pure" {% if base.theme == "pure" %}selected{% endif %}>Pure</option>
+        <option value="sakura" {% if base.theme == "sakura" %}selected{% endif %}>Sakura</option>
+        <option value="skeleton" {% if base.theme == "skeleton" %}selected{% endif %}>Skeleton</option>
+        <option value="bootstrap" {% if base.theme == "bootstrap" %}selected{% endif %}>Bootstrap</option>
+        <option value="medium" {% if base.theme == "medium" %}selected{% endif %}>Medium</option>
+        <option value="tufte" {% if base.theme == "tufte" %}selected{% endif %}>Tufte</option>
+      </select>
+
+      <button type="submit" name="submit" value="save">Save</button>
+      <button type="reset" name="submit">Abort</button>
+    </fieldset>
+  </form>
+
+
+{% endblock %}

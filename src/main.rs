@@ -5,6 +5,7 @@ mod util;
 use pages::history::history;
 use pages::index::{index, index_post};
 use pages::new_statement::{new_statement, new_statement_post};
+use pages::options::{options, options_post};
 use pages::submissions::submissions;
 
 use axum::{
@@ -72,6 +73,8 @@ async fn main() {
         .route("/new", get(new_statement))
         .route("/new", post(new_statement_post))
         .route("/history", get(history))
+        .route("/options", get(options))
+        .route("/options", post(options_post))
         .route("/submissions", get(submissions))
         .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new());

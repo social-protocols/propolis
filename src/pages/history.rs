@@ -1,3 +1,4 @@
+use super::base::{get_base_template, BaseTemplate};
 use crate::auth::ensure_auth;
 use crate::util::human_relative_time;
 
@@ -17,6 +18,7 @@ pub struct VoteHistoryItem {
 #[derive(Template)]
 #[template(path = "history.j2")]
 pub struct HistoryTemplate {
+    base: BaseTemplate,
     history: Vec<VoteHistoryItem>,
 }
 
@@ -32,7 +34,10 @@ pub async fn history(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -
         sqlx::query_as!(VoteHistoryItem, "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc", user.id);
     let result = query.fetch_all(&pool).await.expect("Must be valid");
 
-    let template = HistoryTemplate { history: result };
+    let template = HistoryTemplate {
+        base: get_base_template(cookies, Extension(pool)),
+        history: result,
+    };
 
     Html(template.render().unwrap())
 }

@@ -1,3 +1,4 @@
+use super::base::{get_base_template, BaseTemplate};
 use crate::auth::ensure_auth;
 
 use askama::Template;
@@ -15,6 +16,7 @@ struct Statement {
 #[derive(Template)]
 #[template(path = "index.j2")]
 struct IndexTemplate<'a> {
+    base: BaseTemplate,
     statement: &'a Option<Statement>,
 }
 
@@ -41,6 +43,7 @@ pub async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> 
     };
 
     let template = IndexTemplate {
+        base: get_base_template(cookies, Extension(pool)),
         statement: &statement,
     };
 

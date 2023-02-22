@@ -1,3 +1,4 @@
+use super::base::{get_base_template, BaseTemplate};
 use crate::auth::ensure_auth;
 use crate::util::human_relative_time;
 
@@ -19,6 +20,7 @@ pub struct SubmissionsItem {
 #[derive(Template)]
 #[template(path = "submissions.j2")]
 pub struct SubmissionsTemplate {
+    base: BaseTemplate,
     submissions: Vec<SubmissionsItem>,
 }
 
@@ -51,6 +53,7 @@ group by a.statement_id
 order by a.timestamp desc").bind(user.id).fetch_all(&pool).await.expect("Must be valid");
 
     let template = SubmissionsTemplate {
+        base: get_base_template(cookies, Extension(pool)),
         submissions: result,
     };
 
