@@ -12,13 +12,11 @@ struct Statement {
     text: String,
 }
 
-
 #[derive(Template)]
 #[template(path = "index.j2")]
 struct IndexTemplate<'a> {
     statement: &'a Option<Statement>,
 }
-
 
 // Display one statement at random
 pub async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
@@ -48,7 +46,6 @@ pub async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> 
 
     Html(template.render().unwrap())
 }
-
 
 #[derive(Deserialize)]
 pub struct VoteForm {

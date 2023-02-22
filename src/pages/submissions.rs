@@ -6,7 +6,6 @@ use axum::{response::Html, Extension};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-
 #[derive(sqlx::FromRow)]
 pub struct SubmissionsItem {
     statement_id: i64,

@@ -1,11 +1,13 @@
 use crate::auth::ensure_auth;
 
 use askama::Template;
-use axum::{response::{Html, Redirect}, Extension, Form};
+use axum::{
+    response::{Html, Redirect},
+    Extension, Form,
+};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
 
 #[derive(Template)]
 #[template(path = "new_statement.j2")]
@@ -57,4 +59,3 @@ pub async fn new_statement_post(
 
     Redirect::to("/")
 }
-

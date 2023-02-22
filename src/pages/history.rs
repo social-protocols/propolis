@@ -6,7 +6,6 @@ use axum::{response::Html, Extension};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-
 #[derive(sqlx::FromRow)]
 pub struct VoteHistoryItem {
     statement_id: i64,
@@ -37,4 +36,3 @@ pub async fn history(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -
 
     Html(template.render().unwrap())
 }
-
