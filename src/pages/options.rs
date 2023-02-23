@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::ensure_auth;
+use crate::auth::User;
 
 use askama::Template;
 use axum::{
@@ -23,6 +23,12 @@ struct OptionsTemplate<'a> {
     qr_code: String,
 }
 
+#[derive(Template)]
+#[template(path = "empty_options.j2")]
+struct EmptyOptionsTemplate {
+    base: BaseTemplate,
+}
+
 #[derive(Deserialize)]
 pub struct OptionsForm {
     theme: String,
@@ -34,16 +40,29 @@ pub fn qr_code_base64(code: &String) -> String {
     general_purpose::STANDARD_NO_PAD.encode(code.render::<svg::Color>().build())
 }
 
-pub async fn options(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
-    let user = ensure_auth(&cookies, &pool).await;
+pub async fn options(
+    maybe_user: Option<User>,
+    cookies: Cookies,
+    Extension(pool): Extension<SqlitePool>,
+) -> Html<String> {
+    match maybe_user {
+        Some(user) => {
+            let template = OptionsTemplate {
+                base: get_base_template(cookies, Extension(pool)),
+                secret: &user.secret,
+                qr_code: qr_code_base64(&user.secret),
+            };
 
-    let template = OptionsTemplate {
-        base: get_base_template(cookies, Extension(pool)),
-        secret: &user.secret,
-        qr_code: qr_code_base64(&user.secret),
-    };
-
-    Html(template.render().unwrap())
+            Html(template.render().unwrap())
+        }
+        None => Html(
+            EmptyOptionsTemplate {
+                base: get_base_template(cookies, Extension(pool)),
+            }
+            .render()
+            .unwrap(),
+        ),
+    }
 }
 
 pub async fn options_post(cookies: Cookies, Form(options_form): Form<OptionsForm>) -> Redirect {
