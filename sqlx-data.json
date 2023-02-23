@@ -1,5 +1,41 @@
 {
   "db": "SQLite",
+  "3dad03c4edc0017e3fdd45387cb64f6dfcdc3d21f98470da4955eb67d5fd5ebf": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "statement_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "vote_timestamp",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "vote",
+          "ordinal": 3,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "\nselect s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\njoin statements s on\n  s.id = v.statement_id\nwhere user_id = ? and vote != 0\norder by timestamp desc"
+  },
   "491031582fe7ef3d527ba46dd1dec6c9528c3d48c8ea6f0d08588054753da070": {
     "describe": {
       "columns": [],
@@ -57,42 +93,6 @@
       }
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
-  },
-  "cb38dee824f284005bb65fd063b047e3ced0e555557d1afa3be7ee3386800baa": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "statement_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "vote_timestamp",
-          "ordinal": 2,
-          "type_info": "Int64"
-        },
-        {
-          "name": "vote",
-          "ordinal": 3,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v join statements s on s.id = v.statement_id where user_id = ? and vote != 0 order by timestamp desc"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
