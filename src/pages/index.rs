@@ -1,17 +1,15 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::{ensure_auth, logged_in_user};
+use crate::{
+    auth::{ensure_auth, logged_in_user},
+    next_statement::{next_statement_for_anonymous, next_statement_for_user},
+    structs::Statement,
+};
 
 use askama::Template;
 use axum::{response::Html, Extension, Form};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-#[derive(Serialize, sqlx::FromRow)]
-struct Statement {
-    id: i64,
-    text: String,
-}
 
 #[derive(Template)]
 #[template(path = "index.j2")]
@@ -24,35 +22,8 @@ pub async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> 
     let existing_user = logged_in_user(&cookies, &pool).await;
 
     let statement: Option<Statement> = match existing_user {
-        Some(user) => {
-            // try to pick a statement from the user's personal queue
-            let statement = sqlx::query_as!(Statement,"select s.id as id, s.text as text from queue q join statements s on s.id = q.statement_id where q.user_id = ? limit 1", user.id)
-            .fetch_optional(&pool)
-            .await
-            .expect("Must be valid");
-
-            // if there is no statement in the queue, pick a random statement
-            match statement {
-                Some(statement) => Some(statement),
-                None => sqlx::query_as::<_, Statement>(
-                    // TODO: https://github.com/launchbadge/sqlx/issues/1524
-                    "SELECT id, text from statements ORDER BY RANDOM() LIMIT 1",
-                )
-                .fetch_optional(&pool)
-                .await
-                .expect("Must be valid"),
-            }
-        }
-        None => {
-            // for anonymous users, pick a random statement
-            sqlx::query_as::<_, Statement>(
-                // TODO: https://github.com/launchbadge/sqlx/issues/1524
-                "SELECT id, text from statements ORDER BY RANDOM() LIMIT 1",
-            )
-            .fetch_optional(&pool)
-            .await
-            .expect("Must be valid")
-        }
+        Some(user) => next_statement_for_user(user.id, &pool).await,
+        None => next_statement_for_anonymous(&pool).await,
     };
 
     let template = IndexTemplate {

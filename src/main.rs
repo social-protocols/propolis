@@ -1,5 +1,7 @@
 mod auth;
+mod next_statement;
 mod pages;
+mod structs;
 mod util;
 
 use pages::history::history;
