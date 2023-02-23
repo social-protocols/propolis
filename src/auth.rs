@@ -12,7 +12,7 @@ pub struct User {
 
 pub async fn logged_in_user(cookies: &Cookies, pool: &SqlitePool) -> Option<User> {
     match cookies.get("secret") {
-        Some(secret) => user_for_secret(secret.to_string(), pool).await,
+        Some(cookie) => user_for_secret(cookie.value().to_string(), pool).await,
         None => None,
     }
 }
