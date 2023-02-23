@@ -6,7 +6,10 @@ use crate::{
 };
 
 use askama::Template;
-use axum::{response::{Html, Redirect}, Extension, Form};
+use axum::{
+    response::{Html, Redirect},
+    Extension, Form,
+};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -21,9 +24,8 @@ struct IndexTemplate<'a> {
 pub async fn index(
     existing_user: Option<User>,
     cookies: Cookies,
-    Extension(pool): Extension<SqlitePool>
+    Extension(pool): Extension<SqlitePool>,
 ) -> Html<String> {
-
     let statement: Option<Statement> = match existing_user {
         Some(user) => next_statement_for_user(user.id, &pool).await,
         None => next_statement_for_anonymous(&pool).await,
