@@ -1,12 +1,12 @@
 use super::base::{get_base_template, BaseTemplate};
 use crate::{
-    auth::{ensure_auth, logged_in_user},
+    auth::{ensure_auth, User},
     next_statement::{next_statement_for_anonymous, next_statement_for_user},
     structs::Statement,
 };
 
 use askama::Template;
-use axum::{response::Html, Extension, Form};
+use axum::{response::{Html, Redirect}, Extension, Form};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -18,8 +18,11 @@ struct IndexTemplate<'a> {
     statement: &'a Option<Statement>,
 }
 
-pub async fn index(cookies: Cookies, Extension(pool): Extension<SqlitePool>) -> Html<String> {
-    let existing_user = logged_in_user(&cookies, &pool).await;
+pub async fn index(
+    existing_user: Option<User>,
+    cookies: Cookies,
+    Extension(pool): Extension<SqlitePool>
+) -> Html<String> {
 
     let statement: Option<Statement> = match existing_user {
         Some(user) => next_statement_for_user(user.id, &pool).await,
@@ -44,7 +47,7 @@ pub async fn index_post(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(vote): Form<VoteForm>,
-) -> Html<String> {
+) -> Redirect {
     let user = ensure_auth(&cookies, &pool).await;
 
     sqlx::query!(
@@ -76,5 +79,5 @@ pub async fn index_post(
     .await
     .expect("Database problem");
 
-    index(cookies, Extension(pool)).await
+    Redirect::to("/")
 }
