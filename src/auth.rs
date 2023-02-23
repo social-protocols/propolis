@@ -1,10 +1,16 @@
+use axum::Extension;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use serde::Serialize;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
+use axum::extract::FromRequestParts;
+use axum::http::StatusCode;
+use http::request::Parts;
+use async_trait::async_trait;
 
-#[derive(Serialize, sqlx::FromRow)]
+
+#[derive(Serialize, sqlx::FromRow, Debug)]
 pub struct User {
     pub id: i64,
     pub secret: String,
@@ -64,4 +70,28 @@ fn generate_secret() -> String {
         .take(16)
         .map(char::from)
         .collect()
+}
+
+
+#[async_trait]
+impl<S> FromRequestParts<S> for User
+where
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(
+        parts: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
+
+        use axum::RequestPartsExt;
+        let Extension(pool) = parts.extract::<Extension<SqlitePool>>()
+            .await
+            .expect("Unable to get sqlite connection");
+        let cookies = parts.extract::<Cookies>()
+            .await
+            .expect("Unable to get sqlite connection");
+
+        logged_in_user(&cookies, &pool).await
+            .ok_or((StatusCode::UNAUTHORIZED, "Unauthorized"))
+    }
 }
