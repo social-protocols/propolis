@@ -1,42 +1,26 @@
-use super::base::{get_base_template, BaseTemplate};
 use crate::{
     auth::{ensure_auth, User},
-    next_statement::{next_statement_for_anonymous, next_statement_for_user},
-    structs::Statement,
+    next_statement::{next_statement_for_user, random_statement_id},
 };
 
-use askama::Template;
-use axum::{
-    response::{Html, Redirect},
-    Extension, Form,
-};
+use axum::{response::Redirect, Extension, Form};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-#[derive(Template)]
-#[template(path = "index.j2")]
-struct IndexTemplate<'a> {
-    base: BaseTemplate,
-    statement: &'a Option<Statement>,
-}
-
 pub async fn index(
     existing_user: Option<User>,
-    cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Html<String> {
-    let statement: Option<Statement> = match existing_user {
+) -> Redirect {
+    let statement_id: Option<i64> = match existing_user {
         Some(user) => next_statement_for_user(user.id, &pool).await,
-        None => next_statement_for_anonymous(&pool).await,
+        None => random_statement_id(&pool).await,
     };
 
-    let template = IndexTemplate {
-        base: get_base_template(cookies, Extension(pool)),
-        statement: &statement,
-    };
-
-    Html(template.render().unwrap())
+    match statement_id {
+        Some(id) => Redirect::to(format!("/statement/{}", id).as_str()),
+        None => Redirect::to("/statement/0"), // TODO
+    }
 }
 
 #[derive(Deserialize)]
@@ -45,7 +29,7 @@ pub struct VoteForm {
     vote: i32,
 }
 
-pub async fn index_post(
+pub async fn vote(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(vote): Form<VoteForm>,
