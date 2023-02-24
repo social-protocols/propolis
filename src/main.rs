@@ -5,7 +5,7 @@ mod structs;
 mod util;
 
 use pages::history::history;
-use pages::index::{index, vote};
+use pages::index::index;
 use pages::new_statement::{new_statement, new_statement_post};
 use pages::options::{options, options_post};
 use pages::statement::statement;
@@ -25,6 +25,8 @@ use sqlx::{
 use std::net::SocketAddr;
 
 use std::str::FromStr;
+
+use crate::pages::vote::vote;
 
 async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite

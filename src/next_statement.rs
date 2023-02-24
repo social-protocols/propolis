@@ -1,4 +1,22 @@
+use crate::auth::User;
+
+use axum::{response::Redirect, Extension};
 use sqlx::SqlitePool;
+
+pub async fn redirect_to_next_statement(
+    existing_user: Option<User>,
+    Extension(pool): Extension<SqlitePool>,
+) -> Redirect {
+    let statement_id: Option<i64> = match existing_user {
+        Some(user) => next_statement_for_user(user.id, &pool).await,
+        None => random_statement_id(&pool).await,
+    };
+
+    match statement_id {
+        Some(id) => Redirect::to(format!("/statement/{}", id).as_str()),
+        None => Redirect::to("/statement/0"), // TODO
+    }
+}
 
 pub async fn next_statement_for_user(user_id: i64, pool: &SqlitePool) -> Option<i64> {
     // try to pick a statement from the user's personal queue
