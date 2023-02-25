@@ -16,9 +16,10 @@ Table of Contents:
 	--rem: 12pt;
 	--width: 50rem;
 	--navpos: absolute;  /* fixed | absolute */
-	--font-p: 1em/1.7  'Open Sans', 'DejaVu Sans', FreeSans, Helvetica, sans-serif;
-	--font-h: .9em/1.5 'Open Sans', 'DejaVu Sans', FreeSans, Helvetica, sans-serif;
-	--font-c: .9em/1.4 'DejaVu Sans Mono', monospace;
+  /* Font choice from https://systemfontstack.com/ */
+	--font-p: 1em/1.7 -apple-system, BlinkMacSystemFont, 'avenir next', avenir, 'segoe ui', 'helvetica neue', helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+	--font-h: .9em/1.5 -apple-system, BlinkMacSystemFont, 'avenir next', avenir, 'segoe ui', 'helvetica neue', helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+	--font-c: .9em/1.4 Menlo, Consolas, Monaco, 'Liberation Mono', 'Lucida Console', monospace;
 	--border: 1px solid var(--cmed);
 	--ornament: "‹‹‹ ›››";
 	/* foreground   | background color */
