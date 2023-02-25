@@ -1,4 +1,5 @@
 mod auth;
+mod db;
 mod next_statement;
 mod pages;
 mod static_path;

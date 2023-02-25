@@ -10,7 +10,7 @@
       <big> Switch from <code>{{ current_secret }}</code> to <code>{{ new_secret }}</code>? </big>
       <p> This will... </p>
       <ul>
-        <li>move ? votes and ? statements</li>
+        <li>move {{ num_votes }} votes and {{ num_statements }} statements</li>
         <li>switch to new secret <code>{{ new_secret }}</code></li>
         <li>delete old secret <code>{{ current_secret }}</code></li>
       </ul>
@@ -18,7 +18,6 @@
       <button name="value" type="submit" value="Yes">yes</button>
       <button name="value" type="cancel" value="No">no</button>
       <button name="value" type="submit" value="YesWithoutMerge">yes, but skip merge</button>
-      <button name="value" type="submit" value="invalid">invalid</button>
     </fieldset>
   </form>
 
