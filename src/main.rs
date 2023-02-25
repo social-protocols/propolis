@@ -1,6 +1,7 @@
 mod auth;
 mod next_statement;
 mod pages;
+mod static_path;
 mod structs;
 mod util;
 
@@ -24,9 +25,11 @@ use sqlx::{
 };
 use std::net::SocketAddr;
 
+use include_dir::{include_dir, Dir};
 use std::str::FromStr;
 
 use crate::pages::vote::vote;
+use crate::static_path::static_path;
 
 async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
@@ -71,6 +74,9 @@ async fn setup_db() -> SqlitePool {
     sqlite_pool
 }
 
+// embed files in /static into the binary
+static STATIC_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
+
 #[tokio::main]
 async fn main() {
     let sqlite_pool = setup_db().await;
@@ -85,6 +91,7 @@ async fn main() {
         .route("/options", get(options))
         .route("/options", post(options_post))
         .route("/submissions", get(submissions))
+        .route("/*path", get(static_path))
         .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new());
 
