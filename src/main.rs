@@ -72,6 +72,7 @@ async fn setup_db() -> SqlitePool {
     sqlite_pool
 }
 
+// embed files in /static into the binary
 static STATIC_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
 
 #[tokio::main]

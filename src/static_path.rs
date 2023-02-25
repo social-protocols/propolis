@@ -8,6 +8,7 @@ use http::{header, HeaderValue, StatusCode};
 use crate::STATIC_DIR;
 
 pub async fn static_path(Path(path): Path<String>) -> impl IntoResponse {
+    // https://benw.is/posts/serving-static-files-with-axum
     let path = path.trim_start_matches('/');
     let mime_type = mime_guess::from_path(path).first_or_text_plain();
 
