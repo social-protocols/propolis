@@ -12,6 +12,8 @@ use pages::options::{options, options_post};
 use pages::statement::statement;
 use pages::submissions::submissions;
 
+use tower_http::compression::CompressionLayer;
+
 use axum::{
     routing::{get, post},
     Extension, Router,
@@ -93,7 +95,8 @@ async fn main() {
         .route("/submissions", get(submissions))
         .route("/*path", get(static_path))
         .layer(Extension(sqlite_pool))
-        .layer(CookieManagerLayer::new());
+        .layer(CookieManagerLayer::new())
+        .layer(CompressionLayer::new());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
