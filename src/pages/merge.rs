@@ -1,13 +1,9 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::User;
+use crate::auth::{switch_auth_cookie, User};
 use crate::db::UserQueries;
 
 use askama::Template;
-use axum::{
-    extract::Path,
-    response::Html,
-    Extension, Form,
-};
+use axum::{extract::Path, response::Html, Extension, Form};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -22,7 +18,7 @@ struct MergeTemplate {
     num_statements: i32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 enum MergeAnswer {
     Yes,
     No,
@@ -56,36 +52,38 @@ pub async fn merge(
 
 pub async fn merge_post(
     user: User,
-    Path(new_secret): Path<String>,
+    cookies: Cookies,
+    Path(secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
 ) -> Html<String> {
-
-    match crate::auth::user_for_secret(new_secret, &pool).await {
-
+    match crate::auth::user_for_secret(secret, &pool).await {
         Some(new_user) => {
+            if user.id == new_user.id {
+                return Html("Merge aborted: same user".to_string());
+            }
 
             match merge.value {
-
                 MergeAnswer::Yes | MergeAnswer::YesWithoutMerge => {
+                    let tx = pool.begin().await.expect("Transaction begin failed");
 
-                    user.move_content_to(&new_user, &pool).await;
+                    if merge.value == MergeAnswer::Yes {
+                        user.move_content_to(&new_user, &pool).await;
+                    } else {
+                        user.delete_content(&pool).await;
+                    }
+
                     user.delete(&pool).await;
+                    switch_auth_cookie(new_user.secret, &cookies);
+                    tx.commit().await.expect("Transaction commit failed");
 
                     Html("You are now merged with ?".to_string())
                 }
 
-                MergeAnswer::No => {
-                    Html("Merge aborted.".to_string())
-                }
-
+                MergeAnswer::No => Html("Merge aborted.".to_string()),
             }
         }
 
-        None => {
-            Html("Target user does not exist.".to_string())
-        }
+        None => Html("Target user does not exist.".to_string()),
     }
-
-
 }

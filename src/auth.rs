@@ -51,6 +51,19 @@ pub async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
     }
 }
 
+pub fn switch_auth_cookie(secret: String, cookies: &Cookies) {
+    match cookies.get("secret") {
+        Some(mut cookie) => {
+            // copy old cookie, but also set path, since it may come from e.g. /merge
+            cookie.set_value(secret);
+            cookie.set_path("/");
+            cookies.add(cookie.into_owned());
+        }
+
+        None => {}
+    }
+}
+
 async fn create_user(pool: &SqlitePool) -> User {
     let secret = generate_secret();
     let user =

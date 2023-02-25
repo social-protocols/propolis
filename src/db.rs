@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::SqlitePool;
+use sqlx::{Sqlite, SqlitePool, Transaction};
 
 use crate::auth::User;
 
@@ -13,7 +13,8 @@ pub trait UserQueries {
         0
     }
 
-    async fn move_content_to(&self, _user: &User, _: &SqlitePool) {}
+    async fn move_content_to(&self, _new_user: &User, _pool: &SqlitePool) {}
+    async fn delete_content(&self, _pool: &SqlitePool) {}
 
     async fn delete(&self, _: &SqlitePool) {}
 }
@@ -44,8 +45,6 @@ impl UserQueries for User {
 
     /// Moves content from one user to another
     async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) {
-        let tx = pool.begin().await.expect("Transaction failed");
-
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("UPDATE {} SET user_id=? WHERE user_id=?", table).as_str())
                 .bind(new_user.id)
@@ -54,11 +53,24 @@ impl UserQueries for User {
                 .await
                 .expect("Update should work");
         }
-
-        tx.commit().await.expect("Commit failed");
     }
 
-    /// Deletes just the user and no content
-    async fn delete(&self, _: &SqlitePool) {
+    /// Deletes all content of a particular user
+    async fn delete_content(&self, pool: &SqlitePool) {
+        for table in vec!["authors", "votes", "vote_history", "queue"] {
+            sqlx::query(format!("DELETE FROM {} WHERE user_id=?", table).as_str())
+                .bind(self.id)
+                .execute(pool)
+                .await
+                .expect("Delete should work");
+        }
+    }
+
+    /// Deletes user without content
+    async fn delete(&self, pool: &SqlitePool) {
+        sqlx::query!("DELETE FROM users WHERE id=?", self.id)
+            .execute(pool)
+            .await
+            .expect("Delete should work");
     }
 }
