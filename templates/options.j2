@@ -6,16 +6,10 @@
 
   <!-- <form method="post" action="/options"> -->
   <fieldset>
-    <div class="row">
-      <div class="col">
-        <label for="user-secret" >user secret</label>
-        <input type="text" id="user-secret" value="{{ secret }}" readonly />
-      </div>
-      <div class="col">
-        <label for="qr-code" >qr code</label>
-        <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
-      </div>
-    </div>
+    <p>Use this QR Code on another device to switch it to this account:</p>
+    <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
+    <br />
+    <small>Or open <a href="{{ merge_url }}">{{ merge_url }}</a> on your other device</small>
   </fieldset>
   <form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()">
     <fieldset>

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::{Sqlite, SqlitePool, Transaction};
+use sqlx::SqlitePool;
 
 use crate::auth::User;
 
