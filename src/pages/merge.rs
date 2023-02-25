@@ -77,7 +77,7 @@ pub async fn merge_post(
                     switch_auth_cookie(new_user.secret, &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
-                    Html("You are now merged with ?".to_string())
+                    Html("Merge successful".to_string())
                 }
 
                 MergeAnswer::No => Html("Merge aborted.".to_string()),
