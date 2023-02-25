@@ -56,11 +56,36 @@ pub async fn merge(
 
 pub async fn merge_post(
     user: User,
+    Path(new_secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
 ) -> Html<String> {
 
-    println!("{:?}", merge.value);
-    Html("You are now merged with ?".to_string())
+    match crate::auth::user_for_secret(new_secret, &pool).await {
+
+        Some(new_user) => {
+
+            match merge.value {
+
+                MergeAnswer::Yes | MergeAnswer::YesWithoutMerge => {
+
+                    user.move_content_to(&new_user, &pool).await;
+                    user.delete(&pool).await;
+
+                    Html("You are now merged with ?".to_string())
+                }
+
+                MergeAnswer::No => {
+                    Html("Merge aborted.".to_string())
+                }
+
+            }
+        }
+
+        None => {
+            Html("Target user does not exist.".to_string())
+        }
+    }
+
 
 }
