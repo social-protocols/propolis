@@ -23,6 +23,10 @@ pub async fn static_path(Path(path): Path<String>) -> impl IntoResponse {
                 header::CONTENT_TYPE,
                 HeaderValue::from_str(mime_type.as_ref()).unwrap(),
             )
+            .header(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=604800"),
+            )
             .body(body::boxed(Full::from(file.contents())))
             .unwrap(),
     }
