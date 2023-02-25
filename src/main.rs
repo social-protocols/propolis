@@ -7,6 +7,7 @@ mod util;
 
 use pages::history::history;
 use pages::index::index;
+use pages::merge::{merge, merge_post};
 use pages::new_statement::{new_statement, new_statement_post};
 use pages::options::{options, options_post};
 use pages::statement::statement;
@@ -87,6 +88,8 @@ async fn main() {
         .route("/", get(index))
         .route("/vote", post(vote))
         .route("/statement/:id", get(statement))
+        .route("/merge/:secret", get(merge))
+        .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
         .route("/new", post(new_statement_post))
         .route("/history", get(history))

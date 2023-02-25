@@ -1,0 +1,26 @@
+{% extends "base.j2" %}
+
+{% block content %}
+
+  <h1>Merge</h1>
+
+  <!-- <form method="post" action="/options"> -->
+  <form hx-post="/merge/{{ new_secret }}">
+    <fieldset>
+      <big> Switch from <code>{{ current_secret }}</code> to <code>{{ new_secret }}</code>? </big>
+      <p> This will... </p>
+      <ul>
+        <li>move ? votes and ? statements</li>
+        <li>switch to new secret <code>{{ new_secret }}</code></li>
+        <li>delete old secret <code>{{ current_secret }}</code></li>
+      </ul>
+      <p>Continue?</p>
+      <button name="value" type="submit" value="Yes">yes</button>
+      <button name="value" type="cancel" value="No">no</button>
+      <button name="value" type="submit" value="YesWithoutMerge">yes, but skip merge</button>
+      <button name="value" type="submit" value="invalid">invalid</button>
+    </fieldset>
+  </form>
+
+
+{% endblock %}
