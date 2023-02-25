@@ -24,6 +24,16 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "DELETE FROM users WHERE id=?"
+  },
   "3dad03c4edc0017e3fdd45387cb64f6dfcdc3d21f98470da4955eb67d5fd5ebf": {
     "describe": {
       "columns": [
@@ -69,6 +79,42 @@
       }
     },
     "query": "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote"
+  },
+  "7c0016f1d57f360ccd50022c00e10e12418dbc8ef4668ad2a1065d147e75d1b5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT COUNT(*) as count FROM authors where user_id = ?"
+  },
+  "9d628a139bcb5376e9d685b3052c9d78940db9ce6cfb47060fd6f40866449903": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT COUNT(*) as count FROM votes where user_id = ?"
   },
   "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
     "describe": {

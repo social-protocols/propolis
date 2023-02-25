@@ -1,11 +1,12 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::User;
+use crate::{auth::User, util::base_url};
 
 use askama::Template;
 use axum::{
     response::{Html, Redirect},
     Extension, Form,
 };
+use http::HeaderMap;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
@@ -17,10 +18,10 @@ use base64::{engine::general_purpose, Engine as _};
 
 #[derive(Template)]
 #[template(path = "options.j2")]
-struct OptionsTemplate<'a> {
+struct OptionsTemplate {
     base: BaseTemplate,
-    secret: &'a String,
     qr_code: String,
+    merge_url: String,
 }
 
 #[derive(Template)]
@@ -41,16 +42,18 @@ pub fn qr_code_base64(code: &String) -> String {
 }
 
 pub async fn options(
+    headers: HeaderMap,
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Html<String> {
     match maybe_user {
         Some(user) => {
+            let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
             let template = OptionsTemplate {
                 base: get_base_template(cookies, Extension(pool)),
-                secret: &user.secret,
-                qr_code: qr_code_base64(&user.secret),
+                qr_code: qr_code_base64(&merge_url),
+                merge_url,
             };
 
             Html(template.render().unwrap())
