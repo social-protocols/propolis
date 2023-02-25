@@ -1,5 +1,29 @@
 {
   "db": "SQLite",
+  "02a518fe7de0d3d0c1fd77ee243ab5f1968ed62faca4bb2fd82e2f0bd9cca664": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "text",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT id, text from statements where id = ?"
+  },
   "3dad03c4edc0017e3fdd45387cb64f6dfcdc3d21f98470da4955eb67d5fd5ebf": {
     "describe": {
       "columns": [
@@ -46,30 +70,6 @@
     },
     "query": "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote"
   },
-  "7168ef2ac8e73b03960d5820b617c2e418bd635acaf0337ff8c3e43413581370": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "text",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select s.id as id, s.text as text from queue q join statements s on s.id = q.statement_id where q.user_id = ? limit 1"
-  },
   "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
     "describe": {
       "columns": [
@@ -113,6 +113,24 @@
       }
     },
     "query": "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)"
+  },
+  "e87b661e07f0270f9689d76759a3d68ad09775ea1268933f86a8f017c92c507d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select statement_id from queue where user_id = ? limit 1"
   },
   "eb249830a9036b2c77f7db1436bec513f4c4555a999bf05c4228ad4ddf14db05": {
     "describe": {

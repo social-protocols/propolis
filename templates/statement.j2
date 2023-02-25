@@ -6,7 +6,7 @@
       <p><b>{{ statement.text }}</b></p>
       <div class="row" >
         <div class="col">
-          <form method="post" action="/">
+          <form method="post" action="/vote">
             <input type="hidden" value="{{ statement.id }}" name="statement_id" />
             <button name="vote" value="1">Agree</button>
             <button name="vote" value="0">Skip</button>
@@ -17,7 +17,7 @@
     </div>
 
   {% else %}
-    <div>There are no statements to vote on.</div>
+    <div>Statement not found.</div>
   {% endif %}
 
 {% endblock %}

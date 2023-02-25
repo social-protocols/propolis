@@ -6,9 +6,10 @@ mod structs;
 mod util;
 
 use pages::history::history;
-use pages::index::{index, index_post};
+use pages::index::index;
 use pages::new_statement::{new_statement, new_statement_post};
 use pages::options::{options, options_post};
+use pages::statement::statement;
 use pages::submissions::submissions;
 
 use axum::{
@@ -27,6 +28,7 @@ use std::net::SocketAddr;
 use include_dir::{include_dir, Dir};
 use std::str::FromStr;
 
+use crate::pages::vote::vote;
 use crate::static_path::static_path;
 
 async fn setup_db() -> SqlitePool {
@@ -81,7 +83,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(index))
-        .route("/", post(index_post))
+        .route("/vote", post(vote))
+        .route("/statement/:id", get(statement))
         .route("/new", get(new_statement))
         .route("/new", post(new_statement_post))
         .route("/history", get(history))
