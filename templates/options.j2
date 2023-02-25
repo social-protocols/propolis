@@ -5,24 +5,18 @@
   <h1>Options</h1>
 
   <!-- <form method="post" action="/options"> -->
-  <form hx-post="/options" hx-select="#content" hx-target="#content">
-    <fieldset>
-
-      <div class="row">
-        <div class="col">
-          <label for="user-secret" >user secret</label>
-          <input type="text" id="user-secret" value="{{ secret }}" readonly />
-        </div>
-        <div class="col">
-          <label for="qr-code" >qr code</label>
-          <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
-        </div>
+  <fieldset>
+    <div class="row">
+      <div class="col">
+        <label for="user-secret" >user secret</label>
+        <input type="text" id="user-secret" value="{{ secret }}" readonly />
       </div>
-
-      <button type="submit" name="submit" value="save" htmx-post="/options">Save</button>
-      <button type="reset" name="submit">Abort</button>
-    </fieldset>
-  </form>
+      <div class="col">
+        <label for="qr-code" >qr code</label>
+        <img id="qr-code" src="data:image/svg+xml;base64,{{ qr_code }}">
+      </div>
+    </div>
+  </fieldset>
   <form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()">
     <fieldset>
       <label for="theme" >theme</label>
