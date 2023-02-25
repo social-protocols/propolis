@@ -4,7 +4,8 @@
 
   <h1>Options</h1>
 
-  <form method="post" action="/options">
+  <!-- <form method="post" action="/options"> -->
+  <form hx-post="/options" hx-select="#content" hx-target="#content">
     <fieldset>
 
       <div class="row">
@@ -18,14 +19,17 @@
         </div>
       </div>
 
+      <button type="submit" name="submit" value="save" htmx-post="/options">Save</button>
+      <button type="reset" name="submit">Abort</button>
+    </fieldset>
+  </form>
+  <form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()">
+    <fieldset>
       <label for="theme" >theme</label>
-      <select id="theme" name="theme">
+      <select id="theme" name="theme" _="on change send test to #theme-form">
         <option value="light" {% if base.theme == "light" %}selected{% endif %}>Light</option>
         <option value="dark" {% if base.theme == "dark" %}selected{% endif %}>Dark</option>
       </select>
-
-      <button type="submit" name="submit" value="save">Save</button>
-      <button type="reset" name="submit">Abort</button>
     </fieldset>
   </form>
 
