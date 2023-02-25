@@ -6,6 +6,7 @@ use axum::{
     response::{Html, Redirect},
     Extension, Form,
 };
+use http::{header::HOST, HeaderMap};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
@@ -41,16 +42,19 @@ pub fn qr_code_base64(code: &String) -> String {
 }
 
 pub async fn options(
+    headers: HeaderMap,
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Html<String> {
     match maybe_user {
         Some(user) => {
+            let host = headers[HOST].to_str().expect("Unable te get HOST header");
+            let move_url = format!("https://{}/move/{}", host, &user.secret);
             let template = OptionsTemplate {
                 base: get_base_template(cookies, Extension(pool)),
                 secret: &user.secret,
-                qr_code: qr_code_base64(&user.secret),
+                qr_code: qr_code_base64(&move_url),
             };
 
             Html(template.render().unwrap())
