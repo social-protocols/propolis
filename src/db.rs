@@ -19,9 +19,9 @@ impl User {
             "SELECT COUNT(*) as count FROM authors where user_id = ?",
             self.id,
         )
-           .fetch_one(pool)
-           .await?
-           .count)
+        .fetch_one(pool)
+        .await?
+        .count)
     }
 
     /// Returns number of votes added by [User]
@@ -139,7 +139,42 @@ order by timestamp desc", self.id)
 
         Ok(())
     }
+
+    // Retrieve next statement id for [User]
+    pub async fn next_statement_for_user(&self, pool: &SqlitePool) -> Result<Option<i64>, Error> {
+        // try to pick a statement from the user's personal queue
+        let statement_id = self.next_statement_id_from_queue(pool).await?;
+
+        // if there is no statement in the queue, pick a random statement
+        Ok(match statement_id {
+            Some(statement_id) => Some(statement_id),
+            None => random_statement_id(pool).await?,
+        })
+    }
+
+    /// Retrieve next statement id from [User] queue
+    pub async fn next_statement_id_from_queue(
+        &self,
+        pool: &SqlitePool,
+    ) -> Result<Option<i64>, Error> {
+        Ok(sqlx::query_scalar!(
+            "select statement_id from queue where user_id = ? limit 1",
+            self.id
+        )
+        .fetch_optional(pool)
+        .await?)
+    }
 }
+
+pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error> {
+    // for anonymous users, pick a random statement
+    Ok(sqlx::query_scalar::<_, i64>(
+        // TODO: https://github.com/launchbadge/sqlx/issues/1524
+        "SELECT id from statements ORDER BY RANDOM() LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await?
+)}
 
 pub async fn get_statement(
     statement_id: i64,
