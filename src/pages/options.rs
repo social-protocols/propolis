@@ -1,7 +1,8 @@
-use super::base::{get_base_template, BaseTemplate};
+use super::base::{get_base_template, BaseTemplate, GenericViewTemplate};
 use crate::{auth::User, error::Error, util::base_url};
-
 use askama::Template;
+use maud::html;
+
 use axum::{
     response::{Html, Redirect},
     Extension, Form,
@@ -16,20 +17,6 @@ use qrcode::QrCode;
 
 use base64::{engine::general_purpose, Engine as _};
 
-#[derive(Template)]
-#[template(path = "options.j2")]
-struct OptionsTemplate {
-    base: BaseTemplate,
-    qr_code: String,
-    merge_url: String,
-}
-
-#[derive(Template)]
-#[template(path = "empty_options.j2")]
-struct EmptyOptionsTemplate {
-    base: BaseTemplate,
-}
-
 #[derive(Deserialize)]
 pub struct OptionsForm {
     theme: String,
@@ -41,6 +28,32 @@ pub fn qr_code_base64(code: &String) -> String {
     general_purpose::STANDARD_NO_PAD.encode(code.render::<svg::Color>().build())
 }
 
+fn html(base: &BaseTemplate, merge_url: &str, qr_code: &str) -> String {
+    html! {
+        h1 { "Options" }
+        fieldset {
+            p { "Use this QR Code on another device to switch it to this account:" }
+            img id="qr-code" src=(format!("data:image/svg+xml;base64,{}", qr_code ));
+            br;
+            small {
+                "Or open ";
+                a href=( merge_url ) { ( merge_url ) }
+                "on your other device"
+            }
+        }
+        form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()" {
+            fieldset {
+                label for="theme" { "theme" }
+                select id="theme" name="theme" _="on change send test to #theme-form" {
+                    option value="light" selected=[{ if base.theme == "light" { Some(1) } else { None } }] { "Light" }
+                    option value="dark" selected=[{ if base.theme == "dark" { Some(1) } else { None } }] { "Dark" }
+                }
+            }
+        }
+    }
+    .into_string()
+}
+
 pub async fn options(
     headers: HeaderMap,
     maybe_user: Option<User>,
@@ -50,17 +63,16 @@ pub async fn options(
     Ok(match maybe_user {
         Some(user) => {
             let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
-            let template = OptionsTemplate {
-                base: get_base_template(cookies, Extension(pool)),
-                qr_code: qr_code_base64(&merge_url),
-                merge_url,
-            };
+            let base = get_base_template(cookies, Extension(pool));
+            let content = html(&base, &merge_url, qr_code_base64(&merge_url).as_str());
+            let template = GenericViewTemplate { base, content };
 
             Html(template.render().unwrap())
         }
         None => Html(
-            EmptyOptionsTemplate {
+            GenericViewTemplate {
                 base: get_base_template(cookies, Extension(pool)),
+                content: html! { p { "Please cast some votes first." } }.into_string(),
             }
             .render()
             .unwrap(),

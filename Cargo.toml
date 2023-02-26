@@ -25,6 +25,7 @@ http = "0.2.9"
 include_dir = "0.7.3"
 mime_guess = "2.0.4"
 tower-http = { version = "0.4.0", features = ["compression-gzip"] }
+maud = "0.24.0"
 
 [profile.dev.package.sqlx-macros]
 # speed up compile time verification (https://github.com/launchbadge/sqlx#compile-time-verification)
