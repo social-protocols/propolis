@@ -2,6 +2,7 @@ use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 
 /// Our custom wrapper type for various errors, so we can implement IntoResponse for e.g. sqlx::Error
+#[derive(Debug)]
 pub enum Error {
     SqlxError(sqlx::Error),
     IoError(std::io::Error),
@@ -26,15 +27,19 @@ impl From<askama::Error> for Error {
     }
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        let body = match self {
+impl From<Error> for String {
+    fn from(err: Error) -> String {
+        match err {
             Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
             Error::IoError(io_error) => io_error.to_string(),
             Error::AskamaError(error) => error.to_string(),
-        };
+        }
+    }
+}
 
+impl IntoResponse for Error {
+    fn into_response(self) -> Response {
         // its often easiest to implement `IntoResponse` by calling other implementations
-        (StatusCode::INTERNAL_SERVER_ERROR, body).into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, String::from(self)).into_response()
     }
 }

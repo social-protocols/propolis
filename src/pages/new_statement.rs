@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::{auth::ensure_auth, db::UserQueries, error::Error};
+use crate::{db::UserQueries, error::Error, auth::User};
 
 use askama::Template;
 use axum::{
@@ -37,7 +37,7 @@ pub async fn new_statement_post(
     Extension(pool): Extension<SqlitePool>,
     Form(add_statement): Form<AddStatementForm>,
 ) -> Result<Redirect, Error> {
-    let user = ensure_auth(&cookies, &pool).await?;
+    let user = User::get_or_create(&cookies, &pool).await?;
     user.add_statement(add_statement.statement_text, &pool)
         .await?;
 

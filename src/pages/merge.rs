@@ -58,7 +58,7 @@ pub async fn merge_post(
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
 ) -> Result<Html<String>, Error> {
-    Ok(match crate::auth::user_for_secret(secret, &pool).await {
+    Ok(match User::from_secret(secret, &pool).await? {
         Some(new_user) => {
             if user.id == new_user.id {
                 return Ok(Html("Merge aborted: same user".to_string()));
