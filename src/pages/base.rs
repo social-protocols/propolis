@@ -1,11 +1,23 @@
-use askama::Template;
-use axum::Extension;
+use askama::{Template};
+use axum::{Extension, response::Html};
 use maud::html;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
 
+use crate::error::Error;
+
 pub struct BaseTemplate {
     pub theme: String,
+}
+
+pub fn get_base_template(cookies: Cookies, Extension(_): Extension<SqlitePool>) -> BaseTemplate {
+    let theme = cookies
+        .get("theme")
+        .unwrap_or(Cookie::new("theme", "light"));
+
+    BaseTemplate {
+        theme: theme.value().to_string(),
+    }
 }
 
 #[derive(Template)]
@@ -16,13 +28,10 @@ pub struct GenericViewTemplate<'a> {
     pub title: Option<&'a str>,
 }
 
-pub fn get_base_template(cookies: Cookies, Extension(_): Extension<SqlitePool>) -> BaseTemplate {
-    let theme = cookies
-        .get("theme")
-        .unwrap_or(Cookie::new("theme", "light"));
-
-    BaseTemplate {
-        theme: theme.value().to_string(),
+/// Convert view template to axum::response::Html
+impl<'a> From<GenericViewTemplate<'a>> for Result<Html<String>, Error> {
+    fn from(tmpl: GenericViewTemplate<'a>) -> Result<Html<String>, Error> {
+        Ok(Html(tmpl.render()?))
     }
 }
 
