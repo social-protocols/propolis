@@ -33,14 +33,17 @@ impl SubmissionsTemplate {
 }
 
 pub async fn submissions(
-    user: User,
+    maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Html<String>, Error> {
-    let result = get_submissions(&user, &pool).await?;
+    let submissions = match maybe_user {
+        Some(user) => get_submissions(&user, &pool).await?,
+        None => Vec::new(),
+    };
     let template = SubmissionsTemplate {
         base: get_base_template(cookies, Extension(pool)),
-        submissions: result,
+        submissions,
     };
 
     Ok(Html(template.render().unwrap()))

@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::ensure_auth;
+use crate::{auth::ensure_auth, db::UserQueries, error::Error};
 
 use askama::Template;
 use axum::{
@@ -36,34 +36,10 @@ pub async fn new_statement_post(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(add_statement): Form<AddStatementForm>,
-) -> Redirect {
-    let user = ensure_auth(&cookies, &pool).await;
-    // TODO: add statement and author entry in transaction
-    let created_statement = sqlx::query!(
-        "INSERT INTO statements (text) VALUES (?) RETURNING id",
-        add_statement.statement_text
-    )
-    .fetch_one(&pool)
-    .await
-    .expect("Database problem");
+) -> Result<Redirect, Error> {
+    let user = ensure_auth(&cookies, &pool).await?;
+    user.add_statement(add_statement.statement_text, &pool)
+        .await?;
 
-    let query = sqlx::query!(
-        "INSERT INTO authors (user_id, statement_id) VALUES (?, ?)",
-        user.id,
-        created_statement.id
-    )
-    .execute(&pool)
-    .await;
-    query.expect("Database problem");
-
-    let query = sqlx::query!(
-        "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)",
-        user.id,
-        created_statement.id
-    )
-    .execute(&pool)
-    .await;
-    query.expect("Database problem");
-
-    Redirect::to("/")
+    Ok(Redirect::to("/"))
 }

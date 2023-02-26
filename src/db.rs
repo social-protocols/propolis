@@ -3,6 +3,14 @@ use sqlx::SqlitePool;
 
 use crate::{auth::User, error::Error, pages::submissions::SubmissionsItem, structs::Statement};
 
+#[derive(sqlx::FromRow)]
+pub struct VoteHistoryItem {
+    pub statement_id: i64,
+    pub statement_text: String,
+    pub vote_timestamp: i64,
+    pub vote: i64,
+}
+
 #[async_trait]
 pub trait UserQueries {
     async fn num_statements(&self, _: &SqlitePool) -> Result<i32, Error>;
@@ -13,7 +21,12 @@ pub trait UserQueries {
 
     async fn delete(&self, _: &SqlitePool) -> Result<(), Error>;
 
+    /// Casts a vote
     async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error>;
+    /// Returns vote history
+    async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error>;
+    /// Adds a statement
+    async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -99,6 +112,46 @@ do UPDATE SET vote = excluded.vote",
         )
         .execute(pool)
         .await?;
+        Ok(())
+    }
+
+    async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
+        Ok(sqlx::query_as!(
+            VoteHistoryItem,
+            "
+select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v
+join statements s on
+  s.id = v.statement_id
+where user_id = ? and vote != 0
+order by timestamp desc", self.id)
+            .fetch_all(pool).await?)
+    }
+
+    async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error> {
+        // TODO: add statement and author entry in transaction
+        let created_statement = sqlx::query!(
+            "INSERT INTO statements (text) VALUES (?) RETURNING id",
+            text
+        )
+        .fetch_one(pool)
+        .await?;
+
+        sqlx::query!(
+            "INSERT INTO authors (user_id, statement_id) VALUES (?, ?)",
+            self.id,
+            created_statement.id
+        )
+        .execute(pool)
+        .await?;
+
+        sqlx::query!(
+            "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)",
+            self.id,
+            created_statement.id
+        )
+        .execute(pool)
+        .await?;
+
         Ok(())
     }
 }
