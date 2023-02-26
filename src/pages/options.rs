@@ -44,8 +44,8 @@ fn html(base: &BaseTemplate, merge_url: &str, qr_code: &str) -> String {
             fieldset {
                 label for="theme" { "theme" }
                 select id="theme" name="theme" _="on change send test to #theme-form" {
-                    option value="light" selected=[{ if base.theme == "light" { Some(1) } else { None } }] { "Light" }
-                    option value="dark" selected=[{ if base.theme == "dark" { Some(1) } else { None } }] { "Dark" }
+                    option value="light" selected[base.theme == "light"] { "Light" }
+                    option value="dark" selected[base.theme == "dark"] { "Dark" }
                 }
             }
         }
