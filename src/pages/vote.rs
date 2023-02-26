@@ -1,9 +1,8 @@
-use crate::{auth::ensure_auth, next_statement::redirect_to_next_statement};
+use crate::{auth::User, error::Error, next_statement::redirect_to_next_statement};
 
 use axum::{response::Redirect, Extension, Form};
 use serde::Deserialize;
 use sqlx::SqlitePool;
-use tower_cookies::Cookies;
 
 #[derive(Deserialize)]
 pub struct VoteForm {
@@ -12,21 +11,21 @@ pub struct VoteForm {
 }
 
 pub async fn vote(
-    cookies: Cookies,
+    user: User,
     Extension(pool): Extension<SqlitePool>,
     Form(vote): Form<VoteForm>,
-) -> Redirect {
-    let user = ensure_auth(&cookies, &pool).await;
-
+) -> Result<Redirect, Error> {
     sqlx::query!(
-        "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote",
+        "INSERT INTO votes (statement_id, user_id, vote)
+VALUES (?, ?, ?)
+on CONFLICT (statement_id, user_id)
+do UPDATE SET vote = excluded.vote",
         vote.statement_id,
         user.id,
         vote.vote
     )
     .execute(&pool)
-    .await
-    .expect("Database problem");
+    .await?;
 
     sqlx::query!(
         "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
@@ -35,8 +34,7 @@ pub async fn vote(
         vote.vote
     )
     .execute(&pool)
-    .await
-    .expect("Database problem");
+    .await?;
 
     sqlx::query!(
         "delete from queue where user_id = ? and statement_id = ?",
@@ -44,8 +42,7 @@ pub async fn vote(
         vote.statement_id
     )
     .execute(&pool)
-    .await
-    .expect("Database problem");
+    .await?;
 
-    redirect_to_next_statement(Some(user), Extension(pool)).await
+    Ok(redirect_to_next_statement(Some(user), Extension(pool)).await)
 }

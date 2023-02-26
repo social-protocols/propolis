@@ -1,76 +1,112 @@
 use async_trait::async_trait;
 use sqlx::SqlitePool;
 
-use crate::auth::User;
+use crate::{auth::User, error::Error, pages::submissions::SubmissionsItem, structs::Statement};
 
 #[async_trait]
 pub trait UserQueries {
-    async fn num_statements(&self, _: &SqlitePool) -> i32 {
-        0
-    }
+    async fn num_statements(&self, _: &SqlitePool) -> Result<i32, Error>;
+    async fn num_votes(&self, _: &SqlitePool) -> Result<i32, Error>;
 
-    async fn num_votes(&self, _: &SqlitePool) -> i32 {
-        0
-    }
+    async fn move_content_to(&self, _new_user: &User, _pool: &SqlitePool) -> Result<(), Error>;
+    async fn delete_content(&self, _pool: &SqlitePool) -> Result<(), Error>;
 
-    async fn move_content_to(&self, _new_user: &User, _pool: &SqlitePool) {}
-    async fn delete_content(&self, _pool: &SqlitePool) {}
-
-    async fn delete(&self, _: &SqlitePool) {}
+    async fn delete(&self, _: &SqlitePool) -> Result<(), Error>;
 }
 
 #[async_trait]
 impl UserQueries for User {
-    async fn num_statements(&self, pool: &SqlitePool) -> i32 {
-        sqlx::query!(
+    async fn num_statements(&self, pool: &SqlitePool) -> Result<i32, Error> {
+        Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM authors where user_id = ?",
             self.id,
         )
         .fetch_one(pool)
-        .await
-        .expect("Must be valid")
-        .count
+        .await?
+        .count)
     }
 
-    async fn num_votes(&self, pool: &SqlitePool) -> i32 {
-        sqlx::query!(
+    async fn num_votes(&self, pool: &SqlitePool) -> Result<i32, Error> {
+        Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM votes where user_id = ?",
             self.id,
         )
         .fetch_one(pool)
-        .await
-        .expect("Must be valid")
-        .count
+        .await?
+        .count)
     }
 
     /// Moves content from one user to another
-    async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) {
+    async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<(), Error> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("UPDATE {} SET user_id=? WHERE user_id=?", table).as_str())
                 .bind(new_user.id)
                 .bind(self.id)
                 .execute(pool)
-                .await
-                .expect("Update should work");
+                .await?;
         }
+        Ok(())
     }
 
     /// Deletes all content of a particular user
-    async fn delete_content(&self, pool: &SqlitePool) {
+    async fn delete_content(&self, pool: &SqlitePool) -> Result<(), Error> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("DELETE FROM {} WHERE user_id=?", table).as_str())
                 .bind(self.id)
                 .execute(pool)
-                .await
-                .expect("Delete should work");
+                .await?;
         }
+        Ok(())
     }
 
     /// Deletes user without content
-    async fn delete(&self, pool: &SqlitePool) {
+    async fn delete(&self, pool: &SqlitePool) -> Result<(), Error> {
         sqlx::query!("DELETE FROM users WHERE id=?", self.id)
             .execute(pool)
-            .await
-            .expect("Delete should work");
+            .await?;
+        Ok(())
     }
+}
+
+pub async fn get_statement(
+    statement_id: i64,
+    pool: &SqlitePool,
+) -> Result<Option<Statement>, Error> {
+    Ok(sqlx::query_as!(
+        Statement,
+        // TODO: https://github.com/launchbadge/sqlx/issues/1524
+        "SELECT id, text from statements where id = ?",
+        statement_id,
+    )
+    .fetch_optional(pool)
+    .await?)
+}
+
+pub async fn get_submissions(
+    user: &User,
+    pool: &SqlitePool,
+) -> Result<Vec<SubmissionsItem>, Error> {
+    // TODO: https://github.com/launchbadge/sqlx/issues/1524
+    Ok(sqlx::query_as::<_, SubmissionsItem>(
+        "
+select
+  s.id as statement_id,
+  s.text as statement_text,
+  a.timestamp as author_timestamp,
+  v.vote as vote,
+  coalesce(sum(v_stats.vote == 1), 0) as yes_count,
+  coalesce(sum(v_stats.vote == -1), 0) as no_count
+from authors a
+join statements s on s.id = a.statement_id
+left outer join votes v on
+  s.id = v.statement_id and a.user_id = v.user_id
+left outer join votes v_stats on
+  v_stats.statement_id = a.statement_id
+where a.user_id = ?
+group by a.statement_id
+order by a.timestamp desc",
+    )
+    .bind(user.id)
+    .fetch_all(pool)
+    .await?)
 }

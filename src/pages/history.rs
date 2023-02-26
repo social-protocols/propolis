@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::User;
+use crate::{auth::User, error::Error};
 use crate::util::human_relative_time;
 
 use askama::Template;
@@ -32,7 +32,7 @@ pub async fn history(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Html<String> {
+) -> Result<Html<String>, Error> {
     let history = match maybe_user {
         Some(user) => {
             sqlx::query_as!(
@@ -43,7 +43,7 @@ join statements s on
   s.id = v.statement_id
 where user_id = ? and vote != 0
 order by timestamp desc", user.id)
-            .fetch_all(&pool).await.expect("Must be valid")
+            .fetch_all(&pool).await?
         }
         None => Vec::new(),
     };
@@ -53,5 +53,5 @@ order by timestamp desc", user.id)
         history,
     };
 
-    Html(template.render().unwrap())
+    Ok(Html(template.render().unwrap()))
 }
