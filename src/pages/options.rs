@@ -1,4 +1,4 @@
-use super::base::{get_base_template, BaseTemplate, GenericViewTemplate};
+use super::base::{get_base_template, BaseTemplate, GenericViewTemplate, WarningDialog };
 use crate::{auth::User, error::Error, util::base_url};
 use askama::Template;
 use maud::html;
@@ -60,22 +60,27 @@ pub async fn options(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Html<String>, Error> {
+    let title = Some("Options");
+
     Ok(match maybe_user {
         Some(user) => {
             let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
             let base = get_base_template(cookies, Extension(pool));
             let content = html(&base, &merge_url, qr_code_base64(&merge_url).as_str());
-            let template = GenericViewTemplate { base, content };
+            let template = GenericViewTemplate { base, content: content.as_str(), title };
 
-            Html(template.render().unwrap())
+            Html(template.render()?)
         }
         None => Html(
             GenericViewTemplate {
                 base: get_base_template(cookies, Extension(pool)),
-                content: html! { p { "Please cast some votes first." } }.into_string(),
+                title,
+                content: String::from(WarningDialog {
+                    msg: "Options disabled until you cast your first vote.",
+                    ..Default::default()
+                }).as_str(),
             }
-            .render()
-            .unwrap(),
+            .render()?,
         ),
     })
 }
