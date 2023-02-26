@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::db::{UserQueries, VoteHistoryItem};
+use crate::db::VoteHistoryItem;
 use crate::util::human_relative_time;
 use crate::{auth::User, error::Error};
 

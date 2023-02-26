@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+//! Database access via sqlx
+
 use sqlx::SqlitePool;
 
 use crate::{auth::User, error::Error, pages::submissions::SubmissionsItem, structs::Statement};
@@ -11,37 +12,20 @@ pub struct VoteHistoryItem {
     pub vote: i64,
 }
 
-#[async_trait]
-pub trait UserQueries {
-    async fn num_statements(&self, _: &SqlitePool) -> Result<i32, Error>;
-    async fn num_votes(&self, _: &SqlitePool) -> Result<i32, Error>;
-
-    async fn move_content_to(&self, _new_user: &User, _pool: &SqlitePool) -> Result<(), Error>;
-    async fn delete_content(&self, _pool: &SqlitePool) -> Result<(), Error>;
-
-    async fn delete(&self, _: &SqlitePool) -> Result<(), Error>;
-
-    /// Casts a vote
-    async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error>;
-    /// Returns vote history
-    async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error>;
-    /// Adds a statement
-    async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error>;
-}
-
-#[async_trait]
-impl UserQueries for User {
-    async fn num_statements(&self, pool: &SqlitePool) -> Result<i32, Error> {
+impl User {
+    /// Returns number of statements added by [User]
+    pub async fn num_statements(&self, pool: &SqlitePool) -> Result<i32, Error> {
         Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM authors where user_id = ?",
             self.id,
         )
-        .fetch_one(pool)
-        .await?
-        .count)
+           .fetch_one(pool)
+           .await?
+           .count)
     }
 
-    async fn num_votes(&self, pool: &SqlitePool) -> Result<i32, Error> {
+    /// Returns number of votes added by [User]
+    pub async fn num_votes(&self, pool: &SqlitePool) -> Result<i32, Error> {
         Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM votes where user_id = ?",
             self.id,
@@ -52,7 +36,7 @@ impl UserQueries for User {
     }
 
     /// Moves content from one user to another
-    async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<(), Error> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("UPDATE {} SET user_id=? WHERE user_id=?", table).as_str())
                 .bind(new_user.id)
@@ -64,7 +48,7 @@ impl UserQueries for User {
     }
 
     /// Deletes all content of a particular user
-    async fn delete_content(&self, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn delete_content(&self, pool: &SqlitePool) -> Result<(), Error> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("DELETE FROM {} WHERE user_id=?", table).as_str())
                 .bind(self.id)
@@ -75,7 +59,7 @@ impl UserQueries for User {
     }
 
     /// Deletes user without content
-    async fn delete(&self, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn delete(&self, pool: &SqlitePool) -> Result<(), Error> {
         sqlx::query!("DELETE FROM users WHERE id=?", self.id)
             .execute(pool)
             .await?;
@@ -83,7 +67,7 @@ impl UserQueries for User {
     }
 
     /// Votes on a statement
-    async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error> {
         sqlx::query!(
             "INSERT INTO votes (statement_id, user_id, vote)
 VALUES (?, ?, ?)
@@ -115,7 +99,8 @@ do UPDATE SET vote = excluded.vote",
         Ok(())
     }
 
-    async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
+    /// Returns all votes taken by a [User]
+    pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
             "
@@ -127,7 +112,7 @@ order by timestamp desc", self.id)
             .fetch_all(pool).await?)
     }
 
-    async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error> {
         // TODO: add statement and author entry in transaction
         let created_statement = sqlx::query!(
             "INSERT INTO statements (text) VALUES (?) RETURNING id",

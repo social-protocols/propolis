@@ -1,5 +1,5 @@
 use crate::{
-    db::UserQueries, error::Error, next_statement::redirect_to_next_statement, auth::User,
+    error::Error, next_statement::redirect_to_next_statement, auth::User,
 };
 
 use axum::{response::Redirect, Extension, Form};

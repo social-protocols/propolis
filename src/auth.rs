@@ -1,3 +1,5 @@
+//! Authentication & user management
+
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::StatusCode;
@@ -83,6 +85,7 @@ pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
 }
 
 fn generate_secret() -> String {
+    // TODO: check if used already
     thread_rng()
         .sample_iter(&Alphanumeric)
         .take(16)
