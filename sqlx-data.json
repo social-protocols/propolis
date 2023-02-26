@@ -1,5 +1,29 @@
 {
   "db": "SQLite",
+  "0235e50e558f9db543652e6561b72d6e920106b14979a38d95405ebf25da3e7c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "text",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT id, text from statements where text like ?"
+  },
   "02a518fe7de0d3d0c1fd77ee243ab5f1968ed62faca4bb2fd82e2f0bd9cca664": {
     "describe": {
       "columns": [
