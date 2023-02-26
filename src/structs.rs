@@ -1,3 +1,5 @@
+//! Various structs used all over
+
 use serde::Serialize;
 
 /// Representation of a user. Provides various methods to find & update them

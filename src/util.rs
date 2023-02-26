@@ -1,3 +1,5 @@
+//! Utiliy fns that do not fit anywhere else
+
 use chrono::Utc;
 use http::{
     header::{HOST, REFERER},
