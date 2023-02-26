@@ -1,11 +1,13 @@
 use crate::{
-    error::Error, next_statement::redirect_to_next_statement, auth::User,
+    error::Error, auth::User,
 };
 
 use axum::{response::Redirect, Extension, Form};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
+
+use super::index::redirect_to_next_statement;
 
 #[derive(Deserialize)]
 pub struct VoteForm {
@@ -22,5 +24,5 @@ pub async fn vote(
 
     user.vote(vote.statement_id, vote.vote, &pool).await?;
 
-    Ok(redirect_to_next_statement(Some(user), Extension(pool)).await)
+    Ok(redirect_to_next_statement(Some(user), Extension(pool)).await?)
 }

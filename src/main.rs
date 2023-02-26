@@ -1,7 +1,6 @@
 mod auth;
 mod db;
 mod error;
-mod next_statement;
 mod pages;
 mod static_path;
 mod structs;
