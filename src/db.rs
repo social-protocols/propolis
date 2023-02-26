@@ -1,6 +1,11 @@
 //! Database access via sqlx
 
-use sqlx::SqlitePool;
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
+    SqlitePool,
+};
+use std::env;
+use std::str::FromStr;
 
 use crate::structs::User;
 use crate::{
@@ -161,6 +166,48 @@ order by timestamp desc", self.id)
         .fetch_optional(pool)
         .await?)
     }
+}
+
+/// Create db connection & configure it
+pub async fn setup_db() -> SqlitePool {
+    // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    // if embed_migrations is enabled, we create the database if it doesn't exist
+    let create_database_if_missing = cfg!(feature = "embed_migrations");
+
+    let connection_options = SqliteConnectOptions::from_str(&database_url)
+        .unwrap()
+        .create_if_missing(create_database_if_missing)
+        .journal_mode(SqliteJournalMode::Wal)
+        .synchronous(SqliteSynchronous::Normal)
+        .busy_timeout(std::time::Duration::from_secs(30));
+
+    let sqlite_pool = SqlitePoolOptions::new()
+        .max_connections(8)
+        .acquire_timeout(std::time::Duration::from_secs(30))
+        .connect_with(connection_options)
+        .await
+        .unwrap();
+
+    #[cfg(feature = "embed_migrations")]
+    sqlx::migrate!("./migrations")
+        .run(&sqlite_pool)
+        .await
+        .expect("Unable to migrate");
+
+    for option in vec![
+        "pragma temp_store = memory;",
+        "pragma mmap_size = 30000000000;",
+        "pragma page_size = 4096;",
+    ] {
+        sqlx::query(option)
+            .execute(&sqlite_pool)
+            .await
+            .expect(format!("Unable to set option: {}", option).as_str());
+    }
+
+    sqlite_pool
 }
 
 pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error> {
