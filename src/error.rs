@@ -9,6 +9,7 @@ pub enum Error {
     SqlxError(sqlx::Error),
     IoError(std::io::Error),
     AskamaError(askama::Error),
+    CustomError(String),
 }
 
 impl From<sqlx::Error> for Error {
@@ -35,6 +36,7 @@ impl From<Error> for String {
             Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
             Error::IoError(io_error) => io_error.to_string(),
             Error::AskamaError(error) => error.to_string(),
+            Error::CustomError(msg) => msg,
         }
     }
 }
@@ -42,7 +44,10 @@ impl From<Error> for String {
 /// Support custom [Error] as an axum Response
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        // its often easiest to implement `IntoResponse` by calling other implementations
-        (StatusCode::INTERNAL_SERVER_ERROR, String::from(self)).into_response()
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("INTERNAL SERVER ERROR:\n\n {}", String::from(self)),
+        )
+            .into_response()
     }
 }
