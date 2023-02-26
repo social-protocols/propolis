@@ -234,6 +234,21 @@ pub async fn get_statement(
     .await?)
 }
 
+pub async fn autocomplete_statement(
+    text: &str,
+    pool: &SqlitePool,
+) -> Result<Vec<Statement>, Error> {
+    Ok(
+        sqlx::query_as::<_, Statement>("SELECT id, text
+FROM statements_fts
+WHERE text MATCH ?
+LIMIT 25")
+            .bind(text)
+            .fetch_all(pool)
+            .await?,
+    )
+}
+
 pub async fn get_submissions(
     user: &User,
     pool: &SqlitePool,
