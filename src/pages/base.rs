@@ -1,5 +1,5 @@
-use askama::{Template};
-use axum::{Extension, response::Html};
+use askama::Template;
+use axum::{response::Html, Extension};
 use maud::html;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
@@ -45,7 +45,7 @@ impl<'a> Default for WarningDialog<'a> {
     fn default() -> Self {
         WarningDialog {
             msg: "Nothing to see here",
-            caption: Some("Warning")
+            caption: Some("Warning"),
         }
     }
 }
@@ -57,6 +57,7 @@ impl<'a> From<WarningDialog<'a>> for String {
                 p { (dlg.caption.unwrap_or("Warning")) }
                 p { (dlg.msg) }
             }
-        ).into_string()
+        )
+        .into_string()
     }
 }
