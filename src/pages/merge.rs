@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::{switch_auth_cookie, User};
+use crate::auth::{change_auth_cookie, User};
 use crate::db::UserQueries;
 use crate::error::Error;
 
@@ -75,7 +75,7 @@ pub async fn merge_post(
                     }
 
                     user.delete(&pool).await?;
-                    switch_auth_cookie(new_user.secret, &cookies);
+                    change_auth_cookie(new_user.secret, &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
                     Html("Merge successful".to_string())

@@ -68,7 +68,8 @@ impl User {
 
 }
 
-pub fn switch_auth_cookie(secret: String, cookies: &Cookies) {
+/// Changes the cookie containing the secret to a different value
+pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
     match cookies.get("secret") {
         Some(mut cookie) => {
             // copy old cookie, but also set path, since it may come from e.g. /merge
