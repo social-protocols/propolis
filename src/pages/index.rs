@@ -1,4 +1,5 @@
-use crate::{auth::User, error::Error, db::random_statement_id};
+use crate::structs::User;
+use crate::{db::random_statement_id, error::Error};
 
 use axum::{response::Redirect, Extension};
 use sqlx::SqlitePool;

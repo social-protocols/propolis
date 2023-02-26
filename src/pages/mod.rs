@@ -1,3 +1,5 @@
+//! One file per page
+
 pub mod base;
 pub mod history;
 pub mod index;

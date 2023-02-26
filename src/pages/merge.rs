@@ -1,6 +1,7 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::{change_auth_cookie, User};
+use crate::auth::change_auth_cookie;
 use crate::error::Error;
+use crate::structs::User;
 
 use askama::Template;
 use axum::{extract::Path, response::Html, Extension, Form};
