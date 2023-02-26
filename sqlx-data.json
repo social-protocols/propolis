@@ -70,16 +70,6 @@
     },
     "query": "\nselect s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\njoin statements s on\n  s.id = v.statement_id\nwhere user_id = ? and vote != 0\norder by timestamp desc"
   },
-  "491031582fe7ef3d527ba46dd1dec6c9528c3d48c8ea6f0d08588054753da070": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 3
-      }
-    },
-    "query": "INSERT INTO votes (statement_id, user_id, vote) VALUES (?, ?, ?) on conflict ( statement_id, user_id) do update set vote = excluded.vote"
-  },
   "7c0016f1d57f360ccd50022c00e10e12418dbc8ef4668ad2a1065d147e75d1b5": {
     "describe": {
       "columns": [
@@ -139,6 +129,16 @@
       }
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
+  },
+  "adb78e25d4cb286dea82a5f189f7dae3a47489d4c3715af0c64bf72f5353bda3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO votes (statement_id, user_id, vote)\nVALUES (?, ?, ?)\non CONFLICT (statement_id, user_id)\ndo UPDATE SET vote = excluded.vote"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {

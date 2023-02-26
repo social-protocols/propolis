@@ -1,6 +1,7 @@
 use super::base::{get_base_template, BaseTemplate};
 use crate::auth::{switch_auth_cookie, User};
 use crate::db::UserQueries;
+use crate::error::Error;
 
 use askama::Template;
 use axum::{extract::Path, response::Html, Extension, Form};
@@ -35,9 +36,9 @@ pub async fn merge(
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Html<String> {
-    let num_votes = user.num_votes(&pool).await;
-    let num_statements = user.num_statements(&pool).await;
+) -> Result<Html<String>, Error> {
+    let num_votes = user.num_votes(&pool).await?;
+    let num_statements = user.num_statements(&pool).await?;
 
     let template = MergeTemplate {
         base: get_base_template(cookies, Extension(pool)),
@@ -47,7 +48,7 @@ pub async fn merge(
         new_secret: secret,
     };
 
-    Html(template.render().unwrap())
+    Ok(Html(template.render().unwrap()))
 }
 
 pub async fn merge_post(
@@ -56,11 +57,11 @@ pub async fn merge_post(
     Path(secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
-) -> Html<String> {
-    match crate::auth::user_for_secret(secret, &pool).await {
+) -> Result<Html<String>, Error> {
+    Ok(match crate::auth::user_for_secret(secret, &pool).await {
         Some(new_user) => {
             if user.id == new_user.id {
-                return Html("Merge aborted: same user".to_string());
+                return Ok(Html("Merge aborted: same user".to_string()));
             }
 
             match merge.value {
@@ -68,12 +69,12 @@ pub async fn merge_post(
                     let tx = pool.begin().await.expect("Transaction begin failed");
 
                     if merge.value == MergeAnswer::Yes {
-                        user.move_content_to(&new_user, &pool).await;
+                        user.move_content_to(&new_user, &pool).await?;
                     } else {
-                        user.delete_content(&pool).await;
+                        user.delete_content(&pool).await?;
                     }
 
-                    user.delete(&pool).await;
+                    user.delete(&pool).await?;
                     switch_auth_cookie(new_user.secret, &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
@@ -85,5 +86,5 @@ pub async fn merge_post(
         }
 
         None => Html("Target user does not exist.".to_string()),
-    }
+    })
 }

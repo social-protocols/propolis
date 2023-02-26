@@ -1,19 +1,12 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::auth::User;
+use crate::db::{UserQueries, VoteHistoryItem};
 use crate::util::human_relative_time;
+use crate::{auth::User, error::Error};
 
 use askama::Template;
 use axum::{response::Html, Extension};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-#[derive(sqlx::FromRow)]
-pub struct VoteHistoryItem {
-    statement_id: i64,
-    statement_text: String,
-    vote_timestamp: i64,
-    vote: i64,
-}
 
 #[derive(Template)]
 #[template(path = "history.j2")]
@@ -32,19 +25,9 @@ pub async fn history(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Html<String> {
+) -> Result<Html<String>, Error> {
     let history = match maybe_user {
-        Some(user) => {
-            sqlx::query_as!(
-                VoteHistoryItem,
-                    "
-select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v
-join statements s on
-  s.id = v.statement_id
-where user_id = ? and vote != 0
-order by timestamp desc", user.id)
-            .fetch_all(&pool).await.expect("Must be valid")
-        }
+        Some(user) => user.vote_history(&pool).await?,
         None => Vec::new(),
     };
 
@@ -53,5 +36,5 @@ order by timestamp desc", user.id)
         history,
     };
 
-    Html(template.render().unwrap())
+    Ok(Html(template.render().unwrap()))
 }

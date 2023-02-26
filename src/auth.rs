@@ -9,6 +9,8 @@ use serde::Serialize;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
 
+use crate::error::Error;
+
 #[derive(Serialize, sqlx::FromRow, Debug)]
 pub struct User {
     pub id: i64,
@@ -37,18 +39,18 @@ pub async fn user_for_secret(secret: String, pool: &SqlitePool) -> Option<User> 
     })
 }
 
-pub async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> User {
+pub async fn ensure_auth(cookies: &Cookies, pool: &SqlitePool) -> Result<User, Error> {
     let existing_user: Option<User> = logged_in_user(cookies, pool).await;
 
-    match existing_user {
+    Ok(match existing_user {
         Some(user) => user,
         None => {
-            let user = create_user(pool).await;
+            let user = create_user(pool).await?;
             cookies.add(Cookie::new("secret", user.secret.to_owned()));
 
             user
         }
-    }
+    })
 }
 
 pub fn switch_auth_cookie(secret: String, cookies: &Cookies) {
@@ -64,16 +66,15 @@ pub fn switch_auth_cookie(secret: String, cookies: &Cookies) {
     }
 }
 
-async fn create_user(pool: &SqlitePool) -> User {
+async fn create_user(pool: &SqlitePool) -> Result<User, Error> {
     let secret = generate_secret();
     let user =
         sqlx::query_as::<_, User>("INSERT INTO users (secret) VALUES (?) RETURNING id, secret")
             .bind(secret)
             .fetch_one(pool)
-            .await
-            .expect("Must be valid");
+            .await?;
 
-    user
+    Ok(user)
 }
 
 fn generate_secret() -> String {

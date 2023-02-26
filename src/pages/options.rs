@@ -1,5 +1,5 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::{auth::User, util::base_url};
+use crate::{auth::User, error::Error, util::base_url};
 
 use askama::Template;
 use axum::{
@@ -46,8 +46,8 @@ pub async fn options(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Html<String> {
-    match maybe_user {
+) -> Result<Html<String>, Error> {
+    Ok(match maybe_user {
         Some(user) => {
             let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
             let template = OptionsTemplate {
@@ -65,11 +65,14 @@ pub async fn options(
             .render()
             .unwrap(),
         ),
-    }
+    })
 }
 
-pub async fn options_post(cookies: Cookies, Form(options_form): Form<OptionsForm>) -> Redirect {
+pub async fn options_post(
+    cookies: Cookies,
+    Form(options_form): Form<OptionsForm>,
+) -> Result<Redirect, Error> {
     cookies.add(Cookie::new("theme", options_form.theme));
 
-    Redirect::to("/options")
+    Ok(Redirect::to("/options"))
 }
