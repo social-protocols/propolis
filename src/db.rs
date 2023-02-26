@@ -12,6 +12,8 @@ pub trait UserQueries {
     async fn delete_content(&self, _pool: &SqlitePool) -> Result<(), Error>;
 
     async fn delete(&self, _: &SqlitePool) -> Result<(), Error>;
+
+    async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error>;
 }
 
 #[async_trait]
@@ -64,6 +66,39 @@ impl UserQueries for User {
         sqlx::query!("DELETE FROM users WHERE id=?", self.id)
             .execute(pool)
             .await?;
+        Ok(())
+    }
+
+    /// Votes on a statement
+    async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error> {
+        sqlx::query!(
+            "INSERT INTO votes (statement_id, user_id, vote)
+VALUES (?, ?, ?)
+on CONFLICT (statement_id, user_id)
+do UPDATE SET vote = excluded.vote",
+            statement_id,
+            self.id,
+            vote
+        )
+        .execute(pool)
+        .await?;
+
+        sqlx::query!(
+            "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
+            self.id,
+            statement_id,
+            vote
+        )
+        .execute(pool)
+        .await?;
+
+        sqlx::query!(
+            "delete from queue where user_id = ? and statement_id = ?",
+            self.id,
+            statement_id
+        )
+        .execute(pool)
+        .await?;
         Ok(())
     }
 }

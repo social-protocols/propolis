@@ -1,4 +1,4 @@
-use crate::{auth::User, error::Error, next_statement::redirect_to_next_statement};
+use crate::{auth::User, error::Error, next_statement::redirect_to_next_statement, db::UserQueries};
 
 use axum::{response::Redirect, Extension, Form};
 use serde::Deserialize;
@@ -15,34 +15,7 @@ pub async fn vote(
     Extension(pool): Extension<SqlitePool>,
     Form(vote): Form<VoteForm>,
 ) -> Result<Redirect, Error> {
-    sqlx::query!(
-        "INSERT INTO votes (statement_id, user_id, vote)
-VALUES (?, ?, ?)
-on CONFLICT (statement_id, user_id)
-do UPDATE SET vote = excluded.vote",
-        vote.statement_id,
-        user.id,
-        vote.vote
-    )
-    .execute(&pool)
-    .await?;
-
-    sqlx::query!(
-        "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
-        user.id,
-        vote.statement_id,
-        vote.vote
-    )
-    .execute(&pool)
-    .await?;
-
-    sqlx::query!(
-        "delete from queue where user_id = ? and statement_id = ?",
-        user.id,
-        vote.statement_id
-    )
-    .execute(&pool)
-    .await?;
+    user.vote(vote.statement_id, vote.vote, &pool).await?;
 
     Ok(redirect_to_next_statement(Some(user), Extension(pool)).await)
 }
