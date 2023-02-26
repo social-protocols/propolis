@@ -15,9 +15,7 @@ impl From<sqlx::Error> for Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let body = match self {
-            Error::SqlxError(sqlx_error) => {
-                sqlx_error.to_string()
-            }
+            Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
         };
 
         // its often easiest to implement `IntoResponse` by calling other implementations

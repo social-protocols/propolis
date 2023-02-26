@@ -1,4 +1,4 @@
-use crate::{auth::User, next_statement::redirect_to_next_statement, error::Error};
+use crate::{auth::User, error::Error, next_statement::redirect_to_next_statement};
 
 use axum::{response::Redirect, Extension};
 use sqlx::SqlitePool;
