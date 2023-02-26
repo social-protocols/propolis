@@ -1,5 +1,5 @@
 use crate::{
-    auth::ensure_auth, db::UserQueries, error::Error, next_statement::redirect_to_next_statement,
+    db::UserQueries, error::Error, next_statement::redirect_to_next_statement, auth::User,
 };
 
 use axum::{response::Redirect, Extension, Form};
@@ -18,7 +18,7 @@ pub async fn vote(
     Extension(pool): Extension<SqlitePool>,
     Form(vote): Form<VoteForm>,
 ) -> Result<Redirect, Error> {
-    let user = ensure_auth(&cookies, &pool).await?;
+    let user = User::get_or_create(&cookies, &pool).await?;
 
     user.vote(vote.statement_id, vote.vote, &pool).await?;
 
