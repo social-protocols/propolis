@@ -53,14 +53,12 @@ impl User {
         let secret = generate_secret();
         let user =
             sqlx::query_as::<_, User>("INSERT INTO users (secret) VALUES (?) RETURNING id, secret")
-            .bind(secret)
-            .fetch_one(pool)
-            .await?;
+                .bind(secret)
+                .fetch_one(pool)
+                .await?;
 
         Ok(user)
     }
-
-
 }
 
 /// Changes the cookie containing the secret to a different value
@@ -106,12 +104,7 @@ where
 
         match User::from_cookies(&cookies, &pool).await {
             Ok(result) => result.ok_or((StatusCode::UNAUTHORIZED, "Unauthorized")),
-            Err(_) => {
-                Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal server error",
-                ))
-            },
+            Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, "Internal server error")),
         }
     }
 }
