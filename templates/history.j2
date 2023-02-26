@@ -4,6 +4,9 @@
 
   <h1>Recent Votes</h1>
 
+  {% if history.len() == 0 %}
+    <p>You have not submitted any votes yet</p>
+  {% endif %}
   {% for item in history %}
     <div class="card info">
       <p>{{ item.statement_text }}</p>

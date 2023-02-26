@@ -4,6 +4,9 @@
 
   <h1>Your Submissions</h1>
 
+  {% if submissions.len() == 0 %}
+    <p>You have not submitted any statements yet</p>
+  {% endif %}
   {% for item in submissions %}
     <div class="card info">
       <p>{{ item.statement_text }}</p>
