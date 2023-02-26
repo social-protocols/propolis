@@ -1,3 +1,5 @@
+//! Error handling related code
+
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 
@@ -37,6 +39,7 @@ impl From<Error> for String {
     }
 }
 
+/// Support custom [Error] as an axum Response
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         // its often easiest to implement `IntoResponse` by calling other implementations

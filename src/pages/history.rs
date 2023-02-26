@@ -1,7 +1,8 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::db::VoteHistoryItem;
+use crate::error::Error;
+use crate::structs::User;
+use crate::structs::VoteHistoryItem;
 use crate::util::human_relative_time;
-use crate::{auth::User, error::Error};
 
 use askama::Template;
 use axum::{response::Html, Extension};

@@ -7,18 +7,11 @@ use axum::Extension;
 use http::request::Parts;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use serde::Serialize;
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
 
 use crate::error::Error;
-
-/// Representation of a user. Provides various methods to find & update them
-#[derive(Serialize, sqlx::FromRow, Debug)]
-pub struct User {
-    pub id: i64,
-    pub secret: String,
-}
+use crate::structs::User;
 
 impl User {
     /// If logged in with a secret, will return a [User]

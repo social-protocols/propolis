@@ -2,15 +2,12 @@
 
 use sqlx::SqlitePool;
 
-use crate::{auth::User, error::Error, pages::submissions::SubmissionsItem, structs::Statement};
-
-#[derive(sqlx::FromRow)]
-pub struct VoteHistoryItem {
-    pub statement_id: i64,
-    pub statement_text: String,
-    pub vote_timestamp: i64,
-    pub vote: i64,
-}
+use crate::structs::User;
+use crate::{
+    error::Error,
+    pages::submissions::SubmissionsItem,
+    structs::{Statement, VoteHistoryItem},
+};
 
 impl User {
     /// Returns number of statements added by [User]
@@ -173,8 +170,8 @@ pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error
         "SELECT id from statements ORDER BY RANDOM() LIMIT 1",
     )
     .fetch_optional(pool)
-    .await?
-)}
+    .await?)
+}
 
 pub async fn get_statement(
     statement_id: i64,

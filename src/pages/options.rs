@@ -1,5 +1,6 @@
 use super::base::{get_base_template, BaseTemplate, GenericViewTemplate, WarningDialog};
-use crate::{auth::User, error::Error, util::base_url};
+use crate::structs::User;
+use crate::{error::Error, util::base_url};
 use maud::html;
 
 use axum::{

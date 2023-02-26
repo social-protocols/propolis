@@ -1,5 +1,6 @@
 use super::base::{get_base_template, BaseTemplate};
-use crate::{error::Error, auth::User};
+use crate::error::Error;
+use crate::structs::User;
 
 use askama::Template;
 use axum::{

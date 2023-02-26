@@ -1,6 +1,5 @@
-use crate::{
-    error::Error, auth::User,
-};
+use crate::error::Error;
+use crate::structs::User;
 
 use axum::{response::Redirect, Extension, Form};
 use serde::Deserialize;
