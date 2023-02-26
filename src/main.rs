@@ -20,63 +20,15 @@ use axum::{
     routing::{get, post},
     Extension, Router,
 };
-use std::env;
 use tower_cookies::CookieManagerLayer;
 
-use sqlx::{
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
-    SqlitePool,
-};
 use std::net::SocketAddr;
 
 use include_dir::{include_dir, Dir};
-use std::str::FromStr;
 
+use crate::db::setup_db;
 use crate::pages::vote::vote;
 use crate::static_path::static_path;
-
-async fn setup_db() -> SqlitePool {
-    // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    // if embed_migrations is enabled, we create the database if it doesn't exist
-    let create_database_if_missing = cfg!(feature = "embed_migrations");
-
-    let connection_options = SqliteConnectOptions::from_str(&database_url)
-        .unwrap()
-        .create_if_missing(create_database_if_missing)
-        .journal_mode(SqliteJournalMode::Wal)
-        .synchronous(SqliteSynchronous::Normal)
-        .busy_timeout(std::time::Duration::from_secs(30));
-
-    let sqlite_pool = SqlitePoolOptions::new()
-        .max_connections(8)
-        .acquire_timeout(std::time::Duration::from_secs(30))
-        .connect_with(connection_options)
-        .await
-        .unwrap();
-
-    #[cfg(feature = "embed_migrations")]
-    sqlx::migrate!("./migrations")
-        .run(&sqlite_pool)
-        .await
-        .unwrap();
-
-    sqlx::query("pragma temp_store = memory;")
-        .execute(&sqlite_pool)
-        .await
-        .unwrap();
-    sqlx::query("pragma mmap_size = 30000000000;")
-        .execute(&sqlite_pool)
-        .await
-        .unwrap();
-    sqlx::query("pragma page_size = 4096;")
-        .execute(&sqlite_pool)
-        .await
-        .unwrap();
-
-    sqlite_pool
-}
 
 // embed files in /static into the binary
 static STATIC_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
