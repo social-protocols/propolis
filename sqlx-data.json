@@ -24,6 +24,16 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "3141d724e269dc4bc2d8b7d09c4d61c40c05b58cb8cef2819ff465b847d03fda": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 or vote = -1 on conflict do nothing"
+  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -69,6 +79,16 @@
       }
     },
     "query": "\nselect s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\njoin statements s on\n  s.id = v.statement_id\nwhere user_id = ? and vote != 0\norder by timestamp desc"
+  },
+  "45c1971f51dfcdb223f5269f194cc8b8c3b35c98a1f70540ffdbf7586dd53cde": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing"
   },
   "7c0016f1d57f360ccd50022c00e10e12418dbc8ef4668ad2a1065d147e75d1b5": {
     "describe": {
@@ -140,6 +160,16 @@
     },
     "query": "INSERT INTO votes (statement_id, user_id, vote)\nVALUES (?, ?, ?)\non CONFLICT (statement_id, user_id)\ndo UPDATE SET vote = excluded.vote"
   },
+  "b30a60022407b87e529681a67208685bda8bfe3cb4ec5a3eb2552bb1500920ce": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "INSERT INTO followups (statement_id, followup_id) VALUES (?, ?)"
+  },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
       "columns": [],
@@ -159,24 +189,6 @@
       }
     },
     "query": "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)"
-  },
-  "e87b661e07f0270f9689d76759a3d68ad09775ea1268933f86a8f017c92c507d": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select statement_id from queue where user_id = ? limit 1"
   },
   "eb249830a9036b2c77f7db1436bec513f4c4555a999bf05c4228ad4ddf14db05": {
     "describe": {

@@ -98,6 +98,18 @@ do UPDATE SET vote = excluded.vote",
         )
         .execute(pool)
         .await?;
+
+        if vote == 1 || vote == -1 {
+            // add followups to queue
+            sqlx::query!(
+                "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing",
+                self.id,
+                statement_id
+            )
+            .execute(pool)
+            .await?;
+        }
+
         Ok(())
     }
 
@@ -114,7 +126,12 @@ order by timestamp desc", self.id)
             .fetch_all(pool).await?)
     }
 
-    pub async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn add_statement(
+        &self,
+        text: String,
+        target_statement_id: Option<i64>,
+        pool: &SqlitePool,
+    ) -> Result<(), Error> {
         // TODO: add statement and author entry in transaction
         let created_statement = sqlx::query!(
             "INSERT INTO statements (text) VALUES (?) RETURNING id",
@@ -139,6 +156,11 @@ order by timestamp desc", self.id)
         .execute(pool)
         .await?;
 
+        if let Some(target_statement_id) = target_statement_id {
+            // add created statement as followup to target statement
+            add_followup(target_statement_id, created_statement.id, pool).await?;
+        }
+
         Ok(())
     }
 
@@ -159,10 +181,11 @@ order by timestamp desc", self.id)
         &self,
         pool: &SqlitePool,
     ) -> Result<Option<i64>, Error> {
-        Ok(sqlx::query_scalar!(
-            "select statement_id from queue where user_id = ? limit 1",
-            self.id
+        // TODO: sqlx bug: adding `order by timestamp` infers wrong type in macro
+        Ok(sqlx::query_scalar::<_, i64>(
+            "select statement_id from queue where user_id = ? order by timestamp asc limit 1",
         )
+        .bind(self.id)
         .fetch_optional(pool)
         .await?)
     }
@@ -276,4 +299,29 @@ order by a.timestamp desc",
     .bind(user.id)
     .fetch_all(pool)
     .await?)
+}
+
+pub async fn add_followup(
+    statement_id: i64,
+    followup_id: i64,
+    pool: &SqlitePool,
+) -> Result<(), Error> {
+    sqlx::query!(
+        "INSERT INTO followups (statement_id, followup_id) VALUES (?, ?)",
+        statement_id,
+        followup_id,
+    )
+    .execute(pool)
+    .await?;
+
+    // add followup to queue of users who voted on the original statement
+    sqlx::query!(
+        "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 or vote = -1 on conflict do nothing",
+        followup_id,
+        statement_id,
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
 }
