@@ -1,5 +1,4 @@
 * Core
-** TODO Display next unvoted statement on main page instead of random stmt
 ** TODO Better statement selection
 - Deprioritise already voted upon statements
 ** TODO Add support to link to existing account on different device
