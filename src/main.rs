@@ -29,6 +29,7 @@ use include_dir::{include_dir, Dir};
 use crate::db::setup_db;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
+use crate::pages::traits::traits;
 use crate::pages::vote::vote;
 use crate::static_path::static_path;
 
@@ -41,6 +42,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(index))
+        .route("/traits", get(traits))
         .route("/vote", post(vote))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement))

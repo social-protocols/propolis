@@ -8,4 +8,5 @@ pub mod new_statement;
 pub mod options;
 pub mod statement;
 pub mod submissions;
+pub mod traits;
 pub mod vote;
