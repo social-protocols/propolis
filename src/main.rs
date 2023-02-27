@@ -21,6 +21,7 @@ use axum::{
     Extension, Router,
 };
 use tower_cookies::CookieManagerLayer;
+use tower_http::trace::TraceLayer;
 
 use std::net::SocketAddr;
 
@@ -39,6 +40,9 @@ static STATIC_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
 async fn main() {
     let sqlite_pool = setup_db().await;
 
+    // Setup tracing
+    tracing_subscriber::fmt::init();
+
     let app = Router::new()
         .route("/", get(index))
         .route("/vote", post(vote))
@@ -53,6 +57,7 @@ async fn main() {
         .route("/options", post(options_post))
         .route("/submissions", get(submissions))
         .route("/*path", get(static_path))
+        .layer(TraceLayer::new_for_http())
         .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new())
         .layer(CompressionLayer::new());
