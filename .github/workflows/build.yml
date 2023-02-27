@@ -53,8 +53,11 @@ jobs:
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check
 
-      - name: Check
+      - name: Check default build
         run: cargo check
+
+      - name: Check feature 'embed_migrations'
+        run: cargo check --features embed_migrations
 
       - name: Check formatting
         run: cargo fmt --check
