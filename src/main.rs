@@ -9,7 +9,7 @@ mod util;
 use pages::history::history;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
-use pages::new_statement::{new_statement, new_statement_post};
+use pages::new_statement::new_statement;
 use pages::options::{options, options_post};
 use pages::statement::statement;
 use pages::submissions::submissions;
@@ -28,6 +28,7 @@ use include_dir::{include_dir, Dir};
 
 use crate::db::setup_db;
 use crate::pages::new_statement::completions;
+use crate::pages::new_statement::create_statement;
 use crate::pages::vote::vote;
 use crate::static_path::static_path;
 
@@ -46,7 +47,7 @@ async fn main() {
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
-        .route("/new", post(new_statement_post))
+        .route("/create", post(create_statement))
         .route("/history", get(history))
         .route("/options", get(options))
         .route("/options", post(options_post))

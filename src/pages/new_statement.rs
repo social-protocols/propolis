@@ -1,9 +1,11 @@
 use super::base::{get_base_template, GenericViewTemplate};
-use crate::structs::User;
+use crate::db::get_statement;
+use crate::structs::{Statement, User};
 use crate::util::base_url;
 use crate::{db::autocomplete_statement, error::Error};
 
 use axum::{
+    extract::Query,
     response::{Html, Redirect},
     Extension, Form,
 };
@@ -13,9 +15,14 @@ use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-fn html() -> String {
+#[derive(Deserialize, Debug)]
+pub struct NewStatementUrlQuery {
+    target: Option<i64>,
+}
+
+fn html(target_statement: Option<Statement>) -> String {
     html! {
-        form method="post" action="/new" {
+        form method="post" action="/create" {
             fieldset {
                 legend { "Insert" }
                 input
@@ -31,6 +38,9 @@ fn html() -> String {
                     hx-target="#similar"
                     hx-post="/completions"
                     hx-trigger="keyup changed delay:500ms";
+                @if let Some(ref stmt) = target_statement {
+                    input type="hidden" name="target" value=(stmt.id);
+                }
                 div {
                     button { "Add Statement" }
                 }
@@ -39,6 +49,14 @@ fn html() -> String {
         fieldset {
             legend { "Similar" }
             ul id="similar" {}
+        }
+        fieldset {
+            legend { "Targeting people who responded to" }
+            @if let Some(ref stmt) = target_statement {
+                p {
+                    a href=(format!("/statement/{}", stmt.id)) { (PreEscaped(&stmt.text)) }
+                }
+            }
         }
     }
     .into_string()
@@ -61,10 +79,16 @@ pub async fn completions(
 
 pub async fn new_statement(
     cookies: Cookies,
+    url_query: Query<NewStatementUrlQuery>,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Html<String>, Error> {
+    let target_statement = match url_query.target {
+        Some(target_id) => get_statement(target_id, &pool).await.ok().flatten(),
+        None => None,
+    };
+
     let base = get_base_template(cookies, Extension(pool));
-    let content = html();
+    let content = html(target_statement);
     GenericViewTemplate {
         base,
         content: content.as_str(),
@@ -76,15 +100,16 @@ pub async fn new_statement(
 #[derive(Deserialize)]
 pub struct AddStatementForm {
     statement_text: String,
+    target: Option<i64>,
 }
 
-pub async fn new_statement_post(
+pub async fn create_statement(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-    Form(add_statement): Form<AddStatementForm>,
+    Form(form_data): Form<AddStatementForm>,
 ) -> Result<Redirect, Error> {
     let user = User::get_or_create(&cookies, &pool).await?;
-    user.add_statement(add_statement.statement_text, &pool)
+    user.add_statement(form_data.statement_text, form_data.target, &pool)
         .await?;
 
     Ok(Redirect::to("/"))
