@@ -249,7 +249,6 @@ pub async fn get_statement(
 ) -> Result<Option<Statement>, Error> {
     Ok(sqlx::query_as!(
         Statement,
-        // TODO: https://github.com/launchbadge/sqlx/issues/1524
         "SELECT id, text from statements where id = ?",
         statement_id,
     )

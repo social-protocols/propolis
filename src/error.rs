@@ -44,9 +44,11 @@ impl From<Error> for String {
 /// Support custom [Error] as an axum Response
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
+        let error_msg = String::from(self);
+        tracing::error!(error_msg);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("INTERNAL SERVER ERROR:\n\n {}", String::from(self)),
+            format!("INTERNAL SERVER ERROR:\n\n{}", error_msg),
         )
             .into_response()
     }
