@@ -172,7 +172,7 @@ order by timestamp desc", self.id)
         // if there is no statement in the queue, pick a random statement
         Ok(match statement_id {
             Some(statement_id) => Some(statement_id),
-            None => random_statement_id(pool).await?,
+            None => self.random_unvoted_statement_id(pool).await?,
         })
     }
 
@@ -188,6 +188,17 @@ order by timestamp desc", self.id)
         .bind(self.id)
         .fetch_optional(pool)
         .await?)
+    }
+
+    pub async fn random_unvoted_statement_id(
+        &self,
+        pool: &SqlitePool,
+    ) -> Result<Option<i64>, Error> {
+        Ok(sqlx::query_scalar::<_, i64>(
+            "select id from statements where id not in (select statement_id from votes v where v.user_id = ?) order by random() limit 1")
+            .bind(self.id)
+            .fetch_optional(pool)
+            .await?)
     }
 }
 
