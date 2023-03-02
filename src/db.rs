@@ -202,6 +202,44 @@ order by timestamp desc", self.id)
     }
 }
 
+impl Statement {
+    /// Returns number of statements added by [User]
+    pub async fn num_votes(&self, pool: &SqlitePool) -> Result<(i32, i32, i32), Error> {
+        Ok((
+            sqlx::query!(
+                "SELECT
+SUM(CASE WHEN vote == 1 Then 1 else 0 end) as sum
+FROM votes where statement_id = ?",
+                self.id,
+            )
+            .fetch_one(pool)
+            .await?
+            .sum
+            .unwrap_or(0),
+            sqlx::query!(
+                "SELECT
+SUM(CASE WHEN vote == 0 Then 1 else 0 end) as sum
+FROM votes where statement_id = ?",
+                self.id,
+            )
+            .fetch_one(pool)
+            .await?
+            .sum
+            .unwrap_or(0),
+            sqlx::query!(
+                "SELECT
+SUM(CASE WHEN vote == -1 Then 1 else 0 end) as sum
+FROM votes where statement_id = ?",
+                self.id,
+            )
+            .fetch_one(pool)
+            .await?
+            .sum
+            .unwrap_or(0),
+        ))
+    }
+}
+
 /// Create db connection & configure it
 pub async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
