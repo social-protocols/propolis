@@ -26,12 +26,13 @@ pub async fn votes(
         return Ok(Html("".to_string()))
     }
 
+    let (a, s, d) = statement.unwrap().num_votes(&pool).await?;
     Ok(Html(html! {
 
         div id="chart" {}
         script type="text/javascript" {
             (PreEscaped(r###"
-         function setupChart() {
+         function setupChart(agree, skip, disagree) {
              var options = {
                  colors: ["#00FF00", "#AAAAAA", "#FF0000"],
                  chart: {
@@ -69,15 +70,14 @@ pub async fn votes(
                      }
                  },
                  series: [{
-                     data: [10,2,5]
+                     data: [agree, skip, disagree]
                  }],
              }
              var chart = new ApexCharts(document.querySelector("#chart"), options);
              chart.render();
          }
-         setupChart();
-"###
-            ))
+"###))
+(format!("setupChart({},{},{});", a, s, d))
         }
     }.into_string()))
 }
