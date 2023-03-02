@@ -30,6 +30,7 @@ use include_dir::{include_dir, Dir};
 use crate::db::setup_db;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
+use crate::pages::statement::votes;
 use crate::pages::vote::vote;
 use crate::static_path::static_path;
 
@@ -48,6 +49,7 @@ async fn main() {
         .route("/vote", post(vote))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement))
+        .route("/votes/:id", get(votes))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
