@@ -43,7 +43,7 @@ fn html(statement: Option<Statement>) -> String {
                 p { b { (statement.text) } }
                 div.row {
                     div.col {
-                        form id="form" method="post" action="/vote" {
+                        form id="form" hx-post="/vote" {
                             input type="hidden" value=(statement.id) name="statement_id" {
                                 button name="vote" value="1" { "Agree" }
                                 button name="vote" value="0" { "Skip" }
