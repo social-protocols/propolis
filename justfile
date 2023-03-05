@@ -33,9 +33,13 @@ start:
 develop:
 	cargo watch -cx run
 
-# Run HTTP benchmark against server running on localhost
+# Run wrk HTTP benchmark against server running on localhost
 benchmark:
 	wrk -t8 -c100 -d20s --latency http://localhost:8000
+
+# Run Apache bench HTTP benchmark against server running on localhost
+benchmark-ab:
+  ab -n 1000000 -c 100 -t 20 http://localhost:8000/
 
 # delete local database, download production database
 download-prod-db:
