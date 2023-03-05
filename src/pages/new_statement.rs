@@ -50,9 +50,9 @@ fn html(target_statement: Option<Statement>) -> String {
             legend { "Similar" }
             ul id="similar" {}
         }
-        fieldset {
-            legend { "Targeting people who responded to" }
-            @if let Some(ref stmt) = target_statement {
+        @if let Some(ref stmt) = target_statement {
+            fieldset {
+                legend { "Will be shown to people who answered to" }
                 p {
                     a href=(format!("/statement/{}", stmt.id)) { (PreEscaped(&stmt.text)) }
                 }

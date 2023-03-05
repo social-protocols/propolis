@@ -23,9 +23,10 @@ pub async fn statement(
                     div.col {
                         form method="post" action="/vote" {
                             input type="hidden" value=(statement.id) name="statement_id";
-                            button name="vote" value="1" { "Agree" }
-                            button name="vote" value="0" { "Skip" }
-                            button name="vote" value="-1" { "Disagree" }
+                            button name="vote" value="Yes" { "Agree" }
+                            button name="vote" value="Skip" { "Skip" }
+                            button name="vote" value="ItDepends" { "It depends" }
+                            button name="vote" value="No" { "Disagree" }
                         }
                     }
                 }
