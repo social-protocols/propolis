@@ -1,17 +1,10 @@
-use super::base::{get_base_template, BaseTemplate};
-use crate::{db::get_statement, error::Error, structs::Statement};
+use super::base::{get_base_template, GenericViewTemplate};
+use crate::{db::get_statement, error::Error};
 
-use askama::Template;
 use axum::{extract::Path, response::Html, Extension};
+use maud::{html, PreEscaped};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-#[derive(Template)]
-#[template(path = "statement.j2")]
-struct StatementTemplate<'a> {
-    base: BaseTemplate,
-    statement: &'a Option<Statement>,
-}
 
 pub async fn statement(
     Path(statement_id): Path<i64>,
@@ -20,10 +13,33 @@ pub async fn statement(
 ) -> Result<Html<String>, Error> {
     let statement = get_statement(statement_id, &pool).await?;
 
-    let template = StatementTemplate {
-        base: get_base_template(cookies, Extension(pool)),
-        statement: &statement,
+    let content = html! {
+        @if let Some(statement) = statement {
+            div.card.info {
+                p {
+                    b { (PreEscaped(&statement.text)) }
+                }
+                div.row {
+                    div.col {
+                        form method="post" action="/vote" {
+                            input type="hidden" value=(statement.id) name="statement_id";
+                            button name="vote" value="1" { "Agree" }
+                            button name="vote" value="0" { "Skip" }
+                            button name="vote" value="-1" { "Disagree" }
+                        }
+                    }
+                }
+            }
+        } @else {
+            div { "Statement not found." }
+        }
     };
 
-    Ok(Html(template.render().unwrap()))
+    let base = get_base_template(cookies, Extension(pool));
+    GenericViewTemplate {
+        base,
+        content: content.into_string().as_str(),
+        title: None,
+    }
+    .into()
 }
