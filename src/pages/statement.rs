@@ -51,14 +51,6 @@ pub async fn statement(
                             button name="vote" value="Skip" { "Skip" }
                             button name="vote" value="ItDepends" { "It depends" }
                             button name="vote" value="No" { "Disagree" }
-                            button
-                                name="showstats"
-                                hx-get=(format!("/votes/{}", statement.id))
-                                hx-target="#form"
-                                hx-swap="outerHTML"
-                            {
-                                "Show stats"
-                            }
                         }
                     }
                 }
