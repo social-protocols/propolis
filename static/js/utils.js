@@ -1,6 +1,9 @@
 function setupChart(selector, agree, skip, disagree) {
     var options = {
         colors: ["#00FF00", "#AAAAAA", "#FF0000"],
+        tooltip: {
+            enabled: false,
+        },
         chart: {
             height: "80px",
             type: 'bar',
