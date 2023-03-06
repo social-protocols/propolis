@@ -9,7 +9,6 @@ use tower_cookies::Cookies;
 /// Returns an apexchart div with votes of the particular statement
 pub async fn votes(
     Path(statement_id): Path<i64>,
-    cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Html<String>, Error> {
     let statement = get_statement(statement_id, &pool).await?;

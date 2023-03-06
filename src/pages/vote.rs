@@ -1,16 +1,13 @@
 use crate::structs::User;
 use crate::{error::Error, structs::Vote};
 
-use axum::{
-    response::{IntoResponse, Redirect},
-    Extension, Form,
-};
-use http::{header, StatusCode};
+use axum::{response::IntoResponse, Extension, Form};
+use http::StatusCode;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-use super::index::{next_statement_id, redirect_to_next_statement};
+use super::index::next_statement_id;
 
 #[derive(Deserialize)]
 pub struct VoteForm {
