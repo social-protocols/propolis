@@ -15,20 +15,21 @@ pub async fn votes(
     let statement = get_statement(statement_id, &pool).await?;
 
     if statement.is_none() {
-        return Ok(Html("".to_string()))
+        return Ok(Html("".to_string()));
     }
 
     let (a, s, d) = statement.unwrap().num_votes(&pool).await?;
-    Ok(Html(html! {
+    Ok(Html(
+        html! {
 
-        div id="chart" {}
-        script type="text/javascript" {
-            (format!("setupChart('#chart', {},{},{});", a, s, d))
+            div id="chart" {}
+            script type="text/javascript" {
+                (format!("setupChart('#chart', {},{},{});", a, s, d))
+            }
         }
-    }.into_string()))
+        .into_string(),
+    ))
 }
-
-
 
 pub async fn statement(
     Path(statement_id): Path<i64>,
