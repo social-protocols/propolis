@@ -10,7 +10,6 @@ use std::str::FromStr;
 use crate::structs::{User, Vote};
 use crate::{
     error::Error,
-    pages::submissions::SubmissionsItem,
     structs::{Statement, VoteHistoryItem},
 };
 
@@ -78,9 +77,9 @@ impl User {
         let vote_i32 = vote as i32;
         sqlx::query!(
             "INSERT INTO votes (statement_id, user_id, vote)
-VALUES (?, ?, ?)
-on CONFLICT (statement_id, user_id)
-do UPDATE SET vote = excluded.vote",
+            VALUES (?, ?, ?)
+            on CONFLICT (statement_id, user_id)
+            do UPDATE SET vote = excluded.vote",
             statement_id,
             self.id,
             vote_i32
@@ -327,6 +326,16 @@ LIMIT 25",
     .bind(text)
     .fetch_all(pool)
     .await?)
+}
+
+#[derive(sqlx::FromRow)]
+pub struct SubmissionsItem {
+    pub statement_id: i64,
+    pub statement_text: String,
+    pub author_timestamp: i64,
+    pub vote: i64, // vote is nullable, should be Option<i64>, but TODO: https://github.com/djc/askama/issues/752
+    pub yes_count: i64,
+    pub no_count: i64,
 }
 
 pub async fn get_submissions(

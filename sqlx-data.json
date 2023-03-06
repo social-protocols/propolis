@@ -52,6 +52,16 @@
     },
     "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 or vote = -1 on conflict do nothing"
   },
+  "37d50549384b63a505328d00a6f23829a4a80ce6182e971bd36de80c655e78c8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO votes (statement_id, user_id, vote)\n            VALUES (?, ?, ?)\n            on CONFLICT (statement_id, user_id)\n            do UPDATE SET vote = excluded.vote"
+  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -185,16 +195,6 @@
       }
     },
     "query": "SELECT\nSUM(CASE WHEN vote == 0 Then 1 else 0 end) as sum\nFROM votes where statement_id = ?"
-  },
-  "adb78e25d4cb286dea82a5f189f7dae3a47489d4c3715af0c64bf72f5353bda3": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 3
-      }
-    },
-    "query": "INSERT INTO votes (statement_id, user_id, vote)\nVALUES (?, ?, ?)\non CONFLICT (statement_id, user_id)\ndo UPDATE SET vote = excluded.vote"
   },
   "b30a60022407b87e529681a67208685bda8bfe3cb4ec5a3eb2552bb1500920ce": {
     "describe": {
