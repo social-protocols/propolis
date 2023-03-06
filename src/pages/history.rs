@@ -1,4 +1,4 @@
-use super::base::{get_base_template, BaseTemplate};
+use super::base::{get_base_template, BaseTemplate, GenericViewTemplate};
 use crate::error::Error;
 use crate::structs::User;
 use crate::structs::VoteHistoryItem;
@@ -6,6 +6,7 @@ use crate::util::human_relative_time;
 
 use askama::Template;
 use axum::{response::Html, Extension};
+use maud::html;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
@@ -32,10 +33,42 @@ pub async fn history(
         None => Vec::new(),
     };
 
-    let template = HistoryTemplate {
-        base: get_base_template(cookies, Extension(pool)),
-        history,
+    let content = html! {
+        h1 {
+            "Recent Votes"
+        }
+        @if history.len() == 0 {
+            p { "You have not submitted any votes yet" }
+        }
+        @for item in history {
+            div class="card info" {
+                p {
+                    (item.statement_text)
+                }
+                p {
+                    "Your Vote: "
+                    @if item.vote == 1 {
+                        "Yes"
+                    } @else if item.vote == -1 {
+                        "No"
+                    }
+                }
+                p {
+                    (human_relative_time(&item.vote_timestamp))
+                }
+                input type="hidden" value=(item.statement_id);
+                a href=(format!("/new?target={}", item.statement_id)) {
+                    "Reply"
+                }
+            }
+        }
     };
 
-    Ok(Html(template.render().unwrap()))
+    let base = get_base_template(cookies, Extension(pool));
+    GenericViewTemplate {
+        base,
+        content: content.into_string().as_str(),
+        title: None,
+    }
+    .into()
 }
