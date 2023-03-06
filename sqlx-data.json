@@ -24,6 +24,24 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "16ff7922d795b8b8678be3237dbeb0a403146bd41f51f145029439283950d650": {
+    "describe": {
+      "columns": [
+        {
+          "name": "sum",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT\nSUM(CASE WHEN vote == -1 Then 1 else 0 end) as sum\nFROM votes where statement_id = ?"
+  },
   "3141d724e269dc4bc2d8b7d09c4d61c40c05b58cb8cef2819ff465b847d03fda": {
     "describe": {
       "columns": [],
@@ -150,6 +168,24 @@
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
   },
+  "aaf2d108a7bc59f5cd4315818af4ac7219808319ab143e3f41b5f5cbc154fa5a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "sum",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT\nSUM(CASE WHEN vote == 0 Then 1 else 0 end) as sum\nFROM votes where statement_id = ?"
+  },
   "adb78e25d4cb286dea82a5f189f7dae3a47489d4c3715af0c64bf72f5353bda3": {
     "describe": {
       "columns": [],
@@ -169,6 +205,24 @@
       }
     },
     "query": "INSERT INTO followups (statement_id, followup_id) VALUES (?, ?)"
+  },
+  "bff9e7698cabbd87874bea78c92e9f1064f9e1999b0bb40de7666d4207c8d82c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "sum",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT\nSUM(CASE WHEN vote == 1 Then 1 else 0 end) as sum\nFROM votes where statement_id = ?"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
