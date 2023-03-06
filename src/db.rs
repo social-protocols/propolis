@@ -7,7 +7,7 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
-use crate::structs::User;
+use crate::structs::{User, Vote};
 use crate::{
     error::Error,
     pages::submissions::SubmissionsItem,
@@ -69,7 +69,13 @@ impl User {
     }
 
     /// Votes on a statement
-    pub async fn vote(&self, statement_id: i64, vote: i32, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn vote(
+        &self,
+        statement_id: i64,
+        vote: Vote,
+        pool: &SqlitePool,
+    ) -> Result<(), Error> {
+        let vote_i32 = vote as i32;
         sqlx::query!(
             "INSERT INTO votes (statement_id, user_id, vote)
 VALUES (?, ?, ?)
@@ -77,7 +83,7 @@ on CONFLICT (statement_id, user_id)
 do UPDATE SET vote = excluded.vote",
             statement_id,
             self.id,
-            vote
+            vote_i32
         )
         .execute(pool)
         .await?;
@@ -86,7 +92,7 @@ do UPDATE SET vote = excluded.vote",
             "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
             self.id,
             statement_id,
-            vote
+            vote_i32
         )
         .execute(pool)
         .await?;
@@ -99,16 +105,19 @@ do UPDATE SET vote = excluded.vote",
         .execute(pool)
         .await?;
 
-        if vote == 1 || vote == -1 {
-            // add followups to queue
-            sqlx::query!(
-                "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing",
-                self.id,
-                statement_id
-            )
-            .execute(pool)
-            .await?;
-        }
+        match vote {
+            Vote::Yes | Vote::No | Vote::ItDepends => {
+                // add followups to queue
+                sqlx::query!(
+                    "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing",
+                    self.id,
+                    statement_id
+                )
+                .execute(pool)
+                .await?;
+            }
+            Vote::Skip => {}
+        };
 
         Ok(())
     }

@@ -5,40 +5,27 @@
 </div>
 
 
-# propolis
+# Propolis
+Enable useful discussions among thousands of people.
 
-```
-sqlx database create
-sqlx migrate run
+## Development
 
-cargo run
+```bash
+just reset-db
+just develop
 ```
-open browser https://localhost:8000
-
-
-To reset database:
-```
-sqlx database drop; sqlx database create; sqlx migrate run
-```
+Open in browser: <https://localhost:8000>
 
 ## Benchmarking
 
 Start release web server:
 
-```
+```bash
 cargo run --release
 ```
 
-Then benchmark with your preferred tool.
+Then benchmark:
 
-Using [wrk](https://github.com/wg/wrk):
-
-```
-wrk -t8 -c100 -d20s --latency http://localhost:8000
-```
-
-Using Apache Bench:
-
-```
-ab -n 1000000 -c 100 -t 20 http://localhost:8000/
+```bash
+just benchmark
 ```

@@ -1,5 +1,6 @@
 //! Various structs used all over
 
+use serde::Deserialize;
 use serde::Serialize;
 
 /// Representation of a user. Provides various methods to find & update them
@@ -23,4 +24,13 @@ pub struct VoteHistoryItem {
 pub struct Statement {
     pub id: i64,
     pub text: String,
+}
+
+#[derive(PartialEq, Deserialize, Copy, Clone)]
+#[non_exhaustive]
+pub enum Vote {
+    No = -1,
+    Skip = 0,
+    Yes = 1,
+    ItDepends = 2,
 }
