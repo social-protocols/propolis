@@ -1,6 +1,6 @@
 let
   # Pinned nixpkgs, deterministic.
-  pkgs = import (fetchTarball("https://github.com/NixOS/nixpkgs/archive/507feca6063e9360449e9a45ec6959a5199f82c3.tar.gz")) {};
+  pkgs = import (fetchTarball("https://github.com/NixOS/nixpkgs/archive/3a6307ccdab8fa113cf28c84848f6c46b546a264.tar.gz")) {};
 
   # Rolling updates, not deterministic.
   # pkgs = import (fetchTarball("channel:nixpkgs-unstable")) {};
