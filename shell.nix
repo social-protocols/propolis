@@ -1,27 +1,28 @@
 let
-  # Pinned nixpkgs, deterministic. Last updated: 2/12/21.
-  pkgs = import (fetchTarball("https://github.com/NixOS/nixpkgs/archive/7b08f3fd0dad6e07a1611401fb8772a2469e64ac.tar.gz")) {};
+  # Pinned nixpkgs, deterministic.
+  pkgs = import (fetchTarball("https://github.com/NixOS/nixpkgs/archive/507feca6063e9360449e9a45ec6959a5199f82c3.tar.gz")) {};
 
   # Rolling updates, not deterministic.
   # pkgs = import (fetchTarball("channel:nixpkgs-unstable")) {};
 in pkgs.mkShell {
-  buildInputs = [ 
-    pkgs.cargo
-    pkgs.direnv
-    pkgs.just
-    pkgs.rustfmt
-    pkgs.rustc
-    pkgs.rust-analyzer # for language server
-    pkgs.sqlx-cli
-    pkgs.sqlite-interactive
+  buildInputs = with pkgs; [ 
+    cargo
+    cargo-watch
+    direnv
+    just
+    rustfmt
+    rustc
+    rust-analyzer # for language server
+    sqlx-cli
+    sqlite-interactive
 
     # http benchmarking
-    pkgs.wrk
-    pkgs.apacheHttpd # apache bench
+    wrk
+    apacheHttpd # apache bench
 
     # deployemnt
-    pkgs.flyctl
-    pkgs.docker
+    flyctl
+    docker
   ];
 
   shellHook = ''
