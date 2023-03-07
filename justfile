@@ -16,14 +16,18 @@ create-db:
 	sqlx database create
 	sqlx migrate run
 
-# Create sqlx-data.json file for sqlx offline mode
-prepare-sqlx-offline-mode:
-  cargo sqlx prepare
-
 # Delete, recreate and migrate database
 reset-db:
-	just drop-db
-	just create-db
+	sqlx database drop
+	sqlx database create
+	sqlx migrate run
+
+migrate:
+	sqlx migrate run
+
+# Create sqlx-data.json file for sqlx offline mode
+prepare-sqlx-offline-mode:
+	cargo sqlx prepare
 
 # Run server
 start:
