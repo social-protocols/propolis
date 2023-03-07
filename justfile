@@ -33,6 +33,11 @@ start:
 develop:
 	cargo watch -cx run
 
+fix:
+  cargo fmt
+  cargo sqlx prepare
+  sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
+
 # Run wrk HTTP benchmark against server running on localhost
 benchmark:
 	wrk -t8 -c100 -d20s --latency http://localhost:8000
