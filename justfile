@@ -42,6 +42,10 @@ fix:
   cargo sqlx prepare
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
 
+install-fix-hook:
+	echo "just fix > /dev/null 2>&1; git add sqlx-data.json > /dev/null" > .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit
+
 # Run wrk HTTP benchmark against server running on localhost
 benchmark:
 	wrk -t8 -c100 -d20s --latency http://localhost:8000
