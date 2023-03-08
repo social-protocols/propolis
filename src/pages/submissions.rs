@@ -26,7 +26,11 @@ pub async fn submissions(
         }
         @for item in submissions {
             div.card.info {
-                p { (item.statement_text) }
+                p {
+                    a href=(format!("/statement/{}", item.statement_id))  {
+                        (item.statement_text)
+                    }
+                }
                 @if item.vote != 0 {
                     p {
                         "your vote: "

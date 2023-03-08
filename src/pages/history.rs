@@ -28,7 +28,9 @@ pub async fn history(
         @for item in history {
             div class="card info" {
                 p {
-                    (item.statement_text)
+                    a href=(format!("/statement/{}", item.statement_id))  {
+                        (item.statement_text)
+                    }
                 }
                 p {
                     "Your Vote: "
