@@ -1,27 +1,12 @@
-use super::base::{get_base_template, BaseTemplate, GenericViewTemplate};
+use super::base::{get_base_template, GenericViewTemplate};
 use crate::error::Error;
 use crate::structs::User;
-use crate::structs::VoteHistoryItem;
 use crate::util::human_relative_time;
 
-use askama::Template;
 use axum::{response::Html, Extension};
 use maud::html;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-#[derive(Template)]
-#[template(path = "history.j2")]
-pub struct HistoryTemplate {
-    base: BaseTemplate,
-    history: Vec<VoteHistoryItem>,
-}
-
-impl HistoryTemplate {
-    fn human_relative_time(&self, timestamp: &i64) -> String {
-        human_relative_time(timestamp)
-    }
-}
 
 pub async fn history(
     maybe_user: Option<User>,
