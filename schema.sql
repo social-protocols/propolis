@@ -58,3 +58,16 @@ CREATE TABLE IF NOT EXISTS "vote_history" (
   timestamp integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   vote integer not null -- or separate table with skipped statements?
 ) strict;
+CREATE TABLE statement_stats(
+  statement_id int not null primary key,
+  yes_votes int not null default 0,
+  no_votes int not null default 0,
+  skip_votes int not null default 0,
+  itdepends_votes int not null default 0,
+  subscriptions int not null default 0,
+  -- computed fields
+  total_votes generated always as (yes_votes + no_votes + skip_votes + itdepends_votes) virtual,
+  participation generated always as (cast(total_votes - skip_votes as real) / (total_votes)) virtual,
+  polarization generated always as (1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)) virtual,
+  votes_per_subscription generated always as (cast(total_votes - skip_votes as real) / (subscriptions)) virtual
+);

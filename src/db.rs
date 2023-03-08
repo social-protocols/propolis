@@ -118,6 +118,24 @@ impl User {
             Vote::Skip => {}
         };
 
+        // update statement stats
+        sqlx::query!(
+            "
+            insert or replace into statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
+              select
+              statement_id,
+              coalesce(sum(vote == 1), 0) as yes_votes,
+              coalesce(sum(vote == -1), 0) as no_votes,
+              coalesce(sum(vote == 0), 0) as skip_votes,
+              coalesce(sum(vote == 2), 0) as itdepends_votes
+              from votes
+              where statement_id = ?
+              group by statement_id",
+            statement_id
+        )
+        .execute(pool)
+        .await?;
+
         Ok(())
     }
 
