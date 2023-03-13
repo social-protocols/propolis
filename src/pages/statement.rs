@@ -13,17 +13,18 @@ pub async fn votes(
 ) -> Result<Markup, Error> {
     let statement = get_statement(statement_id, &pool).await?;
 
-    if statement.is_none() {
-        return Ok(html! {});
-    }
-
-    let (a, s, d) = statement.unwrap().num_votes(&pool).await?;
-    Ok(html! {
-        div id="chart" {}
-        script type="text/javascript" {
-            (format!("setupChart('#chart', {},{},{});", a, s, d))
+    match statement {
+        Some(statement) => {
+            let (a, s, d) = statement.num_votes(&pool).await?;
+            Ok(html! {
+                div id="chart" {}
+                script type="text/javascript" {
+                    (format!("setupChart('#chart', {},{},{});", a, s, d))
+                }
+            })
         }
-    })
+        None => Ok(html! {}),
+    }
 }
 
 pub fn render_statement(statement: Statement) -> Markup {
