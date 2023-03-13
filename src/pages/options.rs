@@ -1,15 +1,11 @@
-use super::base::{get_base_template, BaseTemplate, GenericViewTemplate, WarningDialog};
+use super::base::{base, warning_dialog};
 use crate::structs::User;
 use crate::{error::Error, util::base_url};
-use maud::html;
+use maud::{html, Markup};
 
-use axum::{
-    response::{Html, Redirect},
-    Extension, Form,
-};
+use axum::{response::Redirect, Form};
 use http::HeaderMap;
 use serde::Deserialize;
-use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
 
 use qrcode::render::svg;
@@ -28,7 +24,7 @@ pub fn qr_code_base64(code: &String) -> String {
     general_purpose::STANDARD_NO_PAD.encode(code.render::<svg::Color>().build())
 }
 
-fn html(base: &BaseTemplate, merge_url: &str, qr_code: &str) -> String {
+fn html(theme: String, merge_url: &str, qr_code: &str) -> Markup {
     html! {
         fieldset {
             p { "Use this QR Code on another device to switch it to this account:" }
@@ -37,52 +33,43 @@ fn html(base: &BaseTemplate, merge_url: &str, qr_code: &str) -> String {
             small {
                 "Or open ";
                 a href=( merge_url ) { ( merge_url ) }
-                "on your other device"
+                " on your other device"
             }
         }
         form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()" {
             fieldset {
                 label for="theme" { "theme" }
                 select id="theme" name="theme" _="on change send test to #theme-form" {
-                    option value="light" selected[base.theme == "light"] { "Light" }
-                    option value="dark" selected[base.theme == "dark"] { "Dark" }
+                    option value="light" selected[theme == "light"] { "Light" }
+                    option value="dark" selected[theme == "dark"] { "Dark" }
                 }
             }
         }
     }
-    .into_string()
 }
 
 pub async fn options(
     headers: HeaderMap,
     maybe_user: Option<User>,
     cookies: Cookies,
-    Extension(pool): Extension<SqlitePool>,
-) -> Result<Html<String>, Error> {
-    let title = Some("Options");
+) -> Result<Markup, Error> {
+    let title = Some("Options".to_string());
 
     match maybe_user {
         Some(user) => {
             let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
-            let base = get_base_template(cookies, Extension(pool));
-            let content = html(&base, &merge_url, qr_code_base64(&merge_url).as_str());
-            GenericViewTemplate {
-                base,
-                content: content.as_str(),
-                title,
-            }
-            .into()
+            let theme = cookies
+                .get("theme")
+                .map(|c| c.value().to_string())
+                .unwrap_or_else(|| String::from("light"));
+            let content = html(theme, &merge_url, qr_code_base64(&merge_url).as_str());
+            Ok(base(cookies, title, content).into())
         }
-        None => GenericViewTemplate {
-            base: get_base_template(cookies, Extension(pool)),
+        None => Ok(base(
+            cookies,
             title,
-            content: String::from(WarningDialog {
-                msg: "Options disabled until you cast your first vote.",
-                ..Default::default()
-            })
-            .as_str(),
-        }
-        .into(),
+            warning_dialog("Options disabled until you cast your first vote.", None),
+        )),
     }
 }
 

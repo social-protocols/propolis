@@ -2,9 +2,9 @@ use crate::structs::User;
 use crate::{error::Error, structs::Vote};
 
 use axum::extract::Path;
-use axum::response::Html;
 use axum::{response::IntoResponse, Extension, Form};
 use http::StatusCode;
+use maud::html;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -60,7 +60,7 @@ pub async fn vote(
                 "HX-Redirect",
                 format!("/new?target={}", vote_form.statement_id),
             )],
-            Html::from(String::from("")),
+            html! {},
         )),
     }
 }

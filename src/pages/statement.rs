@@ -1,8 +1,8 @@
-use super::base::{get_base_template, GenericViewTemplate};
-use crate::{db::get_statement, error::Error};
+use super::base::base;
+use crate::{db::get_statement, error::Error, structs::Statement};
 
-use axum::{extract::Path, response::Html, Extension};
-use maud::{html, PreEscaped};
+use axum::{extract::Path, Extension};
+use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
@@ -10,48 +10,47 @@ use tower_cookies::Cookies;
 pub async fn votes(
     Path(statement_id): Path<i64>,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Html<String>, Error> {
+) -> Result<Markup, Error> {
     let statement = get_statement(statement_id, &pool).await?;
 
     if statement.is_none() {
-        return Ok(Html("".to_string()));
+        return Ok(html! {});
     }
 
     let (a, s, d) = statement.unwrap().num_votes(&pool).await?;
-    Ok(Html(
-        html! {
-
-            div id="chart" {}
-            script type="text/javascript" {
-                (format!("setupChart('#chart', {},{},{});", a, s, d))
-            }
+    Ok(html! {
+        div id="chart" {}
+        script type="text/javascript" {
+            (format!("setupChart('#chart', {},{},{});", a, s, d))
         }
-        .into_string(),
-    ))
+    })
+}
+
+pub fn render_statement(statement: Statement) -> Markup {
+    html! {
+        div.statement {
+            (statement.text)
+        }
+    }
 }
 
 pub async fn statement(
     Path(statement_id): Path<i64>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Html<String>, Error> {
+) -> Result<Markup, Error> {
     let statement = get_statement(statement_id, &pool).await?;
-
     let content = html! {
         @if let Some(statement) = statement {
-            div.card.info {
-                p {
-                    b { (PreEscaped(&statement.text)) }
-                }
-                div.row {
-                    div.col {
-                        form form id="form" hx-post="/vote" {
-                            input type="hidden" value=(statement.id) name="statement_id";
-                            button name="vote" value="Yes" { "Agree" }
-                            button name="vote" value="Skip" { "Skip" }
-                            button name="vote" value="ItDepends" { "It depends" }
-                            button name="vote" value="No" { "Disagree" }
-                        }
+            (render_statement(statement))
+            div.row {
+                div.col {
+                    form form id="form" hx-post="/vote" {
+                        input type="hidden" value=(statement_id) name="statement_id";
+                        button name="vote" value="Yes" { "Agree" }
+                        button name="vote" value="Skip" { "Skip" }
+                        button name="vote" value="ItDepends" { "It depends" }
+                        button name="vote" value="No" { "Disagree" }
                     }
                 }
             }
@@ -60,11 +59,5 @@ pub async fn statement(
         }
     };
 
-    let base = get_base_template(cookies, Extension(pool));
-    GenericViewTemplate {
-        base,
-        content: content.into_string().as_str(),
-        title: None,
-    }
-    .into()
+    Ok(base(cookies, None, content))
 }

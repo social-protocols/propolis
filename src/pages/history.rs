@@ -1,10 +1,10 @@
-use super::base::{get_base_template, GenericViewTemplate};
+use super::base::base;
 use crate::error::Error;
 use crate::structs::User;
 use crate::util::human_relative_time;
 
-use axum::{response::Html, Extension};
-use maud::html;
+use axum::Extension;
+use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
@@ -12,7 +12,7 @@ pub async fn history(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Html<String>, Error> {
+) -> Result<Markup, Error> {
     let history = match maybe_user {
         Some(user) => user.vote_history(&pool).await?,
         None => Vec::new(),
@@ -51,11 +51,5 @@ pub async fn history(
         }
     };
 
-    let base = get_base_template(cookies, Extension(pool));
-    GenericViewTemplate {
-        base,
-        content: content.into_string().as_str(),
-        title: None,
-    }
-    .into()
+    Ok(base(cookies, Some("History".to_string()), content))
 }

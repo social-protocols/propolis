@@ -1,23 +1,13 @@
-use super::base::{get_base_template, BaseTemplate};
+use super::base::base;
 use crate::auth::change_auth_cookie;
 use crate::error::Error;
 use crate::structs::User;
 
-use askama::Template;
-use axum::{extract::Path, response::Html, Extension, Form};
+use axum::{extract::Path, Extension, Form};
+use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-#[derive(Template)]
-#[template(path = "merge.j2")]
-struct MergeTemplate {
-    base: BaseTemplate,
-    current_secret: String,
-    new_secret: String,
-    num_votes: i32,
-    num_statements: i32,
-}
 
 #[derive(Deserialize, Debug, PartialEq)]
 enum MergeAnswer {
@@ -36,19 +26,32 @@ pub async fn merge(
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Html<String>, Error> {
+) -> Result<Markup, Error> {
     let num_votes = user.num_votes(&pool).await?;
     let num_statements = user.num_statements(&pool).await?;
 
-    let template = MergeTemplate {
-        base: get_base_template(cookies, Extension(pool)),
-        num_votes,
-        num_statements,
-        current_secret: user.secret.to_owned(),
-        new_secret: secret,
+    let current_secret = user.secret.to_owned();
+    let new_secret = secret;
+    let content = html! {
+        h1 { "Merge" }
+        form hx-post={"/merge/"(new_secret)} {
+            fieldset {
+            big { "Switch from " code { (current_secret) } " to " code { (new_secret) } "?" }
+            p { "This will..." }
+            ul {
+                li { "move " (num_votes) " votes and " (num_statements) " statements" }
+                li { "switch to new secret " code { (new_secret) } }
+                li { "delete old secret " code { (current_secret) } }
+            }
+            p { "Continue?" }
+            button name="value" type="submit" value="Yes" { "yes" }
+            button name="value" type="cancel" value="No" { "no" }
+            button name="value" type="submit" value="YesWithoutMerge" { "yes, but skip merge" }
+        }
+        }
     };
 
-    Ok(Html(template.render().unwrap()))
+    Ok(base(cookies, Some("Merge accounts".to_string()), content).into())
 }
 
 pub async fn merge_post(
@@ -57,11 +60,11 @@ pub async fn merge_post(
     Path(secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
-) -> Result<Html<String>, Error> {
+) -> Result<Markup, Error> {
     Ok(match User::from_secret(secret, &pool).await? {
         Some(new_user) => {
             if user.id == new_user.id {
-                return Ok(Html("Merge aborted: same user".to_string()));
+                return Ok(html! {"Merge aborted: same user"});
             }
 
             match merge.value {
@@ -78,13 +81,13 @@ pub async fn merge_post(
                     change_auth_cookie(new_user.secret, &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
-                    Html("Merge successful".to_string())
+                    html! {"Merge successful"}
                 }
 
-                MergeAnswer::No => Html("Merge aborted.".to_string()),
+                MergeAnswer::No => html! {"Merge aborted."},
             }
         }
 
-        None => Html("Target user does not exist.".to_string()),
+        None => html! {"Target user does not exist."},
     })
 }

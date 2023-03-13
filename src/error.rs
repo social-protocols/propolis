@@ -8,7 +8,6 @@ use http::StatusCode;
 pub enum Error {
     SqlxError(sqlx::Error),
     IoError(std::io::Error),
-    AskamaError(askama::Error),
     CustomError(String),
 }
 
@@ -24,18 +23,11 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<askama::Error> for Error {
-    fn from(err: askama::Error) -> Error {
-        Error::AskamaError(err)
-    }
-}
-
 impl From<Error> for String {
     fn from(err: Error) -> String {
         match err {
             Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
             Error::IoError(io_error) => io_error.to_string(),
-            Error::AskamaError(error) => error.to_string(),
             Error::CustomError(msg) => msg,
         }
     }
