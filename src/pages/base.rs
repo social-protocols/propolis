@@ -33,7 +33,6 @@ fn render_base(theme: String, title: Option<String>, content: Markup) -> Markup 
                     ul {
                         li { a href="/" { "Home" } }
                         li { a href="/new" { "Add a statement" } }
-                        li { a href="/history" { "Your recent votes" } }
                         li { a href="/submissions" { "Your submissions" } }
                         li class="float-right" { a href="/options" { "⚙" } }
                     }

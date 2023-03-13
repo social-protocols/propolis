@@ -6,12 +6,11 @@ mod static_path;
 mod structs;
 mod util;
 
-use pages::history::history;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
 use pages::options::{options, options_post};
-use pages::statement::statement;
+use pages::statement::statement_page;
 use pages::submissions::submissions;
 
 use tower_http::compression::CompressionLayer;
@@ -48,13 +47,12 @@ async fn main() {
         .route("/", get(index))
         .route("/vote", post(vote))
         .route("/completions", post(completions))
-        .route("/statement/:id", get(statement))
+        .route("/statement/:id", get(statement_page))
         .route("/votes/:id", get(votes))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
         .route("/create", post(create_statement))
-        .route("/history", get(history))
         .route("/options", get(options))
         .route("/options", post(options_post))
         .route("/submissions", get(submissions))
