@@ -16,7 +16,7 @@ serde = { version = "1.0.155", features = ["derive"] }
 tower-cookies = "0.9.0"
 rand = "0.8.5"
 timediff = "0.2.3"
-chrono = "0.4.23"
+chrono = "0.4.24"
 qrcode = "0.12.0"
 base64 = "0.21.0"
 async-trait = "0.1.66"
