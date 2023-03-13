@@ -34,3 +34,16 @@ pub enum Vote {
     Yes = 1,
     ItDepends = 2,
 }
+
+#[derive(Serialize, sqlx::FromRow)]
+pub struct StatementStats {
+    pub yes_votes: i64,
+    pub no_votes: i64,
+    pub skip_votes: i64,
+    pub itdepends_votes: i64,
+    pub subscriptions: i64,
+    pub total_votes: i64,
+    pub participation: f64,
+    pub polarization: f64,
+    pub votes_per_subscription: f64,
+}

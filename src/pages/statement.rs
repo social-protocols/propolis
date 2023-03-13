@@ -1,5 +1,9 @@
 use super::base::base;
-use crate::{db::get_statement, error::Error, structs::Statement};
+use crate::{
+    db::get_statement,
+    error::Error,
+    structs::{Statement, StatementStats},
+};
 
 use axum::{extract::Path, Extension};
 use maud::{html, Markup};
@@ -15,11 +19,16 @@ pub async fn votes(
 
     match statement {
         Some(statement) => {
-            let (a, s, d) = statement.num_votes(&pool).await?;
+            let StatementStats {
+                yes_votes,
+                skip_votes,
+                no_votes,
+                ..
+            } = statement.stats(&pool).await?;
             Ok(html! {
                 div id="chart" {}
                 script type="text/javascript" {
-                    (format!("setupChart('#chart', {},{},{});", a, s, d))
+                    (format!("setupChart('#chart', {yes_votes},{skip_votes},{no_votes});"))
                 }
             })
         }

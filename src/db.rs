@@ -7,7 +7,7 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
-use crate::structs::{User, Vote};
+use crate::structs::{StatementStats, User, Vote};
 use crate::{
     error::Error,
     structs::{Statement, VoteHistoryItem},
@@ -229,40 +229,18 @@ order by timestamp desc", self.id)
 }
 
 impl Statement {
-    /// Returns number of statements added by [User]
-    pub async fn num_votes(&self, pool: &SqlitePool) -> Result<(i32, i32, i32), Error> {
-        Ok((
-            sqlx::query!(
+    /// Returns number of votes [User]
+    pub async fn stats(&self, pool: &SqlitePool) -> Result<StatementStats, Error> {
+        Ok(
+            // TODO: sqlx bug: computed column types are wrong
+            sqlx::query_as::<_, StatementStats>(
                 "SELECT
-SUM(CASE WHEN vote == 1 Then 1 else 0 end) as sum
-FROM votes where statement_id = ?",
-                self.id,
-            )
+                yes_votes, no_votes, skip_votes, itdepends_votes, subscriptions, cast(total_votes as int) as total_votes, participation, polarization, votes_per_subscription
+                FROM statement_stats where statement_id = ?")
+            .bind(self.id)
             .fetch_one(pool)
             .await?
-            .sum
-            .unwrap_or(0),
-            sqlx::query!(
-                "SELECT
-SUM(CASE WHEN vote == 0 Then 1 else 0 end) as sum
-FROM votes where statement_id = ?",
-                self.id,
-            )
-            .fetch_one(pool)
-            .await?
-            .sum
-            .unwrap_or(0),
-            sqlx::query!(
-                "SELECT
-SUM(CASE WHEN vote == -1 Then 1 else 0 end) as sum
-FROM votes where statement_id = ?",
-                self.id,
-            )
-            .fetch_one(pool)
-            .await?
-            .sum
-            .unwrap_or(0),
-        ))
+        )
     }
 }
 
