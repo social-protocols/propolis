@@ -55,7 +55,7 @@ pub async fn statement_page(
                     }
                 }
             }
-            (history(maybe_user, &pool).await?)
+            (history(&maybe_user, &pool).await?)
         } @else {
             div { "Statement not found." }
         }
@@ -64,7 +64,7 @@ pub async fn statement_page(
     Ok(base(cookies, None, content))
 }
 
-async fn history(maybe_user: Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {
+async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {
     let history = match maybe_user {
         Some(user) => user.vote_history(&pool).await?,
         None => Vec::new(),
@@ -82,10 +82,11 @@ async fn history(maybe_user: Option<User>, pool: &SqlitePool) -> Result<Markup, 
                             span style="color: var(--cfg);" { (item.statement_text) }
                         }
                     }
-                    div {
+                    div style="display: flex; gap: 12px" {
                         a href=(format!("/new?target={}", item.statement_id)) {
                             "↰ Reply"
                         }
+                        (follow_button(item.statement_id, &maybe_user, &pool).await?)
                     }
                 }
                 div style="padding: 5px 0px; align-self: center;" {
@@ -107,6 +108,28 @@ async fn history(maybe_user: Option<User>, pool: &SqlitePool) -> Result<Markup, 
                         }
                     }
                 }
+            }
+        }
+    })
+}
+
+pub async fn follow_button(
+    statement_id: i64,
+    maybe_user: &Option<User>,
+    pool: &SqlitePool,
+) -> Result<Markup, Error> {
+    let is_following = match maybe_user {
+        Some(user) => user.is_following(statement_id, pool).await?,
+        None => false,
+    };
+
+    Ok(html! {
+        @if is_following {
+            "following"
+        } @else {
+            form hx-post="/follow" {
+                input type="hidden" name="statement_id" value=(statement_id);
+                button { "Follow" }
             }
         }
     })

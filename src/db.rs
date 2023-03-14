@@ -123,7 +123,7 @@ impl User {
             "
             insert or replace into statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
               select
-              statement_id,
+            statement_id,
               coalesce(sum(vote == 1), 0) as yes_votes,
               coalesce(sum(vote == -1), 0) as no_votes,
               coalesce(sum(vote == 0), 0) as skip_votes,
@@ -131,6 +131,37 @@ impl User {
               from votes
               where statement_id = ?
               group by statement_id",
+            statement_id
+        ) 
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn is_following(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool, Error> {
+        let subscription = sqlx::query!(
+            "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?",
+            self.id,
+            statement_id
+        )
+        .fetch_optional(pool)
+        .await?;
+        Ok(subscription.is_some())
+    }
+
+    pub async fn follow(&self, statement_id: i64, pool: &SqlitePool) -> Result<(), Error> {
+        // insert into subscriptions
+        sqlx::query!(
+            "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing",
+            self.id,
+            statement_id
+        ).execute(pool).await?;
+
+        // update statement stats
+        sqlx::query!(
+            "insert or replace into statement_stats (statement_id, subscriptions)
+            values (?, 1) on conflict (statement_id) do update set subscriptions = statement_stats.subscriptions + 1",
             statement_id
         )
         .execute(pool)
@@ -143,12 +174,12 @@ impl User {
     pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
-            "
-select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v
-join statements s on
-  s.id = v.statement_id
-where user_id = ? and vote != 0
-order by timestamp desc", self.id)
+            "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v
+            join statements s on s.id = v.statement_id
+            where user_id = ? and vote != 0
+            order by timestamp desc",
+            self.id
+            )
             .fetch_all(pool).await?)
     }
 
@@ -185,6 +216,13 @@ order by timestamp desc", self.id)
         if let Some(target_statement_id) = target_statement_id {
             // add created statement as followup to target statement
             add_followup(target_statement_id, created_statement.id, pool).await?;
+
+            // add to queue of subscribers of target
+            sqlx::query!(
+                "insert into queue (user_id, statement_id) select user_id, ? from subscriptions where statement_id = ? on conflict do nothing",
+                created_statement.id,
+                target_statement_id,
+            ).execute(pool).await?;
         }
 
         Ok(())

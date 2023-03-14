@@ -27,6 +27,7 @@ use std::net::SocketAddr;
 use include_dir::{include_dir, Dir};
 
 use crate::db::setup_db;
+use crate::pages::follow::follow;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
 use crate::pages::statement::votes;
@@ -46,6 +47,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/vote", post(vote))
+        .route("/follow", post(follow))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement_page))
         .route("/votes/:id", get(votes))

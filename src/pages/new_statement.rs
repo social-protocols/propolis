@@ -48,7 +48,7 @@ fn html(target_statement: Option<Statement>) -> Markup {
         }
         @if let Some(ref stmt) = target_statement {
             fieldset {
-                legend { "Will be shown to people who answered to" }
+                legend { "Will be shown to people who answered or are following" }
                 p {
                     a href=(format!("/statement/{}", stmt.id)) { (&stmt.text) }
                 }
