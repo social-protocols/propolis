@@ -1,7 +1,8 @@
 use super::base::base;
 use crate::{
-    db::get_statement,
+    db::{get_statement, statement_stats},
     error::Error,
+    pages::charts::yes_no_pie_chart,
     structs::{StatementStats, User},
 };
 
@@ -17,25 +18,18 @@ pub async fn votes(
     Path(statement_id): Path<i64>,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Markup, Error> {
-    let statement = get_statement(statement_id, &pool).await?;
-
-    match statement {
-        Some(statement) => {
-            let StatementStats {
-                yes_votes,
-                skip_votes,
-                no_votes,
-                ..
-            } = statement.stats(&pool).await?;
-            Ok(html! {
-                div id="chart" {}
-                script type="text/javascript" {
-                    (format!("setupChart('#chart', {yes_votes},{skip_votes},{no_votes});"))
-                }
-            })
+    let StatementStats {
+        yes_votes,
+        skip_votes,
+        no_votes,
+        ..
+    } = statement_stats(statement_id, &pool).await?;
+    Ok(html! {
+        div id="chart" {}
+        script type="text/javascript" {
+            (format!("setupChart('#chart', {yes_votes},{skip_votes},{no_votes});"))
         }
-        None => Ok(html! {}),
-    }
+    })
 }
 
 pub async fn statement_page(
@@ -50,7 +44,7 @@ pub async fn statement_page(
             div.shadow style="font-size: 1.5em; padding: 1em; border-radius: 10px" {
                 (statement.text)
             }
-            div.row {
+            div.row style="margin-bottom: 50px" {
                 div.col {
                     form form id="form" hx-post="/vote" {
                         input type="hidden" value=(statement_id) name="statement_id";
@@ -93,6 +87,9 @@ async fn history(maybe_user: Option<User>, pool: &SqlitePool) -> Result<Markup, 
                             "↰ Reply"
                         }
                     }
+                }
+                div style="padding: 5px 0px; align-self: center;" {
+                    (yes_no_pie_chart(item.statement_id, &pool).await?)
                 }
                 @let vote_color = if item.vote == 1 {
                     "forestgreen"

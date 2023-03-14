@@ -228,20 +228,20 @@ order by timestamp desc", self.id)
     }
 }
 
-impl Statement {
-    /// Returns number of votes [User]
-    pub async fn stats(&self, pool: &SqlitePool) -> Result<StatementStats, Error> {
-        Ok(
-            // TODO: sqlx bug: computed column types are wrong
-            sqlx::query_as::<_, StatementStats>(
-                "SELECT
-                yes_votes, no_votes, skip_votes, itdepends_votes, subscriptions, cast(total_votes as int) as total_votes, participation, polarization, votes_per_subscription
-                FROM statement_stats where statement_id = ?")
-            .bind(self.id)
-            .fetch_one(pool)
-            .await?
-        )
-    }
+pub async fn statement_stats(
+    statement_id: i64,
+    pool: &SqlitePool,
+) -> Result<StatementStats, Error> {
+    Ok(
+        // TODO: sqlx bug: computed column types are wrong
+        sqlx::query_as::<_, StatementStats>(
+            "SELECT
+            yes_votes, no_votes, skip_votes, itdepends_votes, subscriptions, cast(total_votes as int) as total_votes, participation, polarization, votes_per_subscription
+            FROM statement_stats where statement_id = ?")
+        .bind(statement_id)
+        .fetch_one(pool)
+        .await?
+    )
 }
 
 /// Create db connection & configure it
