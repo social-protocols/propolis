@@ -6,7 +6,7 @@ use crate::{db::autocomplete_statement, error::Error};
 
 use axum::{extract::Query, response::Redirect, Extension, Form};
 use http::HeaderMap;
-use maud::{html, Markup, PreEscaped};
+use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -50,7 +50,7 @@ fn html(target_statement: Option<Statement>) -> Markup {
             fieldset {
                 legend { "Will be shown to people who answered to" }
                 p {
-                    a href=(format!("/statement/{}", stmt.id)) { (PreEscaped(&stmt.text)) }
+                    a href=(format!("/statement/{}", stmt.id)) { (&stmt.text) }
                 }
             }
         }
@@ -66,7 +66,7 @@ pub async fn completions(
     Ok(html! {
         @for stmt in &statements {
             li {
-                a href=(format!("{}/statement/{}", base_url(&header_map), stmt.id)) { (PreEscaped(&stmt.text)) }
+                a href=(format!("{}/statement/{}", base_url(&header_map), stmt.id)) { (&stmt.text) }
             }
         }
     })
