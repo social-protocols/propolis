@@ -132,7 +132,7 @@ impl User {
               where statement_id = ?
               group by statement_id",
             statement_id
-        ) 
+        )
         .execute(pool)
         .await?;
 

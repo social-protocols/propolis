@@ -71,3 +71,9 @@ CREATE TABLE statement_stats(
   polarization generated always as (1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)) virtual,
   votes_per_subscription generated always as (cast(total_votes - skip_votes as real) / (subscriptions)) virtual
 );
+CREATE TABLE subscriptions (
+  -- if two statements are the same and were merged, there are multiple authors for one statement
+  user_id integer not null,
+  statement_id integer not null,
+  primary key (user_id, statement_id)
+) strict;
