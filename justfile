@@ -38,6 +38,7 @@ develop:
 	cargo watch -cx run
 
 fix:
+  cargo fix --allow-dirty --allow-staged
   cargo fmt
   cargo sqlx prepare
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
