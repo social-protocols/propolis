@@ -1,16 +1,12 @@
+use crate::error::Error;
 use crate::structs::User;
-use crate::{error::Error, structs::Vote};
 
-use axum::extract::{Path, Query};
 use axum::{response::IntoResponse, Extension, Form};
 use http::StatusCode;
-use maud::html;
+
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-use super::index::next_statement_id;
-use super::statement::votes;
 
 #[derive(Deserialize)]
 pub struct FollowForm {
