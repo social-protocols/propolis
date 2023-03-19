@@ -1,12 +1,7 @@
-<div align="center" style="border-bottom: none">
-        <a href="https://propolis.fly.dev">
-            <img src="logo.svg" width="80" />
-        </a>
-</div>
-
-
-# Propolis
+# <img src="logo.svg" width="24" /> Propolis
 Enable useful discussions among thousands of people.
+
+Try it: <https://propolis.fly.dev>
 
 ## Development
 
