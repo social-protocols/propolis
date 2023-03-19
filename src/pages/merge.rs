@@ -51,7 +51,13 @@ pub async fn merge(
         }
     };
 
-    Ok(base(cookies, Some("Merge accounts".to_string()), content).into())
+    Ok(base(
+        cookies,
+        Some("Merge accounts".to_string()),
+        &Some(user),
+        content,
+    )
+    .into())
 }
 
 pub async fn merge_post(

@@ -61,7 +61,7 @@ pub async fn statement_page(
         }
     };
 
-    Ok(base(cookies, None, content))
+    Ok(base(cookies, None, &maybe_user, content))
 }
 
 async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {

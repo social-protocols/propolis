@@ -14,7 +14,7 @@ pub async fn submissions(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Markup, Error> {
-    let submissions = match maybe_user {
+    let submissions = match &maybe_user {
         Some(user) => get_submissions(&user, &pool).await?,
         None => Vec::new(),
     };
@@ -47,5 +47,5 @@ pub async fn submissions(
             }
         }
     };
-    Ok(base(cookies, None, content))
+    Ok(base(cookies, None, &maybe_user, content))
 }

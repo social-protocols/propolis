@@ -74,6 +74,7 @@ pub async fn completions(
 
 pub async fn new_statement(
     cookies: Cookies,
+    maybe_user: Option<User>,
     url_query: Query<NewStatementUrlQuery>,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Markup, Error> {
@@ -83,7 +84,13 @@ pub async fn new_statement(
     };
 
     let content = html(target_statement);
-    Ok(base(cookies, Some("New statement".to_string()), content).into())
+    Ok(base(
+        cookies,
+        Some("New statement".to_string()),
+        &maybe_user,
+        content,
+    )
+    .into())
 }
 
 #[derive(Deserialize)]
