@@ -86,7 +86,7 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
                         a href=(format!("/new?target={}", item.statement_id)) {
                             "↰ Reply"
                         }
-                        (follow_button(item.statement_id, &maybe_user, &pool).await?)
+                        (subscribe_button(item.statement_id, &maybe_user, &pool).await?)
                     }
                 }
                 div style="padding: 5px 0px; align-self: center;" {
@@ -113,23 +113,23 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
     })
 }
 
-pub async fn follow_button(
+pub async fn subscribe_button(
     statement_id: i64,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
 ) -> Result<Markup, Error> {
-    let is_following = match maybe_user {
-        Some(user) => user.is_following(statement_id, pool).await?,
+    let is_subscribed = match maybe_user {
+        Some(user) => user.is_subscribed(statement_id, pool).await?,
         None => false,
     };
 
     Ok(html! {
-        @if is_following {
-            "following"
+        @if is_subscribed {
+            "subscribed"
         } @else {
-            form hx-post="/follow" {
+            form hx-post="/subscribe" {
                 input type="hidden" name="statement_id" value=(statement_id);
-                button { "Follow" }
+                button { "Subscribe" }
             }
         }
     })

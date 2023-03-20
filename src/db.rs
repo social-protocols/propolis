@@ -139,7 +139,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn is_following(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool, Error> {
+    pub async fn is_subscribed(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool, Error> {
         let subscription = sqlx::query!(
             "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?",
             self.id,
