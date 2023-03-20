@@ -41,10 +41,7 @@ pub async fn vote(
                     let body = votes(Path(vote_form.statement_id), Extension(pool)).await?;
                     Ok((
                         StatusCode::OK,
-                        [(
-                            "HX-Redirect",
-                            format!("{}", redirect_url),
-                            )],
+                        [("HX-Redirect", format!("{}", redirect_url))],
                         body,
                     ))
                 }
