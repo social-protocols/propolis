@@ -25,6 +25,8 @@ in pkgs.mkShell {
     docker
   ];
 
+  RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+
   shellHook = ''
 eval "$(direnv hook $SHELL)"
 echo DATABASE_URL: $DATABASE_URL
