@@ -47,7 +47,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/vote", post(vote))
-        .route("/follow", post(follow))
+        .route("/subscribe", post(follow))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement_page))
         .route("/votes/:id", get(votes))
