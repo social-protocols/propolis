@@ -7,6 +7,7 @@ edition = "2021"
 
 [features]
 embed_migrations = []
+embed_static_files = []
 
 [dependencies]
 tokio = { version = "1.26.0", features = ["full"] }
@@ -23,7 +24,7 @@ async-trait = "0.1.66"
 http = "0.2.9"
 include_dir = "0.7.3"
 mime_guess = "2.0.4"
-tower-http = { version = "0.4.0", features = ["compression-gzip", "trace"] }
+tower-http = { version = "0.4.0", features = ["fs", "compression-gzip", "trace"] }
 maud = { git= "https://github.com/lambda-fairy/maud", features = ["axum"] } # https://github.com/lambda-fairy/maud/issues/366
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"

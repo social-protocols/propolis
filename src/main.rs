@@ -2,7 +2,10 @@ mod auth;
 mod db;
 mod error;
 mod pages;
+
+#[cfg(feature = "embed_static_files")]
 mod static_path;
+
 mod structs;
 mod util;
 
@@ -24,18 +27,20 @@ use tower_http::trace::TraceLayer;
 
 use std::net::SocketAddr;
 
-use include_dir::{include_dir, Dir};
-
 use crate::db::setup_db;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
 use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
 use crate::pages::vote::vote;
-use crate::static_path::static_path;
+
+#[cfg(not(feature = "embed_static_files"))]
+static STATIC_DIR: &str = "static";
 
 // embed files in /static into the binary
-static STATIC_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
+#[cfg(feature = "embed_static_files")]
+static INCLUDED_STATIC_DIR: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/static");
 
 #[tokio::main]
 async fn main() {
@@ -58,11 +63,17 @@ async fn main() {
         .route("/options", get(options))
         .route("/options", post(options_post))
         .route("/subscriptions", get(subscriptions))
-        .route("/*path", get(static_path))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new())
         .layer(CompressionLayer::new());
+
+    // embed static files in the binary, depending on feature flag
+    #[cfg(feature = "embed_static_files")]
+    let app = app.route("/*path", get(crate::static_path::static_path));
+
+    #[cfg(not(feature = "embed_static_files"))]
+    let app = app.route_service("/*path", tower_http::services::ServeDir::new(STATIC_DIR));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
