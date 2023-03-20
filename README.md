@@ -3,6 +3,20 @@ Enable useful discussions among thousands of people.
 
 Try it: <https://propolis.fly.dev>
 
+## User Flow
+
+```mermaid
+flowchart TD
+    link[User arrives via Statement Link] --> statement
+    link --> create
+    statement[View Statement] --> vote
+    statement --> depends
+    vote[Vote Yes/No]
+    vote --> statement
+    depends[It Depends] --> create
+    create[Add New Statement]
+```
+
 ## Development
 
 ```bash
