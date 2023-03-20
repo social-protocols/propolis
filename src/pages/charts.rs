@@ -15,16 +15,17 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
         (apex_chart(json!({
             "series": [yes_votes, itdepends_votes, no_votes],
             "labels": ["Yes", "It depends", "No"],
-            "colors": ["forestgreen", "darkorange", "firebrick"],
+            "colors": ["forestgreen", "slategrey", "firebrick"],
             "chart": {
                 "width": 180,
                 "type": "pie",
             },
             "legend": {
-                "position": "bottom",
-                "labels": {
-                    "colors": "var(--cfg)",
-                },
+                "show": false,
+                // "position": "bottom",
+                // "labels": {
+                //     "colors": "var(--cfg)",
+                // },
             },
             "dataLabels": {
                 "enabled": false,
