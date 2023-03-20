@@ -46,6 +46,9 @@ pub async fn new_statement(
                       hx-target="#similar"
                       hx-post="/completions"
                       hx-trigger="keyup changed delay:500ms" {};
+            div style="display:flex; justify-content: flex-end;" {
+                button { "Add Statement" }
+            }
             @if let Some(ref statement) = target_statement {
                 input type="hidden" name="target" value=(statement.id);
             }
@@ -54,9 +57,6 @@ pub async fn new_statement(
                 div style="margin-bottom: 5px" {"Your reply will be shown to people who subscribed or voted on this statement."}
                 div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                     (small_statement_content(&statement, None, &maybe_user, &pool).await?)
-                }
-                div style="display:flex; justify-content: flex-end;" {
-                    button { "Add Statement" }
                 }
             }
         }
