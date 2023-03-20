@@ -11,7 +11,7 @@ use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
 use pages::options::{options, options_post};
 use pages::statement::statement_page;
-use pages::submissions::submissions;
+use pages::subscriptions::subscriptions;
 
 use tower_http::compression::CompressionLayer;
 
@@ -57,7 +57,7 @@ async fn main() {
         .route("/create", post(create_statement))
         .route("/options", get(options))
         .route("/options", post(options_post))
-        .route("/submissions", get(submissions))
+        .route("/subscriptions", get(subscriptions))
         .route("/*path", get(static_path))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(sqlite_pool))

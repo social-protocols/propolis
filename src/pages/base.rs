@@ -41,7 +41,7 @@ fn render_base(
                     ul style="display:flex" {
                         li { a href="/" { "Home" } }
                         li { a href="/new" { "Add a statement" } }
-                        li  style="margin-right: auto" { a href="/submissions" { "Your submissions" } }
+                        li  style="margin-right: auto" { a href="/subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
                         @if let Some(user) = user {
                             li {

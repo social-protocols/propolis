@@ -362,39 +362,10 @@ LIMIT 25",
     .await?)
 }
 
-#[derive(sqlx::FromRow)]
-pub struct SubmissionsItem {
-    pub statement_id: i64,
-    pub statement_text: String,
-    pub author_timestamp: i64,
-    pub vote: i64, // vote is nullable, should be Option<i64>, but TODO: https://github.com/djc/askama/issues/752
-    pub yes_count: i64,
-    pub no_count: i64,
-}
-
-pub async fn get_submissions(
-    user: &User,
-    pool: &SqlitePool,
-) -> Result<Vec<SubmissionsItem>, Error> {
+pub async fn get_subscriptions(user: &User, pool: &SqlitePool) -> Result<Vec<Statement>, Error> {
     // TODO: https://github.com/launchbadge/sqlx/issues/1524
-    Ok(sqlx::query_as::<_, SubmissionsItem>(
-        "
-select
-  s.id as statement_id,
-  s.text as statement_text,
-  a.timestamp as author_timestamp,
-  v.vote as vote,
-  coalesce(sum(v_stats.vote == 1), 0) as yes_count,
-  coalesce(sum(v_stats.vote == -1), 0) as no_count
-from authors a
-join statements s on s.id = a.statement_id
-left outer join votes v on
-  s.id = v.statement_id and a.user_id = v.user_id
-left outer join votes v_stats on
-  v_stats.statement_id = a.statement_id
-where a.user_id = ?
-group by a.statement_id
-order by a.timestamp desc",
+    Ok(sqlx::query_as::<_, Statement>(
+        "select s.id, s.text from subscriptions sub join statements s on s.id = sub.statement_id where sub.user_id = ?",
     )
     .bind(user.id)
     .fetch_all(pool)
