@@ -55,9 +55,6 @@ fn render_base(
                 div id="content" {
                     (content)
                 }
-                div _=r#"on delayedRedirectTo(value) from body
-            wait 2s
-            call window.location.replace(value)"# {}
             }
         }
     }

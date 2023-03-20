@@ -42,12 +42,9 @@ pub async fn vote(
                     Ok((
                         StatusCode::OK,
                         [(
-                            "HX-Trigger",
-                            format!(
-                                r##"{{"delayedRedirectTo": {{"value": "{}"}}}}"##,
-                                redirect_url
-                            ),
-                        )],
+                            "HX-Redirect",
+                            format!("{}", redirect_url),
+                            )],
                         body,
                     ))
                 }
