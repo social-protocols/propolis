@@ -42,7 +42,7 @@ pub async fn submissions(
                     }
                 }
                 p { "yes: " (item.yes_count) ", no: " (item.no_count) }
-                p { (human_relative_time(&item.author_timestamp)) }
+                p { (human_relative_time(item.author_timestamp)) }
                 input type="hidden" value=(item.statement_id) {}
             }
         }

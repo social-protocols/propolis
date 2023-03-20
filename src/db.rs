@@ -278,7 +278,7 @@ pub async fn statement_stats(
             FROM statement_stats where statement_id = ?")
         .bind(statement_id)
         .fetch_one(pool)
-        .await?
+        .await.unwrap_or_else(|_| StatementStats::empty()),
     )
 }
 

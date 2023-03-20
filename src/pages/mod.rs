@@ -8,5 +8,6 @@ pub mod merge;
 pub mod new_statement;
 pub mod options;
 pub mod statement;
+pub mod statement_ui;
 pub mod submissions;
 pub mod vote;

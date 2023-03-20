@@ -2,16 +2,16 @@ use super::base::base;
 use crate::{
     db::{get_statement, statement_stats},
     error::Error,
-    pages::charts::yes_no_pie_chart,
-    structs::{StatementStats, User},
+    pages::statement_ui::{
+        small_statement_content, small_statement_piechart, small_statement_vote,
+    },
+    structs::{Statement, StatementStats, User, Vote},
 };
 
 use axum::{extract::Path, Extension};
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-use crate::util::human_relative_time;
 
 /// Returns an apexchart div with votes of the particular statement
 pub async fn votes(
@@ -72,64 +72,14 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
 
     Ok(html! {
         @for item in history {
+            @let statement = Statement {
+                id: item.statement_id,
+                text: item.statement_text,
+            };
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                div style="width: 100%; padding: 15px" {
-                    div style="opacity: 0.5" {
-                        (human_relative_time(&item.vote_timestamp))
-                    }
-                    div {
-                        a href=(format!("/statement/{}", item.statement_id)) style="text-decoration: none"  {
-                            span style="color: var(--cfg);" { (item.statement_text) }
-                        }
-                    }
-                    div style="display: flex; gap: 12px" {
-                        a href=(format!("/new?target={}", item.statement_id)) {
-                            "↰ Reply"
-                        }
-                        (subscribe_button(item.statement_id, &maybe_user, &pool).await?)
-                    }
-                }
-                div style="padding: 5px 0px; align-self: center;" {
-                    (yes_no_pie_chart(item.statement_id, &pool).await?)
-                }
-                @let vote_color = if item.vote == 1 {
-                    "forestgreen"
-                } else if item.vote == -1 {
-                    "firebrick"
-                } else {
-                    "default"
-                };
-                div style={"font-weight:bold; background-color: "(vote_color)"; color: white; width: 60px; display: flex; align-items:center; justify-content: center; border-top-right-radius: 10px; border-bottom-right-radius: 10px;"} {
-                    span {
-                        @if item.vote == 1 {
-                            "YES"
-                        } @else if item.vote == -1 {
-                            "NO"
-                        }
-                    }
-                }
-            }
-        }
-    })
-}
-
-pub async fn subscribe_button(
-    statement_id: i64,
-    maybe_user: &Option<User>,
-    pool: &SqlitePool,
-) -> Result<Markup, Error> {
-    let is_subscribed = match maybe_user {
-        Some(user) => user.is_subscribed(statement_id, pool).await?,
-        None => false,
-    };
-
-    Ok(html! {
-        @if is_subscribed {
-            "subscribed"
-        } @else {
-            form hx-post="/subscribe" {
-                input type="hidden" name="statement_id" value=(statement_id);
-                button { "Subscribe" }
+                (small_statement_content(&statement, Some(item.vote_timestamp), &maybe_user, &pool).await?)
+                (small_statement_piechart(item.statement_id, &pool).await?)
+                (small_statement_vote(Vote::from(item.vote)?)?)
             }
         }
     })

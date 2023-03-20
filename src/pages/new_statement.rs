@@ -1,7 +1,8 @@
 use super::base::base;
 use crate::db::get_statement;
-use crate::structs::{Statement, User};
-use crate::util::base_url;
+use crate::pages::statement_ui::small_statement_content;
+use crate::structs::User;
+
 use crate::{db::autocomplete_statement, error::Error};
 
 use axum::{extract::Query, response::Redirect, Extension, Form};
@@ -16,62 +17,6 @@ pub struct NewStatementUrlQuery {
     target: Option<i64>,
 }
 
-fn html(target_statement: Option<Statement>) -> Markup {
-    html! {
-        form method="post" action="/create" {
-            fieldset {
-                legend { "Insert" }
-                input
-                    style="min-width: 80%"
-                    name="statement_text"
-                    _="on htmx:validation:validate
-                      if my.value.length < 3
-                        call me.setCustomValidity('Please enter a value')
-                      else
-                        call me.setCustomValidity('')
-                      me.reportValidity()"
-                    hx-validate="true"
-                    hx-target="#similar"
-                    hx-post="/completions"
-                    hx-trigger="keyup changed delay:500ms";
-                @if let Some(ref stmt) = target_statement {
-                    input type="hidden" name="target" value=(stmt.id);
-                }
-                div {
-                    button { "Add Statement" }
-                }
-            }
-        }
-        fieldset {
-            legend { "Similar" }
-            ul id="similar" {}
-        }
-        @if let Some(ref stmt) = target_statement {
-            fieldset {
-                legend { "Will be shown to people who answered or are following" }
-                p {
-                    a href=(format!("/statement/{}", stmt.id)) { (&stmt.text) }
-                }
-            }
-        }
-    }
-}
-
-pub async fn completions(
-    header_map: HeaderMap,
-    Extension(pool): Extension<SqlitePool>,
-    Form(add_statement): Form<AddStatementForm>,
-) -> Result<Markup, Error> {
-    let statements = autocomplete_statement(add_statement.statement_text.as_str(), &pool).await?;
-    Ok(html! {
-        @for stmt in &statements {
-            li {
-                a href=(format!("{}/statement/{}", base_url(&header_map), stmt.id)) { (&stmt.text) }
-            }
-        }
-    })
-}
-
 pub async fn new_statement(
     cookies: Cookies,
     maybe_user: Option<User>,
@@ -83,7 +28,41 @@ pub async fn new_statement(
         None => None,
     };
 
-    let content = html(target_statement);
+    let content = html! {
+        form method="post" action="/create" {
+            h2 { "Create new statement" }
+            div { "Make sure to add the full context, so that this statement can be understood alone." }
+            textarea
+                style="width: 100%"
+                rows = "4"
+                name="statement_text"
+                _="on htmx:validation:validate
+                      if my.value.length < 3
+                        call me.setCustomValidity('Please enter a value')
+                      else
+                        call me.setCustomValidity('')
+                      me.reportValidity()"
+                      hx-validate="true"
+                      hx-target="#similar"
+                      hx-post="/completions"
+                      hx-trigger="keyup changed delay:500ms" {};
+            @if let Some(ref statement) = target_statement {
+                input type="hidden" name="target" value=(statement.id);
+            }
+            @if let Some(ref statement) = target_statement {
+                h2 { "Replying to" }
+                div style="margin-bottom: 5px" {"Your reply will be shown to people who subscribed or voted on this statement."}
+                div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                    (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+                }
+                div style="display:flex; justify-content: flex-end;" {
+                    button { "Add Statement" }
+                }
+            }
+        }
+        h2 { "Similar" }
+        div id="similar" {}
+    };
     Ok(base(
         cookies,
         Some("New statement".to_string()),
@@ -91,6 +70,22 @@ pub async fn new_statement(
         content,
     )
     .into())
+}
+
+pub async fn completions(
+    _header_map: HeaderMap,
+    maybe_user: Option<User>,
+    Extension(pool): Extension<SqlitePool>,
+    Form(add_statement): Form<AddStatementForm>,
+) -> Result<Markup, Error> {
+    let statements = autocomplete_statement(add_statement.statement_text.as_str(), &pool).await?;
+    Ok(html! {
+        @for statement in &statements {
+            div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+            }
+        }
+    })
 }
 
 #[derive(Deserialize)]
