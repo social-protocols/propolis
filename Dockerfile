@@ -1,8 +1,8 @@
-FROM rust:1.67 as builder
+FROM messense/rust-musl-cross:x86_64-musl as builder
 WORKDIR /propolis
 COPY . .
 RUN SQLX_OFFLINE=true cargo install --path . --features embed_migrations
 
-FROM debian:bullseye-slim
-COPY --from=builder /usr/local/cargo/bin/propolis /usr/local/bin/propolis
+FROM alpine:3.17
+COPY --from=builder /root/.cargo/bin/propolis /usr/local/bin/propolis
 CMD ["propolis"]
