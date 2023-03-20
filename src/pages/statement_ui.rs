@@ -81,7 +81,7 @@ pub async fn subscribe_button(
 
     Ok(html! {
         @if is_subscribed {
-            "subscribed"
+            { "subscribed" }
         } @else {
             form hx-post="/subscribe" {
                 input type="hidden" name="statement_id" value=(statement_id);
