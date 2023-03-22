@@ -1,0 +1,45 @@
+version: "0.5"
+
+# environment:
+#   - 'IS_PRODUCTION_MODE=1'
+# log_location: ./pc.log
+
+processes:
+  # check can run quickly with short feedback cycles.
+  cargo_check:
+    command: cargo watch -c -s 'cargo check --color always 2>&1 && touch .cargo-checked'
+
+  # once a check was successful, trigger a build that can be started.
+  # since the build triggers the run immediately, it can also send a reload signal to browser-sync
+  cargo_build:
+    command: |
+      touch .cargo-checked
+      cargo watch --postpone --no-vcs-ignores -w .cargo-checked -s 'cargo build > /dev/null 2>&1 && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
+
+  # run app immediately.
+  # once a build is successful, restart the service
+  cargo_run:
+    # readiness_probe:
+    #   http_get:
+    #     host: 127.0.0.1
+    #     scheme: http
+    #     path: "/"
+    #     port: 8000
+    #   initial_delay_seconds: 1
+    #   period_seconds: 1
+    command: |
+      touch .cargo-built
+      cargo watch --postpone --no-vcs-ignores -w .cargo-built -s 'target/debug/propolis'
+
+  # once the web-server is running, proxy it through browser-sync
+  browser_sync:
+    # depends_on:
+    #   cargo_run:
+    #     condition: process_healthy
+    command: |
+      # we don't use depends_on here, because the health-check periodically sends http requests forever
+      until $(curl --output /dev/null --silent --head --fail http://localhost:8000); do
+          sleep 1
+      done
+      browser-sync start --proxy "127.0.0.1:8000" --port 3000
+

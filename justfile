@@ -35,7 +35,7 @@ start:
 
 # Continuously build and run the project, watching for file changes
 develop:
-	cargo watch -cx run
+  process-compose -f process-compose-dev.yaml --tui=false up
 
 fix:
   cargo fix --allow-dirty --allow-staged

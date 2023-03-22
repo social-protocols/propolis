@@ -15,6 +15,8 @@ in pkgs.mkShell {
     rust-analyzer # for language server
     sqlx-cli
     sqlite-interactive
+    nodePackages.browser-sync # dev hot reloading
+    process-compose # orchestrate non-containerized processes
 
     # http benchmarking
     wrk
