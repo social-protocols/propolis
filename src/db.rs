@@ -305,6 +305,8 @@ pub async fn setup_db() -> SqlitePool {
         .unwrap();
 
     #[cfg(feature = "embed_migrations")]
+    println!("Running database migrations...");
+    #[cfg(feature = "embed_migrations")]
     sqlx::migrate!("./migrations")
         .run(&sqlite_pool)
         .await

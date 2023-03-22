@@ -3,12 +3,13 @@ mod db;
 mod error;
 mod pages;
 
-#[cfg(feature = "embed_static_files")]
-mod static_path;
+mod static_handler;
 
 mod structs;
 mod util;
 
+use axum::response::Html;
+use http::StatusCode;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
@@ -16,6 +17,7 @@ use pages::options::{options, options_post};
 use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
 
+use rust_embed::RustEmbed;
 use tower_http::compression::CompressionLayer;
 
 use axum::{
@@ -34,13 +36,10 @@ use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
 use crate::pages::vote::vote;
 
-#[cfg(not(feature = "embed_static_files"))]
-static STATIC_DIR: &str = "static";
-
-// embed files in /static into the binary
-#[cfg(feature = "embed_static_files")]
-static INCLUDED_STATIC_DIR: include_dir::Dir<'_> =
-    include_dir::include_dir!("$CARGO_MANIFEST_DIR/static");
+// embed static files into release binary
+#[derive(RustEmbed)]
+#[folder = "static/"]
+struct StaticAsset;
 
 #[tokio::main]
 async fn main() {
@@ -63,17 +62,12 @@ async fn main() {
         .route("/options", get(options))
         .route("/options", post(options_post))
         .route("/subscriptions", get(subscriptions))
+        .route("/*file", get(static_handler::static_handler))
         .layer(TraceLayer::new_for_http())
         .layer(Extension(sqlite_pool))
         .layer(CookieManagerLayer::new())
-        .layer(CompressionLayer::new());
-
-    // embed static files in the binary, depending on feature flag
-    #[cfg(feature = "embed_static_files")]
-    let app = app.route("/*path", get(crate::static_path::static_path));
-
-    #[cfg(not(feature = "embed_static_files"))]
-    let app = app.route_service("/*path", tower_http::services::ServeDir::new(STATIC_DIR));
+        .layer(CompressionLayer::new())
+        .fallback_service(get(not_found));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
@@ -81,4 +75,8 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn not_found() -> (StatusCode, Html<String>) {
+    (StatusCode::NOT_FOUND, Html("Not found".to_string()))
 }

@@ -1,7 +1,7 @@
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{html, Markup, DOCTYPE};
 use tower_cookies::{Cookie, Cookies};
 
-use crate::structs::User;
+use crate::{structs::User, StaticAsset};
 
 fn render_base(
     theme: String,
@@ -25,13 +25,13 @@ fn render_base(
                 meta name="msapplication-TileColor" content="#2b5797";
                 meta name="theme-color" content="#ffffff";
 
-                style { (PreEscaped(include_str!("../../templates/css/classless.css"))) }
-                style { (PreEscaped(include_str!("../../templates/css/theme.css"))) }
-                style { (PreEscaped(include_str!("../../templates/css/main.css"))) }
-                script src="/js/utils.js" {}
-                script src="/js/htmx.min.js" {}
-                script src="/js/_hyperscript.min.js" {}
-                script src="/js/apexcharts.min.js" {}
+                @for file in StaticAsset::iter().filter(|path| path.starts_with("css/")) {
+                    link rel="stylesheet" href={"/"(file)} {}
+                }
+
+                @for file in StaticAsset::iter().filter(|path| path.starts_with("js/")) {
+                    script src={"/"(file)} {}
+                }
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }

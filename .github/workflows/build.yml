@@ -63,8 +63,5 @@ jobs:
       - name: Check feature 'embed_migrations'
         run: cargo check --features embed_migrations
 
-      - name: Check feature 'embed_static_files'
-        run: cargo check --features embed_migrations
-
       - name: Check formatting
         run: cargo fmt --check
