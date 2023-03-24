@@ -128,6 +128,24 @@
     },
     "query": "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?"
   },
+  "75fe5c149645183d120fd6b07c2d1cc50fdf28f46198928d6eacdcca07ad38e8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "vote",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "select vote from votes where user_id = ? and statement_id = ?"
+  },
   "7c0016f1d57f360ccd50022c00e10e12418dbc8ef4668ad2a1065d147e75d1b5": {
     "describe": {
       "columns": [
@@ -163,6 +181,24 @@
       }
     },
     "query": "SELECT COUNT(*) as count FROM votes where user_id = ?"
+  },
+  "9d9cc8b6aa02305b9c83ae238781fe1e81416c8ccec717b62a14268a37f6462a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "followup_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select followup_id from followups where statement_id = ?"
   },
   "a32c2dc990c0b7f41bb9305aab078a6e9421622cc9b71ff644740a3c41a30e57": {
     "describe": {

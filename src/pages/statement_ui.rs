@@ -16,20 +16,20 @@ pub async fn small_statement_content(
     pool: &SqlitePool,
 ) -> Result<Markup, Error> {
     Ok(html! {
-        div style="width: 100%; padding: 15px" {
+        div style="display:flex; flex-direction: column; width: 100%; padding: 15px" {
             @if let Some(timestamp) = timestamp {
                 div style="opacity: 0.5" {
                     (human_relative_time(timestamp))
                 }
             }
-            div {
+            div style="height:100%" {
                 a href=(format!("/statement/{}", statement.id)) style="text-decoration: none"  {
                     span style="color: var(--cfg);" { (statement.text) }
                 }
             }
-            div style="display: flex; gap: 12px" {
+            div style="display: flex; align-items:center; gap: 12px" {
                 a href=(format!("/new?target={}", statement.id)) {
-                    "↰ Reply"
+                    "↳ Add Follow-Up"
                 }
                 (subscribe_button(statement.id, &maybe_user, &pool).await?)
             }
@@ -48,25 +48,41 @@ pub async fn small_statement_piechart(
     })
 }
 
-pub fn small_statement_vote(vote: Vote) -> Result<Markup, Error> {
-    let vote_color = if vote == Vote::Yes {
+pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup, Error> {
+    let vote_color = if vote == Some(Vote::Yes) {
         "forestgreen"
-    } else if vote == Vote::No {
+    } else if vote == Some(Vote::No) {
         "firebrick"
+    } else if vote == Some(Vote::ItDepends) {
+        "slategrey"
     } else {
         "default"
     };
     Ok(html! {
-        div style={"font-weight:bold; background-color: "(vote_color)"; color: white; width: 60px; display: flex; align-items:center; justify-content: center; border-top-right-radius: 10px; border-bottom-right-radius: 10px;"} {
-            span {
-                @if vote == Vote::Yes {
-                    "YES"
-                } @else if vote == Vote::No {
-                    "NO"
-                }
+        div style={"font-weight:bold; background-color: "(vote_color)"; color: white; width: 60px; display: flex; align-items:center; justify-content: center; border-top-right-radius: 10px; border-bottom-right-radius: 10px; flex-shrink: 0"} {
+            @if vote == Some(Vote::Yes) {
+                "YES"
+            } @else if vote == Some(Vote::No) {
+                "NO"
+            } @else if vote == Some(Vote::ItDepends) {
+                span style="writing-mode: tb-rl" { "DEPENDS" }
+            } @else if vote == Some(Vote::Skip) {
+                "SKIP"
             }
         }
     })
+}
+
+pub async fn small_statement_vote_fetch(
+    statement_id: i64,
+    maybe_user: &Option<User>,
+    pool: &SqlitePool,
+) -> Result<Markup, Error> {
+    let vote = match maybe_user {
+        Some(user) => user.get_vote(statement_id, pool).await?,
+        None => None,
+    };
+    small_statement_vote(vote)
 }
 
 pub async fn subscribe_button(

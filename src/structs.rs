@@ -30,7 +30,7 @@ pub struct Statement {
     pub text: String,
 }
 
-#[derive(PartialEq, Deserialize, Copy, Clone, FromPrimitive)]
+#[derive(Debug, PartialEq, Deserialize, Copy, Clone, FromPrimitive)]
 #[non_exhaustive]
 pub enum Vote {
     No = -1,

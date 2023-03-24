@@ -150,6 +150,21 @@ impl User {
         Ok(subscription.is_some())
     }
 
+    pub async fn get_vote(
+        &self,
+        statement_id: i64,
+        pool: &SqlitePool,
+    ) -> Result<Option<Vote>, Error> {
+        let vote = sqlx::query_scalar!(
+            "select vote from votes where user_id = ? and statement_id = ?",
+            self.id,
+            statement_id
+        )
+        .fetch_optional(pool)
+        .await?;
+        Ok(vote.map(|v| Vote::from(v).unwrap()))
+    }
+
     pub async fn follow(&self, statement_id: i64, pool: &SqlitePool) -> Result<(), Error> {
         // insert into subscriptions
         sqlx::query!(
@@ -336,16 +351,13 @@ pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error
     .await?)
 }
 
-pub async fn get_statement(
-    statement_id: i64,
-    pool: &SqlitePool,
-) -> Result<Option<Statement>, Error> {
+pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<Statement, Error> {
     Ok(sqlx::query_as!(
         Statement,
         "SELECT id, text from statements where id = ?",
         statement_id,
     )
-    .fetch_optional(pool)
+    .fetch_one(pool)
     .await?)
 }
 
@@ -397,4 +409,13 @@ pub async fn add_followup(
     .await?;
 
     Ok(())
+}
+
+pub async fn get_followups(statement_id: i64, pool: &SqlitePool) -> Result<Vec<i64>, Error> {
+    Ok(sqlx::query_scalar!(
+        "select followup_id from followups where statement_id = ?",
+        statement_id,
+    )
+    .fetch_all(pool)
+    .await?)
 }

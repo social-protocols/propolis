@@ -24,7 +24,7 @@ pub async fn new_statement(
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Markup, Error> {
     let target_statement = match url_query.target {
-        Some(target_id) => get_statement(target_id, &pool).await.ok().flatten(),
+        Some(target_id) => get_statement(target_id, &pool).await.ok(),
         None => None,
     };
 
@@ -53,7 +53,7 @@ pub async fn new_statement(
                 input type="hidden" name="target" value=(statement.id);
             }
             @if let Some(ref statement) = target_statement {
-                h2 { "Replying to" }
+                h2 { "Following up on" }
                 div style="margin-bottom: 5px" {"Your reply will be shown to people who subscribed or voted on this statement."}
                 div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                     (small_statement_content(&statement, None, &maybe_user, &pool).await?)

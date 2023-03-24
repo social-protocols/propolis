@@ -1,9 +1,10 @@
 use super::base::base;
 use crate::{
-    db::{get_statement, statement_stats},
+    db::{get_followups, get_statement, statement_stats},
     error::Error,
     pages::statement_ui::{
         small_statement_content, small_statement_piechart, small_statement_vote,
+        small_statement_vote_fetch,
     },
     structs::{Statement, StatementStats, User, Vote},
 };
@@ -38,11 +39,21 @@ pub async fn statement_page(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Markup, Error> {
-    let statement = get_statement(statement_id, &pool).await?;
+    let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
+    let user_vote = match &maybe_user {
+        Some(user) => user.get_vote(statement_id, &pool).await?,
+        None => None,
+    };
     let content = html! {
         @if let Some(statement) = statement {
-            div.shadow style="font-size: 1.5em; padding: 1em; border-radius: 10px" {
-                (statement.text)
+            div.shadow style="display:flex; border-radius: 10px" {
+                div style="width: 100%; font-size: 1.5em; padding:1em;" {
+                    (statement.text)
+                }
+                @if user_vote.is_some() {
+                    (small_statement_piechart(statement.id, &pool).await?)
+                    (small_statement_vote(user_vote)?)
+                }
             }
             div.row style="margin-bottom: 50px" {
                 div.col {
@@ -55,7 +66,24 @@ pub async fn statement_page(
                     }
                 }
             }
-            (history(&maybe_user, &pool).await?)
+            @match user_vote {
+                Some(_) => {
+                    h2 { "Follow-ups" }
+                    @let followups = get_followups(statement_id, &pool).await?;
+                    @if followups.is_empty() {
+                        div { "No follow-ups yet." }
+                    }
+                    @for statement_id in followups {
+                        // TODO: different columns depending on vote-dependent follow up
+                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                            (small_statement_content(&get_statement(statement_id, &pool).await?, None, &maybe_user, &pool).await?)
+                            (small_statement_piechart(statement_id, &pool).await?)
+                            (small_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
+                        }
+                    }
+                }
+                None => (history(&maybe_user, &pool).await?)
+            }
         } @else {
             div { "Statement not found." }
         }
@@ -79,7 +107,7 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                 (small_statement_content(&statement, Some(item.vote_timestamp), &maybe_user, &pool).await?)
                 (small_statement_piechart(item.statement_id, &pool).await?)
-                (small_statement_vote(Vote::from(item.vote)?)?)
+                (small_statement_vote(Some(Vote::from(item.vote)?))?)
             }
         }
     })
