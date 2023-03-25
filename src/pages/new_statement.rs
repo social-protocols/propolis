@@ -1,6 +1,8 @@
 use super::base::base;
 use crate::db::get_statement;
-use crate::pages::statement_ui::small_statement_content;
+use crate::pages::statement_ui::{
+    small_statement_content, small_statement_piechart, small_statement_vote_fetch,
+};
 use crate::structs::User;
 
 use crate::{db::autocomplete_statement, error::Error};
@@ -31,7 +33,7 @@ pub async fn new_statement(
     let content = html! {
         form method="post" action="/create" {
             h2 { "Create new statement" }
-            div { "Make sure to add the full context, so that this statement can be understood alone." }
+            div { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
             textarea
                 style="width: 100%"
                 rows = "4"
@@ -54,9 +56,11 @@ pub async fn new_statement(
             }
             @if let Some(ref statement) = target_statement {
                 h2 { "Following up on" }
-                div style="margin-bottom: 5px" {"Your reply will be shown to people who subscribed or voted on this statement."}
+                div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed or voted on this statement."}
                 div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                     (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+                    (small_statement_piechart(statement.id, &pool).await?)
+                    (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
                 }
             }
         }
@@ -83,6 +87,8 @@ pub async fn completions(
         @for statement in &statements {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                 (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+                (small_statement_piechart(statement.id, &pool).await?)
+                (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
             }
         }
     })
