@@ -7,14 +7,14 @@ version: "0.5"
 processes:
   # check can run quickly with short feedback cycles.
   cargo_check:
-    command: cargo watch -c -s 'cargo check --color always 2>&1 && touch .cargo-checked'
+    command: cargo watch --quiet --clear --shell 'cargo check --color always 2>&1 && touch .cargo-checked'
 
   # once a check was successful, trigger a build that can be started.
   # since the build triggers the run immediately, it can also send a reload signal to browser-sync
   cargo_build:
     command: |
       touch .cargo-checked
-      cargo watch --postpone --no-vcs-ignores -w .cargo-checked -s 'cargo rustc -- -Awarnings && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
+      cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-checked --shell 'cargo rustc -- -Awarnings && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
 
   # run app immediately.
   # once a build is successful, restart the service
@@ -32,7 +32,7 @@ processes:
       # - RUST_LOG=sqlx::query=info,tower_http=trace
     command: |
       touch .cargo-built
-      cargo watch --postpone --no-vcs-ignores -w .cargo-built -s 'target/debug/propolis'
+      cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-built --shell 'target/debug/propolis'
 
   # once the web-server is running, proxy it through browser-sync
   browser_sync:
