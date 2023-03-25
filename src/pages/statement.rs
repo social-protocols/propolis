@@ -46,6 +46,9 @@ pub async fn statement_page(
     };
     let content = html! {
         @if let Some(statement) = statement {
+            div {
+                "Do you agree with this statement?"
+            }
             div.shadow style="display:flex; border-radius: 10px" {
                 div style="width: 100%; font-size: 1.5em; padding:1em;" {
                     (statement.text)
@@ -55,14 +58,16 @@ pub async fn statement_page(
                     (small_statement_vote(user_vote)?)
                 }
             }
-            div.row style="margin-bottom: 50px" {
-                div.col {
-                    form form id="form" hx-post="/vote" {
-                        input type="hidden" value=(statement_id) name="statement_id";
-                        button name="vote" value="Yes" { "Agree" }
-                        button name="vote" value="Skip" { "Skip" }
-                        button name="vote" value="ItDepends" { "It depends" }
-                        button name="vote" value="No" { "Disagree" }
+            form form id="form" hx-post="/vote" {
+                input type="hidden" value=(statement_id) name="statement_id";
+                div style="display: flex; justify-content: space-between; margin-bottom: 50px; margin-top: 10px" {
+                    div {
+                        button style="color: white; background-color: forestgreen; border-color: forestgreen" name="vote" value="Yes" { "YES" }
+                        button style="color: white; background-color: firebrick; border-color: firebrick" name="vote" value="No" { "NO" }
+                    }
+                    div {
+                        button style="color: white; background-color: slategrey; border-color: slategrey" name="vote" value="ItDepends" { "IT DEPENDS" }
+                        button style="border: none; background: none;" name="vote" value="Skip" { "Skip" }
                     }
                 }
             }
