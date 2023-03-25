@@ -27,6 +27,9 @@ processes:
     #     port: 8000
     #   initial_delay_seconds: 1
     #   period_seconds: 1
+    environment:
+      - RUST_LOG=warn
+      # - RUST_LOG=sqlx::query=info,tower_http=trace
     command: |
       touch .cargo-built
       cargo watch --postpone --no-vcs-ignores -w .cargo-built -s 'target/debug/propolis'
