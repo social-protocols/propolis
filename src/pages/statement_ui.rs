@@ -49,25 +49,21 @@ pub async fn small_statement_piechart(
 }
 
 pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup, Error> {
-    let vote_color = if vote == Some(Vote::Yes) {
-        "forestgreen"
-    } else if vote == Some(Vote::No) {
-        "firebrick"
-    } else if vote == Some(Vote::ItDepends) {
-        "slategrey"
-    } else {
-        "default"
+    let vote_color = match vote {
+        Some(Vote::Yes) => "forestgreen",
+        Some(Vote::No) => "firebrick",
+        Some(Vote::ItDepends) => "slategrey",
+        Some(Vote::Skip) => "default",
+        None => "default",
     };
     Ok(html! {
         div style={"font-weight:bold; background-color: "(vote_color)"; color: white; width: 60px; display: flex; align-items:center; justify-content: center; border-top-right-radius: 10px; border-bottom-right-radius: 10px; flex-shrink: 0"} {
-            @if vote == Some(Vote::Yes) {
-                "YES"
-            } @else if vote == Some(Vote::No) {
-                "NO"
-            } @else if vote == Some(Vote::ItDepends) {
-                span style="writing-mode: tb-rl" { "DEPENDS" }
-            } @else if vote == Some(Vote::Skip) {
-                "SKIP"
+            @match vote {
+                Some(Vote::Yes) => "YES",
+                Some(Vote::No) => "NO",
+                Some(Vote::ItDepends) => span style="writing-mode: tb-rl" { "IT DEPENDS" },
+                Some(Vote::Skip) => "SKIP",
+                None => "",
             }
         }
     })
