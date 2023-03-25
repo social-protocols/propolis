@@ -31,7 +31,6 @@ pub struct Statement {
 }
 
 #[derive(Debug, PartialEq, Deserialize, Copy, Clone, FromPrimitive)]
-#[non_exhaustive]
 pub enum Vote {
     No = -1,
     Skip = 0,
