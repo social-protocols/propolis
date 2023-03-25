@@ -6,32 +6,37 @@ use crate::{db::statement_stats, error::Error, structs::StatementStats};
 
 pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Markup, Error> {
     let StatementStats {
+        total_votes,
         yes_votes,
         no_votes,
         itdepends_votes,
         ..
     } = statement_stats(statement_id, &pool).await?;
-    Ok(html! {
-        (apex_chart(json!({
-            "series": [yes_votes, itdepends_votes, no_votes],
-            "labels": ["Yes", "It depends", "No"],
-            "colors": ["forestgreen", "slategrey", "firebrick"],
-            "chart": {
-                "width": 180,
-                "type": "pie",
-            },
-            "legend": {
-                "show": false,
-                // "position": "bottom",
-                // "labels": {
-                //     "colors": "var(--cfg)",
-                // },
-            },
-            "dataLabels": {
-                "enabled": false,
-            },
-        }).to_string()))
-    })
+    if total_votes == 0 {
+        Ok(html! {})
+    } else {
+        Ok(html! {
+            (apex_chart(json!({
+                "series": [yes_votes, itdepends_votes, no_votes],
+                "labels": ["Yes", "It depends", "No"],
+                "colors": ["forestgreen", "slategrey", "firebrick"],
+                "chart": {
+                    "width": 180,
+                    "type": "pie",
+                },
+                "legend": {
+                    "show": false,
+                    // "position": "bottom",
+                    // "labels": {
+                    //     "colors": "var(--cfg)",
+                    // },
+                },
+                "dataLabels": {
+                    "enabled": false,
+                },
+            }).to_string()))
+        })
+    }
 }
 
 pub fn apex_chart(options: String) -> Markup {
