@@ -100,7 +100,7 @@ where
         let cookies = parts
             .extract::<Cookies>()
             .await
-            .expect("Unable to get sqlite connection");
+            .expect("Unable to get cookies");
 
         match User::from_cookies(&cookies, &pool).await {
             Ok(result) => result.ok_or((StatusCode::UNAUTHORIZED, "Unauthorized")),
