@@ -12,6 +12,7 @@ use axum::response::Html;
 use http::StatusCode;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
+use pages::new_statement::link_followup;
 use pages::new_statement::new_statement;
 use pages::options::{options, options_post};
 use pages::statement::statement_page;
@@ -59,6 +60,7 @@ async fn main() {
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
         .route("/create", post(create_statement))
+        .route("/link_followup", post(link_followup))
         .route("/options", get(options))
         .route("/options", post(options_post))
         .route("/subscriptions", get(subscriptions))

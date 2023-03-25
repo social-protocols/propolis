@@ -1,5 +1,5 @@
 use super::base::base;
-use crate::db::get_statement;
+use crate::db::{add_followup, get_statement};
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
 };
@@ -17,6 +17,18 @@ use tower_cookies::Cookies;
 #[derive(Deserialize, Debug)]
 pub struct NewStatementUrlQuery {
     target: Option<i64>,
+}
+
+#[derive(Deserialize)]
+pub struct AddStatementForm {
+    statement_text: String,
+    target: Option<i64>,
+}
+
+#[derive(Deserialize)]
+pub struct LinkFollowupForm {
+    statement_id: i64,
+    followup_id: i64,
 }
 
 pub async fn new_statement(
@@ -64,7 +76,11 @@ pub async fn new_statement(
                 }
             }
         }
-        h2 { "Similar" }
+        @if target_statement.is_some() {
+            h2 { "Or link to an existing statement:" }
+        } @else {
+            h2 { "Similar statements:" }
+        }
         div id="similar" {}
     };
     Ok(base(
@@ -86,18 +102,19 @@ pub async fn completions(
     Ok(html! {
         @for statement in &statements {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                @if let Some(target) = add_statement.target {
+                    form method="post" action="/link_followup" {
+                        input type="hidden" name="statement_id" value=(target);
+                        input type="hidden" name="followup_id" value=(statement.id);
+                        button { "Link" }
+                    }
+                }
                 (small_statement_content(&statement, None, &maybe_user, &pool).await?)
                 (small_statement_piechart(statement.id, &pool).await?)
                 (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
             }
         }
     })
-}
-
-#[derive(Deserialize)]
-pub struct AddStatementForm {
-    statement_text: String,
-    target: Option<i64>,
 }
 
 pub async fn create_statement(
@@ -108,6 +125,16 @@ pub async fn create_statement(
     let user = User::get_or_create(&cookies, &pool).await?;
     user.add_statement(form_data.statement_text, form_data.target, &pool)
         .await?;
+
+    Ok(Redirect::to("/"))
+}
+
+pub async fn link_followup(
+    Extension(pool): Extension<SqlitePool>,
+    Form(form_data): Form<LinkFollowupForm>,
+) -> Result<Redirect, Error> {
+    // TODO: is it ok that this linking can be done anonymously? Since no user record is needed for this query...
+    add_followup(form_data.statement_id, form_data.followup_id, &pool).await?;
 
     Ok(Redirect::to("/"))
 }
