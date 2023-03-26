@@ -33,11 +33,6 @@ CREATE TRIGGER statements_ai AFTER INSERT ON statements
 BEGIN
   INSERT INTO statements_fts (id, text) VALUES (new.id, new.text);
 END;
-CREATE TABLE followups (
-  statement_id integer not null,
-  followup_id integer not null,
-  primary key (statement_id, followup_id)
-) strict, without rowid;
 CREATE TABLE queue (
   user_id integer not null,
   statement_id integer not null,
@@ -77,3 +72,10 @@ CREATE TABLE subscriptions (
   statement_id integer not null,
   primary key (user_id, statement_id)
 ) strict;
+CREATE TABLE followups (
+  statement_id integer not null,
+  followup_id integer not null,
+  target_yes integer not null default 0,
+  target_no integer not null default 0,
+  primary key (statement_id, followup_id)
+) strict, without rowid;

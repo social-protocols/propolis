@@ -60,16 +60,6 @@
     },
     "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by timestamp desc"
   },
-  "3141d724e269dc4bc2d8b7d09c4d61c40c05b58cb8cef2819ff465b847d03fda": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 2
-      }
-    },
-    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 or vote = -1 on conflict do nothing"
-  },
   "37d50549384b63a505328d00a6f23829a4a80ce6182e971bd36de80c655e78c8": {
     "describe": {
       "columns": [],
@@ -127,6 +117,36 @@
       }
     },
     "query": "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?"
+  },
+  "50c1a73c83f8209237acd2fd500f81e3010910bd3443e3c3b62132b6dace5e15": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 4
+      }
+    },
+    "query": "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)\n         on conflict(statement_id, followup_id) do update\n         set target_yes = min(1, target_yes + excluded.target_yes),\n             target_no = min(1, target_no + excluded.target_no)"
+  },
+  "68a4270858a3d4f799cf5ce8b1ac349292b4f46d4b79a54cce23410a5a8f174c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = -1 on conflict do nothing"
+  },
+  "6be0168b5f6bb24312ad9fc8b3f64a0413d2a8b3855a3e302df0affa0924d04c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 on conflict do nothing"
   },
   "75fe5c149645183d120fd6b07c2d1cc50fdf28f46198928d6eacdcca07ad38e8": {
     "describe": {
@@ -243,26 +263,6 @@
       }
     },
     "query": "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing"
-  },
-  "b30a60022407b87e529681a67208685bda8bfe3cb4ec5a3eb2552bb1500920ce": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 2
-      }
-    },
-    "query": "INSERT INTO followups (statement_id, followup_id) VALUES (?, ?)"
-  },
-  "bfc1c7084becef57aae0b9be819b72b970188937078059a56c5032692a8125b5": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 2
-      }
-    },
-    "query": "insert into queue (user_id, statement_id) select user_id, ? from subscriptions where statement_id = ? on conflict do nothing"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {

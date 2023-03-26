@@ -7,7 +7,7 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
-use crate::structs::{StatementStats, User, Vote};
+use crate::structs::{StatementStats, TargetSegment, User, Vote};
 use crate::{
     error::Error,
     structs::{Statement, VoteHistoryItem},
@@ -201,7 +201,7 @@ impl User {
     pub async fn add_statement(
         &self,
         text: String,
-        target_statement_id: Option<i64>,
+        target_segment: Option<TargetSegment>,
         pool: &SqlitePool,
     ) -> Result<(), Error> {
         // TODO: add statement and author entry in transaction
@@ -228,16 +228,9 @@ impl User {
         .execute(pool)
         .await?;
 
-        if let Some(target_statement_id) = target_statement_id {
+        if let Some(target_segment) = target_segment {
             // add created statement as followup to target statement
-            add_followup(target_statement_id, created_statement.id, pool).await?;
-
-            // add to queue of subscribers of target
-            sqlx::query!(
-                "insert into queue (user_id, statement_id) select user_id, ? from subscriptions where statement_id = ? on conflict do nothing",
-                created_statement.id,
-                target_statement_id,
-            ).execute(pool).await?;
+            add_followup(target_segment, created_statement.id, pool).await?;
         }
 
         Ok(())
@@ -387,26 +380,41 @@ pub async fn get_subscriptions(user: &User, pool: &SqlitePool) -> Result<Vec<Sta
 }
 
 pub async fn add_followup(
-    statement_id: i64,
+    segment: TargetSegment,
     followup_id: i64,
     pool: &SqlitePool,
 ) -> Result<(), Error> {
     sqlx::query!(
-        "INSERT INTO followups (statement_id, followup_id) VALUES (?, ?)",
-        statement_id,
+        "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)
+         on conflict(statement_id, followup_id) do update
+         set target_yes = min(1, target_yes + excluded.target_yes),
+             target_no = min(1, target_no + excluded.target_no)",
+        segment.statement_id,
         followup_id,
+        segment.voted_yes,
+        segment.voted_no
     )
     .execute(pool)
     .await?;
 
     // add followup to queue of users who voted on the original statement
-    sqlx::query!(
-        "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 or vote = -1 on conflict do nothing",
-        followup_id,
-        statement_id,
-    )
-    .execute(pool)
-    .await?;
+    // TODO: use db trigger instead
+    if segment.voted_yes {
+        sqlx::query!(
+            "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 on conflict do nothing",
+            followup_id,
+            segment.statement_id,
+            )
+            .execute(pool)
+            .await?;
+    } else if segment.voted_no {
+        sqlx::query!(
+            "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = -1 on conflict do nothing",
+            followup_id,
+            segment.statement_id,
+            ).execute(pool)
+            .await?;
+    }
 
     Ok(())
 }

@@ -72,3 +72,9 @@ impl StatementStats {
         }
     }
 }
+
+pub struct TargetSegment {
+    pub statement_id: i64,
+    pub voted_yes: bool,
+    pub voted_no: bool,
+}
