@@ -76,18 +76,6 @@ impl User {
     ) -> Result<(), Error> {
         let vote_i32 = vote as i32;
         sqlx::query!(
-            "INSERT INTO votes (statement_id, user_id, vote)
-            VALUES (?, ?, ?)
-            on CONFLICT (statement_id, user_id)
-            do UPDATE SET vote = excluded.vote",
-            statement_id,
-            self.id,
-            vote_i32
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx::query!(
             "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
             self.id,
             statement_id,

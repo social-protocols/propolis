@@ -60,16 +60,6 @@
     },
     "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by timestamp desc"
   },
-  "37d50549384b63a505328d00a6f23829a4a80ce6182e971bd36de80c655e78c8": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 3
-      }
-    },
-    "query": "INSERT INTO votes (statement_id, user_id, vote)\n            VALUES (?, ?, ?)\n            on CONFLICT (statement_id, user_id)\n            do UPDATE SET vote = excluded.vote"
-  },
   "395153efc686f78e317638a5d0fc21865c7d8cee057faf64c099837b876b2d40": {
     "describe": {
       "columns": [],
