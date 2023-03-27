@@ -19,7 +19,7 @@ timediff = "0.2.3"
 chrono = "0.4.24"
 qrcode = "0.12.0"
 base64 = "0.21.0"
-async-trait = "0.1.67"
+async-trait = "0.1.68"
 http = "0.2.9"
 mime_guess = "2.0.4"
 tower-http = { version = "0.4.0", features = ["fs", "compression-gzip", "trace"] }
