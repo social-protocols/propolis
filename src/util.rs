@@ -16,9 +16,9 @@ pub fn human_relative_time(timestamp: i64) -> String {
 
 /// Returns http(s)://domain, depending on what is used inside the headers
 pub fn base_url(headers: &HeaderMap) -> String {
-    let referer = headers[REFERER]
-        .to_str()
-        .expect("Referer must be convertible to str");
+    let referer = headers
+        .get(REFERER)
+        .map_or("https://", |header_value| header_value.to_str().unwrap());
     let splits: Vec<&str> = referer.split(':').collect();
     let proto = match splits[..] {
         [proto, ..] => proto,
