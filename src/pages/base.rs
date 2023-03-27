@@ -1,13 +1,20 @@
+use http::HeaderMap;
 use maud::{html, Markup, DOCTYPE};
 use tower_cookies::{Cookie, Cookies};
 
-use crate::{structs::User, StaticAsset};
+use crate::{
+    structs::{PageMeta, User},
+    util::base_url,
+    StaticAsset,
+};
 
 fn render_base(
     theme: String,
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
+    headers: &HeaderMap,
+    page_meta: Option<PageMeta>,
 ) -> Markup {
     html! {
         (DOCTYPE)
@@ -24,6 +31,22 @@ fn render_base(
 
                 meta name="msapplication-TileColor" content="#2b5797";
                 meta name="theme-color" content="#ffffff";
+
+                meta property="og:type" content="website";
+
+                @if let Some(page_meta) = page_meta {
+                    @if let Some(title) = page_meta.title {
+                        meta property="og:title" content=(title);
+                    }
+                    @if let Some(description) = page_meta.description {
+                        meta property="og:description" content=(description);
+                    }
+                    @if let Some(url) = page_meta.url {
+                        meta property="og:url" content=(url);
+                    } @else {
+                        meta property="og:url" content=(base_url(&headers));
+                    }
+                }
 
                 @for file in StaticAsset::iter().filter(|path| path.starts_with("css/")) {
                     link rel="stylesheet" href={"/"(file)} {}
@@ -64,12 +87,21 @@ pub fn base(
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
+    headers: &HeaderMap,
+    page_meta: Option<PageMeta>,
 ) -> Markup {
     let theme = cookies
         .get("theme")
         .unwrap_or(Cookie::new("theme", "light"));
 
-    render_base(theme.value().to_string(), title, user, content)
+    render_base(
+        theme.value().to_string(),
+        title,
+        user,
+        content,
+        &headers,
+        page_meta,
+    )
 }
 
 /// Presents a warning dialog to the user
