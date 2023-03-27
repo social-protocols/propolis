@@ -18,6 +18,10 @@ in pkgs.mkShell {
     nodePackages.browser-sync # dev hot reloading
     process-compose # orchestrate non-containerized processes
 
+    # required to build openssl-sys, which openai uses
+    pkg-config
+    openssl
+
     # http benchmarking
     wrk
     apacheHttpd # apache bench
