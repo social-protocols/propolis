@@ -2,6 +2,7 @@ mod auth;
 mod db;
 mod error;
 mod pages;
+mod openai;
 
 mod static_handler;
 
