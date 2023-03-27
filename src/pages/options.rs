@@ -63,13 +63,15 @@ pub async fn options(
                 .map(|c| c.value().to_string())
                 .unwrap_or_else(|| String::from("light"));
             let content = html(theme, &merge_url, qr_code_base64(&merge_url).as_str());
-            Ok(base(cookies, title, &Some(user), content).into())
+            Ok(base(cookies, title, &Some(user), content, &headers, None).into())
         }
         None => Ok(base(
             cookies,
             title,
             &maybe_user,
             warning_dialog("Options disabled until you cast your first vote.", None),
+            &headers,
+            None,
         )),
     }
 }

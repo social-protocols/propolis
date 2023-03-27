@@ -42,6 +42,7 @@ pub async fn new_statement(
     maybe_user: Option<User>,
     url_query: Query<NewStatementUrlQuery>,
     Extension(pool): Extension<SqlitePool>,
+    headers: HeaderMap,
 ) -> Result<Markup, Error> {
     let target_statement = match url_query.target {
         Some(target_id) => get_statement(target_id, &pool).await.ok(),
@@ -102,6 +103,8 @@ pub async fn new_statement(
         Some("New statement".to_string()),
         &maybe_user,
         content,
+        &headers,
+        None,
     )
     .into())
 }

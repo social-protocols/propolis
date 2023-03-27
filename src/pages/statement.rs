@@ -6,10 +6,12 @@ use crate::{
         small_statement_content, small_statement_piechart, small_statement_vote,
         small_statement_vote_fetch,
     },
-    structs::{Statement, StatementStats, User, Vote},
+    structs::{PageMeta, Statement, StatementStats, User, Vote},
+    util::base_url,
 };
 
 use axum::{extract::Path, Extension};
+use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -38,6 +40,7 @@ pub async fn statement_page(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
+    headers: HeaderMap,
 ) -> Result<Markup, Error> {
     let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
     let user_vote = match &maybe_user {
@@ -45,7 +48,7 @@ pub async fn statement_page(
         None => None,
     };
     let content = html! {
-        @if let Some(statement) = statement {
+        @if let Some(statement) = &statement {
             div {
                 "Do you agree with this statement?"
             }
@@ -94,7 +97,23 @@ pub async fn statement_page(
         }
     };
 
-    Ok(base(cookies, None, &maybe_user, content))
+    let page_meta = match &statement {
+        Some(statement) => Some(PageMeta {
+            title: Some("Yes or no?".to_string()),
+            description: Some(statement.text.to_owned()),
+            url: Some(format!("{}/statement/{}", base_url(&headers), statement_id).to_string()),
+        }),
+        None => None,
+    };
+
+    Ok(base(
+        cookies,
+        None,
+        &maybe_user,
+        content,
+        &headers,
+        page_meta,
+    ))
 }
 
 async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {

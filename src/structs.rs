@@ -78,3 +78,9 @@ pub struct TargetSegment {
     pub voted_yes: bool,
     pub voted_no: bool,
 }
+
+pub struct PageMeta {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub url: Option<String>,
+}

@@ -4,6 +4,7 @@ use crate::error::Error;
 use crate::structs::User;
 
 use axum::{extract::Path, Extension, Form};
+use http::HeaderMap;
 use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
@@ -26,6 +27,7 @@ pub async fn merge(
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
+    headers: HeaderMap,
 ) -> Result<Markup, Error> {
     let num_votes = user.num_votes(&pool).await?;
     let num_statements = user.num_statements(&pool).await?;
@@ -56,6 +58,8 @@ pub async fn merge(
         Some("Merge accounts".to_string()),
         &Some(user),
         content,
+        &headers,
+        None,
     )
     .into())
 }

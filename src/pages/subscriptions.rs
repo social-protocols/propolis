@@ -6,6 +6,7 @@ use crate::structs::User;
 use crate::{db::get_subscriptions, pages::statement_ui::small_statement_content};
 
 use axum::Extension;
+use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
@@ -14,6 +15,7 @@ pub async fn subscriptions(
     maybe_user: Option<User>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
+    headers: HeaderMap,
 ) -> Result<Markup, Error> {
     let subscriptions = match &maybe_user {
         Some(user) => get_subscriptions(&user, &pool).await?,
@@ -33,5 +35,5 @@ pub async fn subscriptions(
             }
         }
     };
-    Ok(base(cookies, None, &maybe_user, content))
+    Ok(base(cookies, None, &maybe_user, content, &headers, None))
 }
