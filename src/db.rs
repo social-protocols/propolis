@@ -301,12 +301,13 @@ pub async fn setup_db() -> SqlitePool {
         .unwrap();
 
     #[cfg(feature = "embed_migrations")]
-    println!("Running database migrations...");
-    #[cfg(feature = "embed_migrations")]
-    sqlx::migrate!("./migrations")
-        .run(&sqlite_pool)
-        .await
-        .expect("Unable to migrate");
+    {
+        println!("Running database migrations...");
+        sqlx::migrate!("./migrations")
+            .run(&sqlite_pool)
+            .await
+            .expect("Unable to migrate");
+    }
 
     for option in vec![
         "pragma temp_store = memory;",
