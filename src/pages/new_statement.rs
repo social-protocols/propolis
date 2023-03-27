@@ -81,7 +81,7 @@ pub async fn new_statement(
                     }
                 }
                 div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                    (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+                    (small_statement_content(&statement, None, false, &maybe_user, &pool).await?)
                     (small_statement_piechart(statement.id, &pool).await?)
                     (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
                 }
@@ -125,7 +125,7 @@ pub async fn completions(
                         button { "Link" }
                     }
                 }
-                (small_statement_content(&search_result_statement, None, &maybe_user, &pool).await?)
+                (small_statement_content(&search_result_statement, None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(search_result_statement.id, &pool).await?)
                 (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
             }

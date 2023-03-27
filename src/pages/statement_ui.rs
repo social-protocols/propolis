@@ -12,6 +12,7 @@ use crate::util::human_relative_time;
 pub async fn small_statement_content(
     statement: &Statement,
     timestamp: Option<i64>,
+    show_controls: bool,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
 ) -> Result<Markup, Error> {
@@ -27,11 +28,13 @@ pub async fn small_statement_content(
                     span style="color: var(--cfg);" { (statement.text) }
                 }
             }
-            div style="display: flex; align-items:center; gap: 12px" {
-                a href=(format!("/new?target={}", statement.id)) {
-                    "↳ Add Follow-Up"
+            @if show_controls {
+                div style="display: flex; align-items:center; gap: 12px" {
+                    a href=(format!("/new?target={}", statement.id)) {
+                        "↳ Add Follow-Up"
+                    }
+                    (subscribe_button(statement.id, &maybe_user, &pool).await?)
                 }
-                (subscribe_button(statement.id, &maybe_user, &pool).await?)
             }
         }
     })

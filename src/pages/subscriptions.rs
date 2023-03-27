@@ -27,7 +27,7 @@ pub async fn subscriptions(
         }
         @for statement in subscriptions {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_content(&statement, None, &maybe_user, &pool).await?)
+                (small_statement_content(&statement, None, false, &maybe_user, &pool).await?)
                 (small_statement_piechart(statement.id, &pool).await?)
                 (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
             }

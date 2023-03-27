@@ -81,7 +81,7 @@ pub async fn statement_page(
                     @for statement_id in followups {
                         // TODO: different columns depending on vote-dependent follow up
                         div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                            (small_statement_content(&get_statement(statement_id, &pool).await?, None, &maybe_user, &pool).await?)
+                            (small_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
                             (small_statement_piechart(statement_id, &pool).await?)
                             (small_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
                         }
@@ -110,7 +110,7 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
                 text: item.statement_text,
             };
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_content(&statement, Some(item.vote_timestamp), &maybe_user, &pool).await?)
+                (small_statement_content(&statement, Some(item.vote_timestamp), false, &maybe_user, &pool).await?)
                 (small_statement_piechart(item.statement_id, &pool).await?)
                 (small_statement_vote(Some(Vote::from(item.vote)?))?)
             }
