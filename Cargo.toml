@@ -34,6 +34,7 @@ num-traits = "0.2.15"
 num-derive = "0.3.3"
 rust-embed = "6.6.1"
 openai = "1.0.0-alpha.7"
+anyhow = "1.0.70"
 
 [profile.dev.package.sqlx-macros]
 # speed up compile time verification (https://github.com/launchbadge/sqlx#compile-time-verification)

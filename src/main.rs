@@ -72,12 +72,14 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
+    openai::setup_openai().await;
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
+
 }
 
 async fn not_found() -> (StatusCode, Html<String>) {
