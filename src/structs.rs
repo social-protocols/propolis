@@ -97,3 +97,10 @@ pub struct StatementPrediction {
     pub total_tokens : i64,
     pub timestamp : i64,
 }
+
+impl From<StatementPrediction> for String {
+    fn from(value: StatementPrediction) -> Self {
+        serde_json::to_string_pretty(&value)
+            .unwrap_or("<serde_json failure>".to_string())
+    }
+}

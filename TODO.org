@@ -14,6 +14,14 @@
 - [X] DB caching
   - [X] Create DB migration with new table for GPT-data
   - [X] Cache tokens used
+- [-] Add political spectrum categorization
+  - [X] Determine ideology: environmentalist, capitalist, etc.
+  - [ ] Parse result into a rust struct of known ideologies to work with them
+  - [ ] own table for ideologies
+  - [ ] Show ideology on statement page
+  - [ ] Show ideologies on user overview page
+- [X] Show total tokens & costs on endpoint
+- [ ] make prediction toggleable via feature flag
 - [ ] Create "background" process / coroutine for filling DB with GPT-data
 * UI
 ** DONE Center stuff

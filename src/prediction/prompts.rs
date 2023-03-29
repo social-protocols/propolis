@@ -73,3 +73,21 @@ pub fn statement_category(s: &Statement) -> GenericPrompt {
         ],
     }
 }
+
+/// Tries to determine a statements ideology
+pub fn statement_ideology(s: &Statement) -> GenericPrompt {
+    GenericPrompt {
+        name: "statement_ideology".to_string(),
+        version: 3,
+        handler: |s| s,
+        primer: vec![
+            AiMessage::system("Determine a statements ideology in single words."),
+            AiMessage::user("More money must be invested."),
+            AiMessage::assistant("capitalist"),
+            AiMessage::user("Nature must be protected on a global scale."),
+            AiMessage::assistant("environmentalist,globalist"),
+            // the actual prediction
+            AiMessage::user(s.text.as_str()),
+        ],
+    }
+}

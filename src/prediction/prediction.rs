@@ -31,7 +31,7 @@ pub async fn run<E: AiEnv>(
     prompt: GenericPrompt,
     env: E,
     pool: &SqlitePool,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<StatementPrediction> {
 
     let mut prediction = StatementPrediction {
         statement_id: s.id,
@@ -80,7 +80,8 @@ pub async fn run<E: AiEnv>(
         }
     }
 
-    Ok(serde_json::to_string_pretty(&prediction)
-        .expect("Serialization of StatementPrediction failed"))
+    // Ok(serde_json::to_string_pretty(&prediction)
+    //     .expect("Serialization of StatementPrediction failed"))
 
+    Ok(prediction)
 }
