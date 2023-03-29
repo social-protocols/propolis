@@ -84,3 +84,16 @@ pub struct PageMeta {
     pub description: Option<String>,
     pub url: Option<String>,
 }
+
+#[derive(Serialize, sqlx::FromRow, Clone)]
+pub struct StatementPrediction {
+    pub statement_id : i64,
+    pub ai_env : String,
+    pub prompt_name : String,
+    pub prompt_version : i64,
+    pub prompt_result : String,
+    pub completion_tokens : i64,
+    pub prompt_tokens : i64,
+    pub total_tokens : i64,
+    pub timestamp : i64,
+}

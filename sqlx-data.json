@@ -24,6 +24,52 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "059ea7af2a63c2c76cb495f6080b1fd6b5a03045b2b67699f58b8df59feac003": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "statement_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "vote_timestamp",
+          "ordinal": 2,
+          "type_info": "Int64"
+        },
+        {
+          "name": "vote",
+          "ordinal": 3,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by timestamp desc"
+  },
+  "395153efc686f78e317638a5d0fc21865c7d8cee057faf64c099837b876b2d40": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "\n            insert or replace into statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)\n              select\n            statement_id,\n              coalesce(sum(vote == 1), 0) as yes_votes,\n              coalesce(sum(vote == -1), 0) as no_votes,\n              coalesce(sum(vote == 0), 0) as skip_votes,\n              coalesce(sum(vote == 2), 0) as itdepends_votes\n              from votes\n              where statement_id = ?\n              group by statement_id"
+  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -34,7 +80,35 @@
     },
     "query": "DELETE FROM users WHERE id=?"
   },
-  "759358773931c1ee6b54cd55371dc58486311a952f08d9080c9bc2661aef78a8": {
+  "45c1971f51dfcdb223f5269f194cc8b8c3b35c98a1f70540ffdbf7586dd53cde": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing"
+  },
+  "4ccd7d6e3c8d14459413cb7941e8f4f73f15b73a608971d8643406473cce440a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "subscription",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?"
+  },
+  "50c1a73c83f8209237acd2fd500f81e3010910bd3443e3c3b62132b6dace5e15": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -42,7 +116,37 @@
         "Right": 4
       }
     },
-    "query": "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)\n         on conflict(statement_id, followup_id) do update\n         set target_yes = min(1, target_yes + excluded.target_yes),\n             target_no  = min(1, target_no  + excluded.target_no )"
+    "query": "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)\n         on conflict(statement_id, followup_id) do update\n         set target_yes = min(1, target_yes + excluded.target_yes),\n             target_no = min(1, target_no + excluded.target_no)"
+  },
+  "557923ac1e72c00ef4920ddf59cc15e1884bf37672281b1ee7d79785d13f1aa4": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 5
+      }
+    },
+    "query": "INSERT INTO statement_predictions\n                (statement_id, ai_env, prompt_name, prompt_version, prompt_result)\n                VALUES (?, ?, ?, ?, ?)"
+  },
+  "68a4270858a3d4f799cf5ce8b1ac349292b4f46d4b79a54cce23410a5a8f174c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = -1 on conflict do nothing"
+  },
+  "6be0168b5f6bb24312ad9fc8b3f64a0413d2a8b3855a3e302df0affa0924d04c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 on conflict do nothing"
   },
   "75fe5c149645183d120fd6b07c2d1cc50fdf28f46198928d6eacdcca07ad38e8": {
     "describe": {
@@ -79,6 +183,48 @@
       }
     },
     "query": "SELECT COUNT(*) as count FROM authors where user_id = ?"
+  },
+  "8c4d5132671747d22e0f6ea893afb11c3c733dd63e13b360eba0c5e0bc9596d9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "ai_env",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_version",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "prompt_result",
+          "ordinal": 4,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 4
+      }
+    },
+    "query": "SELECT statement_id, ai_env, prompt_name, prompt_version, prompt_result\n        FROM statement_predictions\n        WHERE statement_id = ? and ai_env = ? and prompt_name = ? and prompt_version = ?"
   },
   "9d628a139bcb5376e9d685b3052c9d78940db9ce6cfb47060fd6f40866449903": {
     "describe": {
@@ -140,6 +286,16 @@
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
   },
+  "ae550accf826fc7f7448e0f58ac016364bd62dcd6b6136b2fa6ee0e869d8c5b9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "insert or replace into statement_stats (statement_id, subscriptions)\n            values (?, 1) on conflict (statement_id) do update set subscriptions = statement_stats.subscriptions + 1"
+  },
   "b0bfa8b55bcebabbd2abf5e60388a91fa92da050e135faa126d45e44a573c478": {
     "describe": {
       "columns": [],
@@ -149,60 +305,6 @@
       }
     },
     "query": "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing"
-  },
-  "c1ab324d9d4906db350799402fb741abb2b45bf4a4d310c087f53b79987abd8c": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "statement_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "vote_timestamp",
-          "ordinal": 2,
-          "type_info": "Int64"
-        },
-        {
-          "name": "vote",
-          "ordinal": 3,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by v.created desc"
-  },
-  "ce5f99074f61321db7041fd1f0c0ff83c91748bfcdaec69d1b47de7394a51061": {
-    "describe": {
-      "columns": [
-        {
-          "name": "subscription",
-          "ordinal": 0,
-          "type_info": "Int"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Right": 2
-      }
-    },
-    "query": "select count(*) as subscription from subscriptions where user_id = ? and statement_id = ?"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
@@ -242,6 +344,16 @@
     },
     "query": "INSERT INTO statements (text) VALUES (?) RETURNING id"
   },
+  "f7b847cb2f6a602ac272f30c5b8bb2dffd9a139fce4f661138db7bd1328f1324": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "delete from queue where user_id = ? and statement_id = ?"
+  },
   "fa547048a2ff6f7db4a3b154acfe0a3d9632a2b0b286a3a99f63548179b6e8b2": {
     "describe": {
       "columns": [],
@@ -251,15 +363,5 @@
       }
     },
     "query": "INSERT INTO authors (user_id, statement_id) VALUES (?, ?)"
-  },
-  "fd1af445f9aa1ca343f269f11dc199275b6f7f5d4e65198407e9a922d4cd664c": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 2
-      }
-    },
-    "query": "INSERT INTO subscriptions (user_id, statement_id) VALUES (?, ?)"
   }
 }

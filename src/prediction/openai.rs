@@ -5,10 +5,9 @@ use openai::set_key;
 use serde_json::Value;
 use std::env;
 
-use crate::error::Error;
 use crate::prediction::data;
 
-use super::api::{AiEnv, AiPrompt, AiRole};
+use super::api::{AiEnv, AiPrompt, AiRole, PromptResponse};
 
 impl From<AiRole> for ChatCompletionMessageRole {
     fn from(value: AiRole) -> Self {
@@ -22,20 +21,20 @@ impl From<AiRole> for ChatCompletionMessageRole {
 
 pub enum OpenAiModel {
     Gpt4,
-    Gpt35_turbo,
-    Gpt35_text_davinci003,
-    Gpt35_text_davinci002,
-    Gpt35_code_davinci002,
+    Gpt35Turbo,
+    Gpt35TextDavinci003,
+    Gpt35TextDavinci002,
+    Gpt35CodeDavinci002,
 }
 
 impl From<OpenAiModel> for &str {
     fn from(value: OpenAiModel) -> Self {
         match value {
             OpenAiModel::Gpt4 => "gpt-4",
-            OpenAiModel::Gpt35_turbo => "gpt-3.5-turbo",
-            OpenAiModel::Gpt35_text_davinci003 => "text-davinci-003",
-            OpenAiModel::Gpt35_text_davinci002 => "text-davinci-002",
-            OpenAiModel::Gpt35_code_davinci002 => "code-davinci-002",
+            OpenAiModel::Gpt35Turbo => "gpt-3.5-turbo",
+            OpenAiModel::Gpt35TextDavinci003 => "text-davinci-003",
+            OpenAiModel::Gpt35TextDavinci002 => "text-davinci-002",
+            OpenAiModel::Gpt35CodeDavinci002 => "code-davinci-002",
         }
     }
 }
@@ -48,13 +47,17 @@ pub struct OpenAiEnv {
 impl OpenAiEnv {
     pub fn from(model: OpenAiModel) -> Self {
         Self {
-            model: model.into()
+            model: model.into(),
         }
     }
 }
 
 #[async_trait]
 impl AiEnv for OpenAiEnv {
+    fn name(&self) -> String {
+        format!("openai--{}", self.model).to_string()
+    }
+
     async fn send_prompt<Prompt: AiPrompt>(
         &self,
         prompt: &Prompt,
@@ -68,18 +71,21 @@ impl AiEnv for OpenAiEnv {
             })
         }
 
-        let raw_result = ChatCompletion::builder(self.model, messages.to_owned())
+        let result = ChatCompletion::builder(self.model, messages.to_owned())
             .create()
             .await?
-            .unwrap()
-            .choices
-            .first()
-            .unwrap()
-            .message
-            .content
-            .to_owned();
+            .unwrap();
+        let (c, p, t) = result.usage.map_or((0, 0, 0), |us| {
+            (us.completion_tokens, us.prompt_tokens, us.total_tokens)
+        });
+        let raw_result = result.choices.first().unwrap().message.content.to_owned();
 
-        Ok(prompt.handle_response(raw_result))
+        Ok(prompt.handle_response(PromptResponse {
+            content: raw_result,
+            completion_tokens: c.into(),
+            prompt_tokens: p.into(),
+            total_tokens: t.into(),
+        }))
     }
 }
 

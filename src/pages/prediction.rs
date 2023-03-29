@@ -1,27 +1,35 @@
 use axum::{extract::Path, response::IntoResponse, Extension};
 use maud::html;
 use sqlx::SqlitePool;
-use tower_cookies::Cookies;
 
 use crate::{
     db::get_statement,
     error::Error,
     prediction::{
         openai::{OpenAiEnv, OpenAiModel},
-        prediction::bfp,
+        prediction::{bfp, run},
     },
-    structs::{Statement, User},
+    structs::Statement,
 };
 
 pub async fn prediction_page(
-    cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Path(statement_id): Path<i64>,
-    maybe_user: Option<User>,
 ) -> Result<impl IntoResponse, Error> {
     let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
-    let statement_text = statement.map_or("-".to_string(), |s| s.text.clone());
-    let bfp_result = match bfp(&statement_text, OpenAiEnv::from(OpenAiModel::Gpt35_turbo)).await {
+    let statement_id = statement.as_ref().map_or(None, |s| Some(s.id));
+    let statement_text = statement
+        .as_ref()
+        .map_or("-".to_string(), |s| s.text.clone());
+    let statement = &statement.expect("No such statement");
+    let bfp_result = match run(
+        &statement,
+        bfp(&statement),
+        OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
+        &pool
+    )
+    .await
+    {
         Ok(result) => result,
         Err(err) => {
             println!("GPT ERROR: {:?}", err);
@@ -30,10 +38,10 @@ pub async fn prediction_page(
     };
 
     let content = html! {
-        p { "Statement:" }
+        p { (format!("Statement ({}):", statement_id.unwrap_or(0))) }
         p { (statement_text) }
         p { "BFP trait:"}
-        p { (bfp_result)}
+        pre { (bfp_result) }
     };
     Ok(content)
 }

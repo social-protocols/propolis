@@ -1,4 +1,4 @@
-use super::api::{AiEnv, AiMessage, AiPrompt};
+use super::api::{AiMessage, AiPrompt, PromptResponse};
 
 pub struct GenericPrompt {
     pub name: String,
@@ -8,7 +8,7 @@ pub struct GenericPrompt {
 }
 
 impl AiPrompt for GenericPrompt {
-    type PromptResult = String;
+    type PromptResult = PromptResponse;
 
     fn name(&self) -> &str {
         self.name.as_str()
@@ -22,7 +22,13 @@ impl AiPrompt for GenericPrompt {
         self.primer.clone()
     }
 
-    fn handle_response(&self, s: String) -> Self::PromptResult {
-        (self.handler)(s)
+    fn handle_response(&self, r: PromptResponse) -> Self::PromptResult {
+        PromptResponse {
+            content: (self.handler)(r.content),
+            completion_tokens: r.completion_tokens,
+            prompt_tokens: r.prompt_tokens,
+            total_tokens: r.total_tokens,
+        }
+        
     }
 }

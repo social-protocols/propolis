@@ -1,10 +1,8 @@
-use std::vec;
-
-use anyhow::anyhow;
 use async_trait::async_trait;
 
 #[async_trait]
 pub trait AiEnv {
+    fn name(&self) -> String;
     async fn send_prompt<Prompt : AiPrompt>(&self, r : &Prompt) -> anyhow::Result<Prompt::PromptResult>;
 }
 
@@ -33,6 +31,14 @@ impl AiMessage {
     }
 }
 
+#[derive(serde::Serialize)]
+pub struct PromptResponse {
+    pub content: String,
+    pub completion_tokens: i64,
+    pub prompt_tokens: i64,
+    pub total_tokens: i64,
+}
+
 /// Represents a prompt to send to an ai plus its postprocessing via handler
 pub trait AiPrompt: Send + Sync {
     // Require the result to be serializable so we can store it in the db
@@ -45,5 +51,5 @@ pub trait AiPrompt: Send + Sync {
     /// String that will be use to prime the ai
     fn primer(&self) -> Vec<AiMessage>;
     /// Handle the response from the ai
-    fn handle_response(&self, r: String) -> Self::PromptResult;
+    fn handle_response(&self, r: PromptResponse) -> Self::PromptResult;
 }

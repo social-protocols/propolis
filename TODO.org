@@ -7,6 +7,14 @@
   - but what about the votes that I have taken. How can I delete them? If we do
     not provide a simple button, we might not conform to european standards and
     get into trouble. A simple deletion of the cookie might suffice though.
+** TODO Statement category prediction
+- [X] Simple OpenAI integration
+- [X] Create API to write versioned GPT prompts
+- [X] Create endpoint to get GPT-data for a statement
+- [X] DB caching
+  - [X] Create DB migration with new table for GPT-data
+  - [X] Cache tokens used
+- [ ] Create "background" process / coroutine for filling DB with GPT-data
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
