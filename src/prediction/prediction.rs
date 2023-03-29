@@ -3,7 +3,7 @@ use sqlx::SqlitePool;
 use crate::structs::{Statement, StatementPrediction};
 
 use super::{
-    api::{AiEnv, AiMessage},
+    api::AiEnv,
     prompts::GenericPrompt,
 };
 
@@ -24,41 +24,6 @@ async fn find_existing_prediction(
     )
     .fetch_all(pool)
     .await?)
-}
-
-/// Computes the big five personality traits for a statement
-pub fn bfp(s: &Statement) -> GenericPrompt {
-    GenericPrompt {
-        name: "BFP".to_string(),
-        version: 3,
-        handler: |s| s,
-        primer: vec![
-            AiMessage::system(concat!(
-                "Categorize via the big five personality traits psychological test.\n"
-            )),
-            AiMessage::user(concat!(
-                "I sometimes enjoy trying new foods and cuisines from different cultures.\n",
-            )),
-            AiMessage::assistant(concat!(
-                r###"openness-to-experience: medium
-notes:\n"###
-            )),
-            AiMessage::user(concat!("I talk to a lot of different people at parties.\n",)),
-            AiMessage::assistant(concat!(
-                r###"extraversion: high
-notes:\n"###
-            )),
-            AiMessage::user(concat!(
-                "The way refugees behave in germany is outrageous and should be sanctioned!\n",
-            )),
-            AiMessage::assistant(concat!(
-                r###"agreeableness: low
-notes: hateful\n"###
-            )),
-            // the actual prediction
-            AiMessage::user(format!("{}\n", s.text).as_str()),
-        ],
-    }
 }
 
 pub async fn run<E: AiEnv>(

@@ -7,7 +7,8 @@ use crate::{
     error::Error,
     prediction::{
         openai::{OpenAiEnv, OpenAiModel},
-        prediction::{bfp, run},
+        prediction::run,
+        prompts::{bfp, statement_category},
     },
     structs::Statement,
 };
@@ -22,26 +23,28 @@ pub async fn prediction_page(
         .as_ref()
         .map_or("-".to_string(), |s| s.text.clone());
     let statement = &statement.expect("No such statement");
-    let bfp_result = match run(
+    let bfp = run(
         &statement,
         bfp(&statement),
         OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
-        &pool
+        &pool,
     )
-    .await
-    {
-        Ok(result) => result,
-        Err(err) => {
-            println!("GPT ERROR: {:?}", err);
-            err.to_string()
-        }
-    };
+    .await?;
+    let category = run(
+        &statement,
+        statement_category(&statement),
+        OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
+        &pool,
+    )
+    .await?;
 
     let content = html! {
         p { (format!("Statement ({}):", statement_id.unwrap_or(0))) }
         p { (statement_text) }
         p { "BFP trait:"}
-        pre { (bfp_result) }
+        pre { (bfp) }
+        p { "Statement category:"}
+        pre { (category) }
     };
     Ok(content)
 }
