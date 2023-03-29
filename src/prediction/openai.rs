@@ -1,10 +1,87 @@
 use anyhow::anyhow;
-use openai::chat::{ChatCompletion, ChatCompletionMessage};
+use async_trait::async_trait;
+use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
 use openai::set_key;
 use serde_json::Value;
 use std::env;
 
 use crate::error::Error;
+use crate::prediction::data;
+
+use super::api::{AiEnv, AiPrompt, AiRole};
+
+impl From<AiRole> for ChatCompletionMessageRole {
+    fn from(value: AiRole) -> Self {
+        match value {
+            AiRole::System => Self::System,
+            AiRole::User => Self::User,
+            AiRole::Assistant => Self::Assistant,
+        }
+    }
+}
+
+pub enum OpenAiModel {
+    Gpt4,
+    Gpt35_turbo,
+    Gpt35_text_davinci003,
+    Gpt35_text_davinci002,
+    Gpt35_code_davinci002,
+}
+
+impl From<OpenAiModel> for &str {
+    fn from(value: OpenAiModel) -> Self {
+        match value {
+            OpenAiModel::Gpt4 => "gpt-4",
+            OpenAiModel::Gpt35_turbo => "gpt-3.5-turbo",
+            OpenAiModel::Gpt35_text_davinci003 => "text-davinci-003",
+            OpenAiModel::Gpt35_text_davinci002 => "text-davinci-002",
+            OpenAiModel::Gpt35_code_davinci002 => "code-davinci-002",
+        }
+    }
+}
+
+/// Environment for running stuff against OpenAI models
+pub struct OpenAiEnv {
+    pub model: &'static str, // e.g. gpt-3.5-turbo, text-davinci-003, etc.
+}
+
+impl OpenAiEnv {
+    pub fn from(model: OpenAiModel) -> Self {
+        Self {
+            model: model.into()
+        }
+    }
+}
+
+#[async_trait]
+impl AiEnv for OpenAiEnv {
+    async fn send_prompt<Prompt: AiPrompt>(
+        &self,
+        prompt: &Prompt,
+    ) -> anyhow::Result<Prompt::PromptResult> {
+        let mut messages: Vec<ChatCompletionMessage> = vec![];
+        for m in prompt.primer() {
+            messages.push(ChatCompletionMessage {
+                role: m.role.into(),
+                content: m.content,
+                name: None,
+            })
+        }
+
+        let raw_result = ChatCompletion::builder(self.model, messages.to_owned())
+            .create()
+            .await?
+            .unwrap()
+            .choices
+            .first()
+            .unwrap()
+            .message
+            .content
+            .to_owned();
+
+        Ok(prompt.handle_response(raw_result))
+    }
+}
 
 pub fn determine_topics() {
     r###"
@@ -38,57 +115,9 @@ Regarding the above response of a person to a statement. Categorize the person w
 "###;
 }
 
-#[derive(Debug)]
-pub enum BigFivePersonaAxis {
-    OpennessToExperience,
-    Conscientiousness,
-    Extraversion,
-    Agreeableness,
-    Neuroticism,
-    Unknown(String),
-}
-
-impl BigFivePersonaAxis {
-    pub fn from_str(s: &str) -> BigFivePersonaAxis {
-        match s {
-            "openness-to-experience" => BigFivePersonaAxis::OpennessToExperience,
-            "conscientiousness" => BigFivePersonaAxis::Conscientiousness,
-            "extraversion" => BigFivePersonaAxis::Extraversion,
-            "agreeableness" => BigFivePersonaAxis::Agreeableness,
-            "neuroticism" => BigFivePersonaAxis::Neuroticism,
-            s => BigFivePersonaAxis::Unknown(s.to_string()),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum BigFivePersonaValue {
-    Low,
-    Medium,
-    High,
-    Unknown(String),
-}
-
-impl BigFivePersonaValue {
-    pub fn from_str(s: &str) -> BigFivePersonaValue {
-        match s {
-            "high" => BigFivePersonaValue::High,
-            "medium" => BigFivePersonaValue::Medium,
-            "low" => BigFivePersonaValue::Low,
-            s => BigFivePersonaValue::Unknown(s.to_string()),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct BigFivePersonaTrait {
-    pub axis: BigFivePersonaAxis,
-    pub value: BigFivePersonaValue,
-}
-
 pub async fn determine_big_five_persona_trait(
     statement: &str,
-) -> anyhow::Result<BigFivePersonaTrait> {
+) -> anyhow::Result<data::BigFivePersonaTrait> {
     let priming = ChatCompletionMessage {
         role: openai::chat::ChatCompletionMessageRole::System,
         content: r###"
@@ -136,30 +165,31 @@ JSON:
     println!("GPT raw result: {}", raw_json_result);
     let parsed_json: Value = serde_json::from_str(&raw_json_result)?;
     println!("GPT parsed result: {}", parsed_json);
-    let axis = BigFivePersonaAxis::from_str(
+    let axis = data::BigFivePersonaAxis::from_str(
         parsed_json["big-five-personality-trait"]
             .as_str()
             .ok_or(anyhow!("Unable to parse trait"))?,
     );
-    let value = BigFivePersonaValue::from_str(
+    let value = data::BigFivePersonaValue::from_str(
         parsed_json["value"]
             .as_str()
             .ok_or(anyhow!("Unable to parse trait"))?,
     );
 
-    Ok(BigFivePersonaTrait { axis, value })
+    Ok(data::BigFivePersonaTrait { axis, value })
 }
 
-pub async fn setup_openai() {
-    set_key(env::var("OPENAI_KEY").unwrap());
-
+pub async fn run_dummy_prompt() {
     println!("Running GPT");
-    let result =
-        determine_big_five_persona_trait("I am upset about the political situation").await;
+    let result = determine_big_five_persona_trait("I am upset about the political situation").await;
 
     println!("Got GPT result");
     match result {
         Ok(result) => println!("GPT OK: {:?}", result),
         Err(err) => println!("GPT Error: {:?}", err),
     };
+}
+
+pub async fn setup_openai() {
+    set_key(env::var("OPENAI_KEY").unwrap());
 }

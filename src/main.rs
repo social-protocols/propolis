@@ -2,7 +2,7 @@ mod auth;
 mod db;
 mod error;
 mod pages;
-mod openai;
+mod prediction;
 
 mod static_handler;
 
@@ -34,6 +34,7 @@ use std::net::SocketAddr;
 use crate::db::setup_db;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
+use crate::pages::prediction::prediction_page;
 use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
 use crate::pages::vote::vote;
@@ -56,6 +57,7 @@ async fn main() {
         .route("/subscribe", post(subscribe))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement_page))
+        .route("/prediction/:id", get(prediction_page))
         .route("/votes/:id", get(votes))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
@@ -72,14 +74,13 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
-    openai::setup_openai().await;
+    prediction::openai::setup_openai().await;
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
-
 }
 
 async fn not_found() -> (StatusCode, Html<String>) {
