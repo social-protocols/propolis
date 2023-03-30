@@ -153,8 +153,7 @@ impl User {
         Ok(vote.map(|v| Vote::from(v).unwrap()))
     }
 
-    pub async fn follow(&self, statement_id: i64, pool: &SqlitePool) -> Result<(), Error> {
-        // insert into subscriptions
+    pub async fn subscribe(&self, statement_id: i64, pool: &SqlitePool) -> Result<(), Error> {
         sqlx::query!(
             "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing",
             self.id,

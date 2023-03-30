@@ -18,7 +18,7 @@ pub async fn subscribe(
     Form(form_data): Form<FollowForm>,
 ) -> Result<impl IntoResponse, Error> {
     let user = User::get_or_create(&cookies, &pool).await?;
-    user.follow(form_data.statement_id, &pool).await?;
+    user.subscribe(form_data.statement_id, &pool).await?;
 
     Ok("subscribed")
 }
