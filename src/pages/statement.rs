@@ -129,7 +129,7 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
                 text: item.statement_text,
             };
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_content(&statement, Some(item.vote_timestamp), false, &maybe_user, &pool).await?)
+                (small_statement_content(&statement, Some(item.vote_timestamp), true, &maybe_user, &pool).await?)
                 (small_statement_piechart(item.statement_id, &pool).await?)
                 (small_statement_vote(Some(Vote::from(item.vote)?))?)
             }
