@@ -14,7 +14,7 @@ processes:
   cargo_build:
     command: |
       touch .cargo-checked
-      cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-checked --shell 'cargo rustc -- -Awarnings && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
+      cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-checked --shell 'cargo rustc --color always 2>&1 -- -Awarnings && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
 
   # run app immediately.
   # once a build is successful, restart the service
