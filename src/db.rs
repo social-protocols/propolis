@@ -74,6 +74,8 @@ impl User {
         vote: Vote,
         pool: &SqlitePool,
     ) -> Result<(), Error> {
+        // TODO: voting on specialization gets generalizations and other specializations into queue
+
         let vote_i32 = vote as i32;
         sqlx::query!(
             "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)",
@@ -84,58 +86,18 @@ impl User {
         .execute(pool)
         .await?;
 
-        sqlx::query!(
-            "delete from queue where user_id = ? and statement_id = ?",
-            self.id,
-            statement_id
-        )
-        .execute(pool)
-        .await?;
-
-        match vote {
-            Vote::Yes | Vote::No | Vote::ItDepends => {
-                // add followups to queue
-                sqlx::query!(
-                    "insert into queue (user_id, statement_id) select ?, followup_id from followups where statement_id = ? on conflict do nothing",
-                    self.id,
-                    statement_id
-                )
-                .execute(pool)
-                .await?;
-            }
-            Vote::Skip => {}
-        };
-
-        // update statement stats
-        sqlx::query!(
-            "
-            insert or replace into statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
-              select
-            statement_id,
-              coalesce(sum(vote == 1), 0) as yes_votes,
-              coalesce(sum(vote == -1), 0) as no_votes,
-              coalesce(sum(vote == 0), 0) as skip_votes,
-              coalesce(sum(vote == 2), 0) as itdepends_votes
-              from votes
-              where statement_id = ?
-              group by statement_id",
-            statement_id
-        )
-        .execute(pool)
-        .await?;
-
         Ok(())
     }
 
     pub async fn is_subscribed(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool, Error> {
         let subscription = sqlx::query!(
-            "select 1 as subscription from subscriptions where user_id = ? and statement_id = ?",
+            "select count(*) as subscription from subscriptions where user_id = ? and statement_id = ?",
             self.id,
             statement_id
         )
-        .fetch_optional(pool)
+        .fetch_one(pool)
         .await?;
-        Ok(subscription.is_some())
+        Ok(subscription.subscription == 1)
     }
 
     pub async fn get_vote(
@@ -158,13 +120,6 @@ impl User {
             "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing",
             self.id,
             statement_id
-        ).execute(pool).await?;
-
-        // update statement stats
-        sqlx::query!(
-            "insert or replace into statement_stats (statement_id, subscriptions)
-            values (?, 1) on conflict (statement_id) do update set subscriptions = statement_stats.subscriptions + 1",
-            statement_id
         )
         .execute(pool)
         .await?;
@@ -173,13 +128,14 @@ impl User {
     }
 
     /// Returns all votes taken by a [User]
+    // TODO: just return what's in the vote_history table
     pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
-            "select s.id as statement_id, s.text as statement_text, timestamp as vote_timestamp, vote from vote_history v
+            "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v
             join statements s on s.id = v.statement_id
             where user_id = ? and vote != 0
-            order by timestamp desc",
+            order by v.created desc",
             self.id
             )
             .fetch_all(pool).await?)
@@ -191,6 +147,7 @@ impl User {
         target_segment: Option<TargetSegment>,
         pool: &SqlitePool,
     ) -> Result<(), Error> {
+        // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
         let created_statement = sqlx::query!(
             "INSERT INTO statements (text) VALUES (?) RETURNING id",
@@ -250,7 +207,7 @@ impl User {
     ) -> Result<Option<i64>, Error> {
         // TODO: sqlx bug: adding `order by timestamp` infers wrong type in macro
         Ok(sqlx::query_scalar::<_, i64>(
-            "select statement_id from queue where user_id = ? order by timestamp asc limit 1",
+            "select statement_id from queue where user_id = ? order by created asc limit 1",
         )
         .bind(self.id)
         .fetch_optional(pool)
@@ -286,6 +243,7 @@ pub async fn statement_stats(
 }
 
 /// Create db connection & configure it
+//TODO: move to own file
 pub async fn setup_db() -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -384,7 +342,7 @@ pub async fn add_followup(
         "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)
          on conflict(statement_id, followup_id) do update
          set target_yes = min(1, target_yes + excluded.target_yes),
-             target_no = min(1, target_no + excluded.target_no)",
+             target_no  = min(1, target_no  + excluded.target_no )",
         segment.statement_id,
         followup_id,
         segment.voted_yes,
@@ -392,25 +350,6 @@ pub async fn add_followup(
     )
     .execute(pool)
     .await?;
-
-    // add followup to queue of users who voted on the original statement
-    // TODO: use db trigger instead
-    if segment.voted_yes {
-        sqlx::query!(
-            "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = 1 on conflict do nothing",
-            followup_id,
-            segment.statement_id,
-            )
-            .execute(pool)
-            .await?;
-    } else if segment.voted_no {
-        sqlx::query!(
-            "insert into queue (user_id, statement_id) select user_id, ? from votes where statement_id = ? and vote = -1 on conflict do nothing",
-            followup_id,
-            segment.statement_id,
-            ).execute(pool)
-            .await?;
-    }
 
     Ok(())
 }

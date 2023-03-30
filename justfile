@@ -37,14 +37,18 @@ start:
 develop:
   process-compose -f process-compose-dev.yaml --tui=false up
 
+test:
+  cargo watch -cx test
+
 fix:
-  cargo fix --allow-dirty --allow-staged
-  cargo fmt
+  sqlx migrate run
   cargo sqlx prepare
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
+  cargo fix --allow-dirty --allow-staged
+  cargo fmt
 
 install-fix-hook:
-	echo "just fix > /dev/null 2>&1; git add sqlx-data.json > /dev/null" > .git/hooks/pre-commit
+	echo "just fix > /dev/null 2>&1; git add sqlx-data.json schema.sql > /dev/null" > .git/hooks/pre-commit
 	chmod +x .git/hooks/pre-commit
 
 # Run wrk HTTP benchmark against server running on localhost
