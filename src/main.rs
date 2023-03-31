@@ -20,6 +20,7 @@ use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
 
 use rust_embed::RustEmbed;
+use sqlx::pool;
 use tower_http::compression::CompressionLayer;
 
 use axum::{
@@ -28,6 +29,8 @@ use axum::{
 };
 use tower_cookies::CookieManagerLayer;
 use tower_http::trace::TraceLayer;
+use tracing::info;
+use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 use std::future;
 use std::net::SocketAddr;
@@ -50,7 +53,11 @@ async fn main() {
     let sqlite_pool = setup_db().await;
 
     // Setup tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
+
 
     let app = Router::new()
         .route("/", get(index))
@@ -70,16 +77,16 @@ async fn main() {
         .route("/subscriptions", get(subscriptions))
         .route("/*file", get(static_handler::static_handler))
         .layer(TraceLayer::new_for_http())
-        .layer(Extension(sqlite_pool))
+        .layer(Extension(sqlite_pool.to_owned()))
         .layer(CookieManagerLayer::new())
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
     prediction::openai::setup_openai().await;
 
-    let prediction_runner = prediction::runner::run();
+    let prediction_runner = prediction::runner::run(&sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
-    println!("listening on {}", addr);
+    info!("listening on {}", addr);
     let axum_server = axum::Server::bind(&addr)
         .serve(app.into_make_service());
 

@@ -29,7 +29,7 @@ async fn find_existing_prediction(
 pub async fn run<E: AiEnv>(
     s: &Statement,
     prompt: GenericPrompt,
-    env: E,
+    env: &E,
     pool: &SqlitePool,
 ) -> anyhow::Result<StatementPrediction> {
 

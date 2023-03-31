@@ -31,7 +31,7 @@ pub async fn prediction_page(
     let pred = run(
         &statement,
         multi_statement_predictor(stmts.as_slice()),
-        env,
+        &env,
         &pool,
     )
     .await?;

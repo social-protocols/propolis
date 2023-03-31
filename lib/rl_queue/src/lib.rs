@@ -11,7 +11,7 @@ pub struct RateLimiter {
 #[derive(PartialEq, Debug)]
 pub enum QuotaState {
     Remaining(f64),
-    ExceededUntil(Instant),
+    ExceededUntil(f64, Instant),
 }
 
 impl RateLimiter {
@@ -40,10 +40,10 @@ impl RateLimiter {
         self.check();
         let quota = quota.into();
         self.quota += quota;
-        if self.quota - quota <= self.allowed_quota {
+        if self.quota <= self.allowed_quota {
             QuotaState::Remaining(self.allowed_quota - self.quota)
         } else {
-            QuotaState::ExceededUntil(Instant::now() + self.period)
+            QuotaState::ExceededUntil(self.quota - self.allowed_quota, Instant::now() + self.period)
         }
     }
 }

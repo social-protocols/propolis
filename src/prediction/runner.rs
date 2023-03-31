@@ -1,12 +1,28 @@
-use std::{collections::HashMap, time::{Duration, Instant}};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 
-use rl_queue::{RateLimiter, QuotaState};
+use rl_queue::{QuotaState, RateLimiter};
+use sqlx::SqlitePool;
+use tracing::log::{info, warn};
 
-use crate::structs::Statement;
+use crate::{prediction::{prompts::multi_statement_predictor, prediction}, structs::Statement};
+
+use super::openai::{OpenAiEnv, OpenAiModel};
 
 /// Returns those statements that are not yet predicted
-pub async fn unpredicted_statements(_num: u32) -> anyhow::Result<Vec<Statement>> {
-    Ok(vec![])
+pub async fn unpredicted_statements(num: u32, pool: &SqlitePool) -> anyhow::Result<Vec<Statement>> {
+    Ok(sqlx::query_as!(
+        Statement,
+        "SELECT * FROM statements WHERE
+id NOT IN (SELECT statement_id FROM statement_predictions)
+LIMIT ?",
+        num
+    )
+    .fetch_all(pool)
+    .await
+    .expect("Unable to fetch"))
 }
 
 pub struct StatementCategorizationPredictor {
@@ -15,32 +31,41 @@ pub struct StatementCategorizationPredictor {
 }
 
 impl StatementCategorizationPredictor {
-    pub async fn predict_next_statement(&mut self) -> anyhow::Result<()> {
+    pub async fn predict_next_statement(&mut self, pool: &SqlitePool) -> anyhow::Result<()> {
+        let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
         if self.token_rate_limiter.check() {
-            for s in unpredicted_statements(1).await? {
-                // TODO: run openai
+            // TODO: predict multiple statements
+            let stmts = unpredicted_statements(1, &pool).await?;
+            for statement in &stmts {
+                info!("Predicting statement ({}): {}", statement.id, statement.text);
+                let pred = prediction::run(
+                    &statement,
+                    multi_statement_predictor(stmts.as_slice()),
+                    &env,
+                    &pool,
+                )
+                .await?;
+                match self.token_rate_limiter.add(pred.total_tokens as f64) {
+                    QuotaState::ExceededUntil(exceeded_by, instant) => {
+                        warn!("Exceeded token quota by {}. Waiting", exceeded_by);
+                        async_std::task::sleep( instant - Instant::now() ).await;
+                    }
+                    QuotaState::Remaining(v) => {
+
+                        info!("Quota remaining: {}", v);
+                    }
+                }
             }
         }
         Ok(())
     }
 }
 
-pub async fn run() {
+pub async fn run(pool: &SqlitePool) {
     let mut pred = StatementCategorizationPredictor {
-        token_rate_limiter: RateLimiter::new(100.0, Duration::from_secs(1))
+        token_rate_limiter: RateLimiter::new(100.0, Duration::from_secs(30)),
     };
     loop {
-        if !pred.token_rate_limiter.check() {
-            continue;
-        }
-        println!("Adding 50");
-        match pred.token_rate_limiter.add(51) {
-            QuotaState::ExceededUntil(instant) => {
-                async_std::task::sleep( instant - Instant::now() ).await;
-            }
-            QuotaState::Remaining(v) => {
-                println!("Remaining: {}", v);
-            }
-        }
+        pred.predict_next_statement(&pool).await.unwrap();
     }
 }

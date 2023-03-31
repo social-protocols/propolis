@@ -18,14 +18,21 @@
 - [X] Write a combined predictor
 - [-] Add political spectrum/ideology categorization
   - [X] Determine ideology: environmentalist, capitalist, etc.
+  - [ ] multi statement predictor
+    - [ ] do not store CSV header row in table
+    - [ ] store data in a serialized format
   - [ ] Parse result into a rust struct of known ideologies to work with them
   - [ ] own table for ideologies
   - [ ] Show ideology on statement page
   - [ ] Show ideologies on user overview page
 - [X] Show total tokens & costs on endpoint
 - [ ] make prediction toggleable via feature flag
-- [ ] Create "background" process / coroutine for filling DB with GPT-data
-  - [ ] Implement own rate-limited queue to process statements
+- [-] Create async process for filling DB with GPT-data
+  - [X] Run loop to process statements in background
+  - [X] Add token based rate-limiter for predictions
+  - [ ] multi statement prediction...
+    - [ ] Predict more than one statement at the same time
+    - [ ] adjust prediction::run to accept several statements
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
