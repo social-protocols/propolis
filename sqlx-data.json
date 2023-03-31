@@ -311,5 +311,15 @@
       }
     },
     "query": "INSERT INTO authors (user_id, statement_id) VALUES (?, ?)"
+  },
+  "fd1af445f9aa1ca343f269f11dc199275b6f7f5d4e65198407e9a922d4cd664c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "INSERT INTO subscriptions (user_id, statement_id) VALUES (?, ?)"
   }
 }

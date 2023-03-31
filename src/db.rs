@@ -208,6 +208,14 @@ impl User {
         .await?;
 
         sqlx::query!(
+            "INSERT INTO subscriptions (user_id, statement_id) VALUES (?, ?)",
+            self.id,
+            created_statement.id
+        )
+        .execute(pool)
+        .await?;
+
+        sqlx::query!(
             "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)",
             self.id,
             created_statement.id
