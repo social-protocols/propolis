@@ -30,7 +30,8 @@ pub async fn small_statement_content(
             }
             @if show_controls {
                 div style="display: flex; align-items:center; gap: 12px" {
-                    a href=(format!("/new?target={}", statement.id)) {
+                    // link with button styles
+                    a style="text-decoration: none; font-weight: bold; letter-spacing: 0.1em; font-size: 85%; padding: 0.4em 0em; margin-right: 1em" href=(format!("/new?target={}", statement.id)) {
                         "↳ Add Follow-Up"
                     }
                     (subscribe_button(statement.id, &maybe_user, &pool).await?)
@@ -96,11 +97,12 @@ pub async fn subscribe_button(
 
     Ok(html! {
         @if is_subscribed {
-            { "subscribed" }
+            // same padding as button
+            span style="padding: 0.4em 1em; opacity: 0.5; font-size: 85%" { "subscribed" }
         } @else {
             form hx-post="/subscribe" {
                 input type="hidden" name="statement_id" value=(statement_id);
-                button { "Subscribe" }
+                button style="border: none; background: none; margin: 0;" { "Subscribe" }
             }
         }
     })
