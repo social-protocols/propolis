@@ -29,6 +29,7 @@ use axum::{
 use tower_cookies::CookieManagerLayer;
 use tower_http::trace::TraceLayer;
 
+use std::future;
 use std::net::SocketAddr;
 
 use crate::db::setup_db;
@@ -75,12 +76,15 @@ async fn main() {
         .fallback_service(get(not_found));
 
     prediction::openai::setup_openai().await;
+
+    let prediction_runner = prediction::runner::run();
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     println!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let axum_server = axum::Server::bind(&addr)
+        .serve(app.into_make_service());
+
+    let (_, axum_result) = futures::future::join(prediction_runner, axum_server).await;
+    axum_result.unwrap();
 }
 
 async fn not_found() -> (StatusCode, Html<String>) {
