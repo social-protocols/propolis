@@ -1,3 +1,8 @@
+use std::borrow::Borrow;
+
+use function_name::named;
+use qrcode::render::string::Element;
+
 use crate::structs::Statement;
 
 use super::api::{AiMessage, AiPrompt, PromptResponse};
@@ -88,6 +93,44 @@ pub fn statement_ideology(s: &Statement) -> GenericPrompt {
             AiMessage::assistant("environmentalist,globalist"),
             // the actual prediction
             AiMessage::user(s.text.as_str()),
+        ],
+    }
+}
+
+/// Given multiple statements, predict: category (political / personal),
+/// political ideology or bfp traits and tags
+#[named]
+pub fn multi_statement_predictor<S: Borrow<Statement>>(stmts: &[S]) -> GenericPrompt {
+    let mut stmts_s = String::from("");
+    for s in stmts {
+        stmts_s += format!("{}: {}", s.borrow().id, s.borrow().text).as_str();
+    }
+    GenericPrompt {
+        name: function_name!().into(),
+        version: 7,
+        handler: |s| s,
+        primer: vec![
+            AiMessage::system("
+You will be given multiple statements, each starting on their own line,
+and your task is to determine whether the statement falls into the category
+of politics or personal statements. In the case of it being a political category,
+give which political ideologies (e.g., liberalism, conservatism, socialism)
+each quote aligns with the most.
+In the case of it being a personal category, give the big five personality traits instead.
+
+In addition, also output up to three topic tags. The output should be a csv table.
+All cells should be followed by a strength score (w=weak, s=strong) after a \":\" delimiter.
+"),
+            AiMessage::user("
+1. The global economy is at risk of recession due to the trade war and uncertainty it creates.
+2. In clubs kann man hervorragend neue Freunde kennenlernen
+"),
+            AiMessage::assistant("
+num|category|label1|label2|label3|tag1|tag2|tag3
+1|politics|neoliberalism:s|conservatism:w|socialism:w|global economy:s|trade war:s|uncertainty:s
+2|personal|extraversion:s|openness:w|agreeableness:s|clubs:s|friendship:s|socializing:w
+"),
+            AiMessage::user(format!("{}", stmts_s).as_str()),
         ],
     }
 }

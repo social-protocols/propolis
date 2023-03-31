@@ -8,7 +8,7 @@ use crate::{
     prediction::{
         openai::{OpenAiEnv, OpenAiModel},
         prediction::run,
-        prompts::{bfp, statement_category, statement_ideology},
+        prompts::{bfp, multi_statement_predictor, statement_category, statement_ideology},
     },
     structs::Statement,
 };
@@ -26,36 +26,16 @@ pub async fn prediction_page(
 
     let mut total_tokens = 0;
 
-    let bfp = run(
+    let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
+    let stmts = vec![statement];
+    let pred = run(
         &statement,
-        bfp(&statement),
-        OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
+        multi_statement_predictor(stmts.as_slice()),
+        env,
         &pool,
     )
     .await?;
-    let category = run(
-        &statement,
-        statement_category(&statement),
-        OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
-        &pool,
-    )
-    .await?;
-    total_tokens += bfp.total_tokens;
-    total_tokens += category.total_tokens;
-
-    let mut ideology_prompt_result = "n/a".to_string();
-
-    if category.prompt_result == "political" {
-        let ideology = run(
-            &statement,
-            statement_ideology(&statement),
-            OpenAiEnv::from(OpenAiModel::Gpt35Turbo),
-            &pool,
-        )
-        .await?;
-        ideology_prompt_result = ideology.prompt_result;
-        total_tokens += ideology.total_tokens;
-    }
+    total_tokens += pred.total_tokens;
 
     let content = html! {
         p {
@@ -67,16 +47,8 @@ pub async fn prediction_page(
             code { (total_tokens) }
         }
         p {
-            { "BFP trait: " }
-            code { (bfp.prompt_result) }
-        }
-        p {
-            { "Statement category: " }
-            code { (category.prompt_result) }
-        }
-        p {
-            { "Statement ideology: " }
-            code { (ideology_prompt_result) }
+            { "Result: " }
+            pre { (pred.prompt_result) }
         }
     };
     Ok(content)
