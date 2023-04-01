@@ -1,11 +1,10 @@
 use std::borrow::Borrow;
 
-use function_name::named;
-use qrcode::render::string::Element;
+use crate::structs::{Statement, StatementPrediction};
+use serde::Deserialize;
+use sqlx::SqlitePool;
 
-use crate::structs::Statement;
-
-use super::api::{AiMessage, AiPrompt, PromptResponse};
+use super::{api::{AiMessage, AiPrompt, PromptResponse, AiEnv}, prediction};
 
 pub struct GenericPrompt {
     pub name: String,
@@ -97,20 +96,74 @@ pub fn statement_ideology(s: &Statement) -> GenericPrompt {
     }
 }
 
-/// Given multiple statements, predict: category (political / personal),
-/// political ideology or bfp traits and tags
-#[named]
-pub fn multi_statement_predictor<S: Borrow<Statement>>(stmts: &[S]) -> GenericPrompt {
-    let mut stmts_s = String::from("");
-    for s in stmts {
-        stmts_s += format!("{}: {}", s.borrow().id, s.borrow().text).as_str();
-    }
-    GenericPrompt {
-        name: function_name!().into(),
-        version: 7,
-        handler: |s| s,
-        primer: vec![
-            AiMessage::system("
+/// Contains various meta information about a statement
+pub enum StatementMeta {
+    Potitics {
+        tags: Vec<String>,
+        ideologies: Vec<String>,
+    },
+    Personal {
+        tags: Vec<String>,
+        bfp_traits: Vec<String>,
+    },
+}
+
+pub enum Score {
+    Weak,
+    Strong,
+}
+
+/// A value with an optional score
+pub struct ScoredValue {
+    pub value: String,
+    pub score: Score,
+}
+
+/// A single row of the result that we get back via the multi_statement_predictor
+#[derive(Deserialize)]
+pub struct MultiStatementPredictorResultRow {
+    pub statement_id: u64,
+    pub category: String,
+    pub label1: String,
+    pub label2: String,
+    pub label3: String,
+    pub tag1: String,
+    pub tag2: String,
+    pub tag3: String,
+}
+
+impl MultiStatementPredictorResultRow {
+    // pub fn from_lines(s: &str) -> Vec<Self> {
+    //     /// What the csv record looks like in data types
+    //     type CsvRecord = (u64, String, String, String, String, String, String);
+
+    //     let mut result : Vec<Self> = vec![];
+    //     let mut rdr = csv::Reader::from_reader(s);
+    //     for result in rdr.deserialize() {
+    //         let record: CsvRecord = result?;
+    //     }
+
+    // }
+}
+
+pub struct MultiStatementPredictor {}
+
+impl MultiStatementPredictor {
+    /// Given multiple statements, predict: category (political / personal),
+    /// political ideology or bfp traits and tags
+    pub fn prompt<S: Borrow<Statement>>(&self, stmts: &[S]) -> GenericPrompt {
+        let mut stmts_s = String::from("");
+        for s in stmts {
+            stmts_s += format!("{}: {}", s.borrow().id, s.borrow().text).as_str();
+        }
+        GenericPrompt {
+            name: "multi_statement_predictor".into(),
+            version: 7,
+            // strips the csv header from the result
+            handler: |s| s.splitn(2, "\n").nth(1).unwrap_or("").trim().into(),
+            primer: vec![
+                AiMessage::system(
+                    "
 You will be given multiple statements, each starting on their own line,
 and your task is to determine whether the statement falls into the category
 of politics or personal statements. In the case of it being a political category,
@@ -120,17 +173,49 @@ In the case of it being a personal category, give the big five personality trait
 
 In addition, also output up to three topic tags. The output should be a csv table.
 All cells should be followed by a strength score (w=weak, s=strong) after a \":\" delimiter.
-"),
-            AiMessage::user("
+",
+                ),
+                AiMessage::user(
+                    "
 1. The global economy is at risk of recession due to the trade war and uncertainty it creates.
 2. In clubs kann man hervorragend neue Freunde kennenlernen
-"),
-            AiMessage::assistant("
+",
+                ),
+                AiMessage::assistant(
+                    "
 num|category|label1|label2|label3|tag1|tag2|tag3
 1|politics|neoliberalism:s|conservatism:w|socialism:w|global economy:s|trade war:s|uncertainty:s
 2|personal|extraversion:s|openness:w|agreeableness:s|clubs:s|friendship:s|socializing:w
-"),
-            AiMessage::user(format!("{}", stmts_s).as_str()),
-        ],
+",
+                ),
+                AiMessage::user(format!("{}", stmts_s).as_str()),
+            ],
+        }
+    }
+
+    pub async fn run<S: Borrow<Statement>, E: AiEnv>(
+        &self,
+        stmts: &[S],
+        env: &E,
+        pool: &SqlitePool,
+    ) -> anyhow::Result<Vec<StatementPrediction>> {
+        let result = prediction::run(stmts[0].borrow(), self.prompt(&stmts), env, &pool).await?;
+        Ok(vec![result])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name() {
+        let s = Statement {
+            id: 0,
+            text: "".into(),
+        };
+        bfp(&s);
+        statement_category(&s);
+        statement_ideology(&s);
     }
 }

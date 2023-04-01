@@ -46,6 +46,7 @@ anyhow = "1.0.70"
 function_name = "0.3.0"
 futures = "0.3.28"
 async-std = "1.12.0"
+csv = "1.2.1"
 # speed up compile time verification (https://github.com/launchbadge/sqlx#compile-time-verification)
 opt-level = 3
 

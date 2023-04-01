@@ -20,7 +20,6 @@ use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
 
 use rust_embed::RustEmbed;
-use sqlx::pool;
 use tower_http::compression::CompressionLayer;
 
 use axum::{
@@ -32,7 +31,6 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
-use std::future;
 use std::net::SocketAddr;
 
 use crate::db::setup_db;

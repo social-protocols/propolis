@@ -21,6 +21,8 @@
   - [ ] multi statement predictor
     - [ ] do not store CSV header row in table
     - [ ] store data in a serialized format
+    - [ ] Figure out how to store version with serialized data structure and how
+      to load different versions
   - [ ] Parse result into a rust struct of known ideologies to work with them
   - [ ] own table for ideologies
   - [ ] Show ideology on statement page

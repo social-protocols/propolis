@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     time::{Duration, Instant},
 };
 
@@ -7,7 +6,7 @@ use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
 use tracing::log::{info, warn};
 
-use crate::{prediction::{prompts::multi_statement_predictor, prediction}, structs::Statement};
+use crate::{prediction::prompts::MultiStatementPredictor, structs::Statement};
 
 use super::openai::{OpenAiEnv, OpenAiModel};
 
@@ -38,14 +37,16 @@ impl StatementCategorizationPredictor {
             let stmts = unpredicted_statements(1, &pool).await?;
             for statement in &stmts {
                 info!("Predicting statement ({}): {}", statement.id, statement.text);
-                let pred = prediction::run(
-                    &statement,
-                    multi_statement_predictor(stmts.as_slice()),
+                let stmts = vec![statement];
+                let pred = MultiStatementPredictor {};
+                let result = pred.run(
+                    &stmts,
                     &env,
                     &pool,
                 )
                 .await?;
-                match self.token_rate_limiter.add(pred.total_tokens as f64) {
+                let first = result.first().unwrap();
+                match self.token_rate_limiter.add(first.total_tokens as f64) {
                     QuotaState::ExceededUntil(exceeded_by, instant) => {
                         warn!("Exceeded token quota by {}. Waiting", exceeded_by);
                         async_std::task::sleep( instant - Instant::now() ).await;
@@ -62,10 +63,10 @@ impl StatementCategorizationPredictor {
 }
 
 pub async fn run(pool: &SqlitePool) {
-    let mut pred = StatementCategorizationPredictor {
+    let mut runner = StatementCategorizationPredictor {
         token_rate_limiter: RateLimiter::new(100.0, Duration::from_secs(30)),
     };
     loop {
-        pred.predict_next_statement(&pool).await.unwrap();
+        runner.predict_next_statement(&pool).await.unwrap();
     }
 }

@@ -7,8 +7,7 @@ use crate::{
     error::Error,
     prediction::{
         openai::{OpenAiEnv, OpenAiModel},
-        prediction::run,
-        prompts::{bfp, multi_statement_predictor, statement_category, statement_ideology},
+        prediction::run, prompts::MultiStatementPredictor,
     },
     structs::Statement,
 };
@@ -28,14 +27,15 @@ pub async fn prediction_page(
 
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
     let stmts = vec![statement];
-    let pred = run(
-        &statement,
-        multi_statement_predictor(stmts.as_slice()),
+    let pred = MultiStatementPredictor {};
+    let result = pred.run(
+        &stmts,
         &env,
         &pool,
     )
     .await?;
-    total_tokens += pred.total_tokens;
+    let first = result.first().unwrap();
+    total_tokens += first.total_tokens;
 
     let content = html! {
         p {
@@ -48,7 +48,7 @@ pub async fn prediction_page(
         }
         p {
             { "Result: " }
-            pre { (pred.prompt_result) }
+            pre { (first.prompt_result) }
         }
     };
     Ok(content)
