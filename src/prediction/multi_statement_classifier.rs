@@ -316,7 +316,7 @@ impl<'a, R: MultiStatementResultTypes> MultiStatementPromptGen<'a, R> {
         // -- find those statements for which a prediction is missing --
         let stmts = sqlx::query_as!(
             Statement,
-            "SELECT * FROM statements WHERE
+            "SELECT id,text FROM statements WHERE
 id NOT IN
   (SELECT statement_id
    FROM statement_predictions

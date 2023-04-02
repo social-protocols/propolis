@@ -19,7 +19,7 @@ use super::{
 pub async fn unpredicted_statements(num: u32, pool: &SqlitePool) -> anyhow::Result<Vec<Statement>> {
     Ok(sqlx::query_as!(
         Statement,
-        "SELECT * FROM statements WHERE
+        "SELECT id,text FROM statements WHERE
 id NOT IN (SELECT statement_id FROM statement_predictions)
 LIMIT ?",
         num
