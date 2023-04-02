@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
@@ -32,15 +32,17 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
         let result: Option<MultiStatementPromptResult<R>>;
         loop {
             if self.token_rate_limiter.check() {
+                info!("Running prompt: {}, V{}", prompt.name, prompt.version);
                 let response = self.env.send_prompt(&prompt).await?;
                 match self
                     .token_rate_limiter
                     .add(response.response.total_tokens as f64)
                 {
-                    QuotaState::ExceededUntil(exceeded_by, _instant) => {
+                    QuotaState::ExceededUntil(exceeded_by, instant) => {
                         warn!(
-                            "Exceeded token quota by {}. Waiting until quota reset",
-                            exceeded_by
+                            "Exceeded token quota by {}. Waiting for: {}s",
+                            exceeded_by,
+                            (instant - Instant::now()).as_secs()
                         );
                     }
                     QuotaState::Remaining(v) => {
@@ -77,7 +79,6 @@ pub async fn run(pool: &SqlitePool) {
         let prompt = prompt_gen.next_prompt().await.unwrap();
         match prompt {
             Some(prompt) => {
-                info!("Running prompt: {}, V{}", prompt.name, prompt.version);
                 let result = runner.run(prompt).await.unwrap();
 
                 result.store(pool).await.unwrap();
