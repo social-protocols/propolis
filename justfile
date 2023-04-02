@@ -25,6 +25,9 @@ reset-db:
 migrate:
 	sqlx migrate run
 
+seed:
+  URL=http://localhost:8000 scripts/seed
+
 # Create sqlx-data.json file for sqlx offline mode
 prepare-sqlx-offline-mode:
 	cargo sqlx prepare
