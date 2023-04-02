@@ -89,8 +89,6 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
 }
 
 /// Used to generate prompts and handle the result
-///
-/// Will cache results in the db based on the given prompt
 pub struct MultiStatementPromptGen<'a, R: MultiStatementResultTypes> {
     /// Amount of statements to include in the prompt
     pub batch_size: u8,

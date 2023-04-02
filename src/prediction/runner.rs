@@ -62,6 +62,8 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
 }
 
 /// Setup continuous prompt generation and runner in an async loop
+///
+/// Will store prompt results in the db
 pub async fn run(pool: &SqlitePool) {
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
