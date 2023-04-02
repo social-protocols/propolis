@@ -5,7 +5,8 @@ use sqlx::SqlitePool;
 use crate::{
     db::get_statement,
     error::Error,
-    structs::Statement,
+    prediction::prompts::StatementMeta,
+    structs::{Statement, StatementPrediction},
 };
 
 pub async fn prediction_page(
@@ -13,13 +14,42 @@ pub async fn prediction_page(
     Path(statement_id): Path<i64>,
 ) -> Result<impl IntoResponse, Error> {
     let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
-    let _statement_id = statement.as_ref().map_or(None, |s| Some(s.id));
-    let statement_text = statement
-        .as_ref()
-        .map_or("-".to_string(), |s| s.text.clone());
+
+    if let None = statement {
+        return Err(Error::CustomError("No such statement".into()));
+    }
+
+    let statement = statement.unwrap();
+
+    let pred = sqlx::query_as!(
+        StatementPrediction,
+        "select
+-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY
+  statement_id as \"statement_id!\",
+  ai_env as \"ai_env!\",
+  prompt_name as \"prompt_name!\",
+  prompt_version as \"prompt_version!\",
+  prompt_result as \"prompt_result!\",
+  completion_tokens as \"completion_tokens!\",
+  prompt_tokens as \"prompt_tokens!\",
+  total_tokens as \"total_tokens!\",
+  timestamp as \"timestamp!\"
+from statement_predictions
+where statement_id = ? order by timestamp desc",
+        statement.id
+    )
+    .fetch_optional(&pool)
+    .await?
+    .map_or("no prediction yet".to_string(), |s| s.prompt_result.into());
+
+    let pred_formatted = serde_json::to_string_pretty(
+        &serde_json::from_str::<StatementMeta>(pred.as_str()).unwrap(),
+    )
+    .unwrap();
 
     let content = html! {
-        p { (statement_text) }
+        p { (statement.text) }
+        pre { (pred_formatted) }
     };
     Ok(content)
 }

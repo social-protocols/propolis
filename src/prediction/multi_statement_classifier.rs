@@ -90,6 +90,7 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
 
 impl<R: MultiStatementResultTypes> MultiStatementPrompt<R> {
     /// Gives a prompt that computes various meta information on the passed statements
+    // TODO: move to prompts.rs
     pub fn statement_meta(stmts: &[Statement]) -> Self {
         let mut stmts_s = String::from("");
         for s in stmts {
@@ -97,10 +98,29 @@ impl<R: MultiStatementResultTypes> MultiStatementPrompt<R> {
         }
         MultiStatementPrompt {
             name: "statement_meta".into(),
-            version: 0,
+            version: 5,
             handler: |s| {
                 let s_without_header = s.trim().splitn(2, "\n").nth(1).unwrap_or("").to_string();
+                let target_delim_count = 7;
                 s_without_header
+                    .split("\n")
+                    // -- fixup delimiter count, since the ai does not reliably do that --
+                    .map(|s| -> String {
+                        let s = s.to_string();
+                        let delim_count = s.match_indices("|").collect::<Vec<_>>().len();
+                        if delim_count < target_delim_count {
+                            s + "|".repeat(target_delim_count - delim_count).as_str().into()
+                        } else if delim_count > target_delim_count {
+                            s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
+                                .unwrap()
+                                .into()
+                        } else {
+                            s
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    // -- finally try to return an R (result type) --
                     .try_into()
                     .expect("Unable to extract from string")
             },
@@ -114,15 +134,14 @@ give which political ideologies (e.g., liberalism, conservatism, socialism)
 each quote aligns with the most.
 In the case of it being a personal category, give the big five personality traits instead.
 
-In addition, also output up to three topic tags. The output should be a csv table.
+In addition, also output up to three topic tags. The output should be a csv table with empty values as \"-\".
 All cells should be followed by a strength score (w=weak, s=strong) after a \":\" delimiter.
-",
+If you are not sure, use \"-\"",
                 ),
                 AiMessage::user(
                     "
 1. The global economy is at risk of recession due to the trade war and uncertainty it creates.
-2. In clubs kann man hervorragend neue Freunde kennenlernen
-",
+2. In clubs kann man hervorragend neue Freunde kennenlernen",
                 ),
                 AiMessage::assistant(
                     "
