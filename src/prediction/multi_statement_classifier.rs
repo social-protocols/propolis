@@ -63,6 +63,7 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
             });
         }
 
+        debug!("Inserting {} entries into statement_predictions table", predictions.len());
         for prediction in predictions {
             sqlx::query!(
                 r#"INSERT INTO statement_predictions
@@ -331,20 +332,26 @@ LIMIT ?",
         )
         .fetch_all(self.pool)
         .await?;
-        debug!(
-            "Next batch len for {} V{}: {}",
-            dummy_prompt.name,
-            dummy_prompt.version,
-            stmts.len()
-        );
+        if stmts.len() > 0 {
+            debug!(
+                "Next batch len for {} V{}: {}",
+                dummy_prompt.name,
+                dummy_prompt.version,
+                stmts.len()
+            );
+        }
         Ok(stmts)
     }
 
     /// Returns a prompt for the next batch of statements
-    pub async fn next_prompt(&self) -> anyhow::Result<MultiStatementPrompt<R>> {
+    pub async fn next_prompt(&self) -> anyhow::Result<Option<MultiStatementPrompt<R>>> {
         let batch = self.next_batch().await?;
-        let prompt = (self.prompt)(batch);
+        if batch.len() > 0 {
+            let prompt = (self.prompt)(batch);
 
-        Ok(prompt)
+            Ok(Some(prompt))
+        } else {
+            Ok(None)
+        }
     }
 }

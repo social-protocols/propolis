@@ -81,9 +81,8 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
                     .token_rate_limiter
                     .add(response.response.total_tokens as f64)
                 {
-                    QuotaState::ExceededUntil(exceeded_by, instant) => {
-                        warn!("Exceeded token quota by {}. Waiting", exceeded_by);
-                        async_std::task::sleep(instant - Instant::now()).await;
+                    QuotaState::ExceededUntil(exceeded_by, _instant) => {
+                        warn!("Exceeded token quota by {}. Waiting until quota reset", exceeded_by);
                     }
                     QuotaState::Remaining(v) => {
                         info!("Quota remaining: {}", v);
@@ -101,6 +100,7 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
     }
 }
 
+/// Setup continuous prompt generation and runner in an async loop
 pub async fn run(pool: &SqlitePool) {
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
@@ -116,12 +116,19 @@ pub async fn run(pool: &SqlitePool) {
     };
     loop {
         let prompt = prompt_gen.next_prompt().await.unwrap();
-        info!("Running prompt: {}, V{}", prompt.name, prompt.version);
-        let result = runner
-            .run(prompt)
-            .await
-            .unwrap();
+        match prompt {
+            Some(prompt) => {
+                info!("Running prompt: {}, V{}", prompt.name, prompt.version);
+                let result = runner
+                    .run(prompt)
+                    .await
+                    .unwrap();
 
-        result.store(pool).await;
+                result.store(pool).await.unwrap();
+            }
+            None => {
+                async_std::task::sleep(Duration::from_secs(1)).await;
+            }
+        }
     }
 }
