@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[allow(unused_imports, dead_code)]
 pub enum BigFivePersonaAxis {
     OpennessToExperience,
     Conscientiousness,
@@ -9,6 +10,7 @@ pub enum BigFivePersonaAxis {
 }
 
 impl BigFivePersonaAxis {
+    #[allow(dead_code)]
     pub fn from_str(s: &str) -> BigFivePersonaAxis {
         match s {
             "openness-to-experience" => BigFivePersonaAxis::OpennessToExperience,
@@ -22,6 +24,7 @@ impl BigFivePersonaAxis {
 }
 
 #[derive(Debug)]
+#[allow(unused_imports, dead_code)]
 pub enum BigFivePersonaValue {
     Low,
     Medium,
@@ -30,6 +33,7 @@ pub enum BigFivePersonaValue {
 }
 
 impl BigFivePersonaValue {
+    #[allow(dead_code)]
     pub fn from_str(s: &str) -> BigFivePersonaValue {
         match s {
             "high" => BigFivePersonaValue::High,
@@ -41,6 +45,7 @@ impl BigFivePersonaValue {
 }
 
 #[derive(Debug)]
+#[allow(unused_imports)]
 pub struct BigFivePersonaTrait {
     pub axis: BigFivePersonaAxis,
     pub value: BigFivePersonaValue,

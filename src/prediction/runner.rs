@@ -1,33 +1,17 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
 use tracing::log::{info, warn};
 
-use crate::{prediction::prompts::MultiStatementPredictorV1, structs::Statement};
-
 use super::{
     api::AiEnv,
     multi_statement_classifier::{
         MultiStatementPrompt, MultiStatementPromptGen, MultiStatementPromptResult,
-        MultiStatementResultTypes, StatementMetaContainer,
+        MultiStatementResultTypes,
     },
-    openai::{OpenAiEnv, OpenAiModel},
+    openai::{OpenAiEnv, OpenAiModel}, prompts::StatementMetaContainer,
 };
-
-/// Returns those statements that are not yet predicted
-pub async fn unpredicted_statements(num: u32, pool: &SqlitePool) -> anyhow::Result<Vec<Statement>> {
-    Ok(sqlx::query_as!(
-        Statement,
-        "SELECT id,text FROM statements WHERE
-id NOT IN (SELECT statement_id FROM statement_predictions)
-LIMIT ?",
-        num
-    )
-    .fetch_all(pool)
-    .await
-    .expect("Unable to fetch"))
-}
 
 /// Runs given prompts and yields results
 pub struct PromptRunner<'a, E: AiEnv + 'a> {
@@ -37,34 +21,6 @@ pub struct PromptRunner<'a, E: AiEnv + 'a> {
 }
 
 impl<'a, E: AiEnv> PromptRunner<'a, E> {
-    pub async fn predict_next_statement(&mut self, pool: &SqlitePool) -> anyhow::Result<()> {
-        let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
-        if self.token_rate_limiter.check() {
-            // TODO: predict multiple statements
-            let stmts = unpredicted_statements(1, &pool).await?;
-            for statement in &stmts {
-                info!(
-                    "Predicting statement ({}): {}",
-                    statement.id, statement.text
-                );
-                let stmts = vec![statement];
-                let pred = MultiStatementPredictorV1 {};
-                let result = pred.run(&stmts, &env, &pool).await?;
-                let first = result.first().unwrap();
-                match self.token_rate_limiter.add(first.total_tokens as f64) {
-                    QuotaState::ExceededUntil(exceeded_by, instant) => {
-                        warn!("Exceeded token quota by {}. Waiting", exceeded_by);
-                        async_std::task::sleep(instant - Instant::now()).await;
-                    }
-                    QuotaState::Remaining(v) => {
-                        info!("Quota remaining: {}", v);
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
     /// Run the given prompt and return the result
     pub async fn run<R>(
         &mut self,
@@ -82,7 +38,10 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
                     .add(response.response.total_tokens as f64)
                 {
                     QuotaState::ExceededUntil(exceeded_by, _instant) => {
-                        warn!("Exceeded token quota by {}. Waiting until quota reset", exceeded_by);
+                        warn!(
+                            "Exceeded token quota by {}. Waiting until quota reset",
+                            exceeded_by
+                        );
                     }
                     QuotaState::Remaining(v) => {
                         info!("Quota remaining: {}", v);
@@ -119,10 +78,7 @@ pub async fn run(pool: &SqlitePool) {
         match prompt {
             Some(prompt) => {
                 info!("Running prompt: {}, V{}", prompt.name, prompt.version);
-                let result = runner
-                    .run(prompt)
-                    .await
-                    .unwrap();
+                let result = runner.run(prompt).await.unwrap();
 
                 result.store(pool).await.unwrap();
             }

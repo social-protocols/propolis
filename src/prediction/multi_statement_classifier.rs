@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sqlx::SqlitePool;
 use tracing::debug;
 
@@ -63,7 +63,10 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
             });
         }
 
-        debug!("Inserting {} entries into statement_predictions table", predictions.len());
+        debug!(
+            "Inserting {} entries into statement_predictions table",
+            predictions.len()
+        );
         for prediction in predictions {
             sqlx::query!(
                 r#"INSERT INTO statement_predictions
@@ -149,135 +152,16 @@ pub struct MultiStatementPromptGen<'a, R: MultiStatementResultTypes> {
 
 // TODO: this should probably go into prompts.rs
 /// A single row of the result that we get back via the multi_statement_predictor
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub struct StatementMeta {
-    pub category: String,
-    pub label1: String,
-    pub label2: String,
-    pub label3: String,
-    pub tag1: String,
-    pub tag2: String,
-    pub tag3: String,
-}
-
-/// Container for several StatementMeta instances
-#[derive(Serialize, Clone, PartialEq, Eq)]
-pub struct StatementMetaContainer {
-    pub value: Vec<StatementMeta>,
-}
-
-impl IntoIterator for StatementMetaContainer {
-    type Item = String;
-
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.value
-            .into_iter()
-            .map(|s| serde_json::to_string(&s).unwrap())
-            .collect::<Vec<String>>()
-            .into_iter()
-    }
-}
-
-// /// Trait which allows the instance to be persisted to the db
-// #[async_trait]
-// pub trait CanStore {
-//     /// Store the instance inside the db
-//     async fn store(&self, pool: &SqlitePool) -> anyhow::Result<()>;
+// #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+// pub struct StatementMeta {
+//     pub category: String,
+//     pub label1: String,
+//     pub label2: String,
+//     pub label3: String,
+//     pub tag1: String,
+//     pub tag2: String,
+//     pub tag3: String,
 // }
-
-// impl CanStore for StatementMetaContainer {
-//     async fn store(&self, pool: &SqlitePool) -> anyhow::Result<()> {
-
-//         for p in self.value {
-//             // FIXME: get relevant line
-//             prediction.prompt_result = self.response.content;
-//             // FIXME: divide by statements.len()
-//             prediction.completion_tokens = self.response.completion_tokens;
-//             prediction.prompt_tokens = self.response.prompt_tokens;
-//             prediction.total_tokens = self.response.total_tokens;
-//         }
-//     }
-// }
-
-impl TryFrom<String> for StatementMetaContainer {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        StatementMeta::from_lines(value.as_str())
-    }
-}
-
-// impl TryFrom<String> for StatementMeta {
-//     type Error = anyhow::Error;
-
-//     fn try_from(value: String) -> Result<Self, Self::Error> {
-//         type CsvRecord = (u64, String, String, String, String, String, String, String);
-
-//         debug!("Deserializing CSV results:\n\n{}\n\n", value);
-//         let mut rdr = csv::Reader::from_reader(value.as_bytes());
-//         for line in rdr.deserialize() {
-//             let record: CsvRecord = line?;
-
-//             return Ok(Self {
-//                 category: record.1,
-//                 label1: record.2,
-//                 label2: record.3,
-//                 label3: record.4,
-//                 tag1: record.5,
-//                 tag2: record.6,
-//                 tag3: record.7,
-//             });
-//         }
-
-//         Err(anyhow::anyhow!(
-//             "Unable to extract StatementMeta from String"
-//         ))
-//     }
-// }
-
-impl StatementMeta {
-    /// Creates a container of statements from CSV data without a header
-    pub fn from_lines(s: &str) -> anyhow::Result<StatementMetaContainer> {
-        /// What the csv record looks like in data types
-        type CsvRecord = (u64, String, String, String, String, String, String, String);
-
-        let mut result: Vec<Self> = vec![];
-        debug!("Deserializing CSV results:\n\n{}\n\n", s);
-        let mut rdr = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .delimiter(b'|').from_reader(s.as_bytes());
-        for line in rdr.deserialize() {
-            let record: CsvRecord = line?;
-
-            result.push(Self {
-                category: record.1,
-                label1: record.2,
-                label2: record.3,
-                label3: record.4,
-                tag1: record.5,
-                tag2: record.6,
-                tag3: record.7,
-            })
-        }
-
-        Ok(StatementMetaContainer { value: result })
-    }
-}
-
-#[test]
-fn test_statement_meta_from_lines() {
-    let v = StatementMeta::from_lines(
-        concat!(
-            "1|politics|conservatism:s|nationalism:s|law and order:s|immigration:s|border security:w|protectionism:w\n",
-        )
-        ).unwrap();
-    assert_eq!(v.value.len(), 1);
-    assert_eq!(v.value[0].category, "politics");
-    assert_eq!(v.value[0].label2, "nationalism:s");
-    assert_eq!(v.value[0].tag1, "immigration:s");
-}
 
 impl<R: MultiStatementResultTypes> AiPrompt for MultiStatementPrompt<R> {
     type PromptResult = MultiStatementPromptResult<R>;
