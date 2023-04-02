@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(rl.add(50), QuotaState::Remaining(0.0));
 
         match rl.add(1) {
-            QuotaState::ExceededUntil(_) => assert!(true),
+            QuotaState::ExceededUntil(_, _) => assert!(true),
             _ => assert!(false),
         }
     }

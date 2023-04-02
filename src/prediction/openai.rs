@@ -3,7 +3,7 @@ use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageR
 use openai::set_key;
 use std::env;
 
-use super::api::{AiEnv, AiPrompt, AiRole, PromptResponse};
+use super::api::{AiEnv, AiPrompt, AiRole, PromptResponse, AiEnvInfo};
 
 impl From<AiRole> for ChatCompletionMessageRole {
     fn from(value: AiRole) -> Self {
@@ -50,8 +50,8 @@ impl OpenAiEnv {
 
 #[async_trait]
 impl AiEnv for OpenAiEnv {
-    fn name(&self) -> String {
-        format!("openai--{}", self.model).to_string()
+    fn info(&self) -> AiEnvInfo {
+        AiEnvInfo { name: "openai".into(), model: self.model.into() }
     }
 
     async fn send_prompt<Prompt: AiPrompt>(
@@ -77,6 +77,8 @@ impl AiEnv for OpenAiEnv {
         let raw_result = result.choices.first().unwrap().message.content.to_owned();
 
         Ok(prompt.handle_response(PromptResponse {
+            env_info: self.info(),
+            prompt_info: prompt.info(),
             content: raw_result,
             completion_tokens: c.into(),
             prompt_tokens: p.into(),

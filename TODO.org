@@ -18,11 +18,10 @@
 - [X] Write a combined predictor
 - [-] Add political spectrum/ideology categorization
   - [X] Determine ideology: environmentalist, capitalist, etc.
-  - [ ] multi statement predictor
-    - [ ] do not store CSV header row in table
-    - [ ] store data in a serialized format
-    - [ ] Figure out how to store version with serialized data structure and how
-      to load different versions
+  - [-] multi statement predictor
+    - [X] do not store CSV header row in table
+    - [ ] restore data as a struct
+      - [ ] how to handle different prompt versions?
   - [ ] Parse result into a rust struct of known ideologies to work with them
   - [ ] own table for ideologies
   - [ ] Show ideology on statement page
@@ -35,6 +34,9 @@
   - [ ] multi statement prediction...
     - [ ] Predict more than one statement at the same time
     - [ ] adjust prediction::run to accept several statements
+*** Refactor
+- [ ] runner ⇒ MultiStatementClassifier
+  - [ ] classify_batch
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]

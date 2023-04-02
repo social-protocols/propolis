@@ -1,9 +1,37 @@
 use async_trait::async_trait;
+use serde::Serialize;
+
+/// Contains the information to identify an ai environment
+#[derive(Serialize, Clone, PartialEq, Eq, Debug)]
+pub struct AiEnvInfo {
+    /// Name of the provider. e.g. "openai"
+    pub name: String,
+    /// Actual model used
+    pub model: String,
+}
+
+/// Contains the information to identify a used prompt
+#[derive(Serialize, Clone, PartialEq, Eq, Debug)]
+pub struct PromptInfo {
+    /// Name of the prompt function
+    pub name: String,
+    /// Used version
+    pub version: u16,
+}
+
+impl From<AiEnvInfo> for String {
+    fn from(value: AiEnvInfo) -> Self {
+        format!("{},{}", value.model, value.name).to_string()
+    }
+}
 
 #[async_trait]
 pub trait AiEnv {
-    fn name(&self) -> String;
-    async fn send_prompt<Prompt : AiPrompt>(&self, r : &Prompt) -> anyhow::Result<Prompt::PromptResult>;
+    fn info(&self) -> AiEnvInfo;
+    async fn send_prompt<Prompt: AiPrompt>(
+        &self,
+        r: &Prompt,
+    ) -> anyhow::Result<Prompt::PromptResult>;
 }
 
 #[derive(Clone)]
@@ -20,30 +48,78 @@ pub struct AiMessage {
 }
 
 impl AiMessage {
-    pub fn system(s : &str) -> Self {
-        AiMessage { role: AiRole::System, content: s.to_string() }
+    pub fn system(s: &str) -> Self {
+        AiMessage {
+            role: AiRole::System,
+            content: s.to_string(),
+        }
     }
-    pub fn user(s : &str) -> Self {
-        AiMessage { role: AiRole::User, content: s.to_string() }
+    pub fn user(s: &str) -> Self {
+        AiMessage {
+            role: AiRole::User,
+            content: s.to_string(),
+        }
     }
-    pub fn assistant(s : &str) -> Self {
-        AiMessage { role: AiRole::Assistant, content: s.to_string() }
+    pub fn assistant(s: &str) -> Self {
+        AiMessage {
+            role: AiRole::Assistant,
+            content: s.to_string(),
+        }
     }
 }
 
 #[derive(serde::Serialize)]
 pub struct PromptResponse {
+    pub env_info: AiEnvInfo,
+    pub prompt_info: PromptInfo,
+    /// Response content
     pub content: String,
-    pub completion_tokens: i64,
+    /// Amount of tokens used for the input prompt
     pub prompt_tokens: i64,
+    /// Amount of tokens used for output completion
+    pub completion_tokens: i64,
+    /// Total amount of tokens used
     pub total_tokens: i64,
+}
+
+/// Trait for something that is a response of a prompt
+pub trait AsPromptResponse: Serialize {
+    /// Response content
+    fn content(&self) -> &str;
+    /// Amount of tokens used for the input prompt
+    fn prompt_tokens(&self) -> i64;
+    /// Amount of tokens used for output completion
+    fn completion_tokens(&self) -> i64;
+    /// Total amount of tokens used
+    fn total_tokens(&self) -> i64;
+}
+
+impl AsPromptResponse for PromptResponse {
+    fn content(&self) -> &str {
+        self.content.as_str()
+    }
+    fn prompt_tokens(&self) -> i64 {
+        self.prompt_tokens
+    }
+    fn completion_tokens(&self) -> i64 {
+        self.completion_tokens
+    }
+    fn total_tokens(&self) -> i64 {
+        self.total_tokens
+    }
 }
 
 /// Represents a prompt to send to an ai plus its postprocessing via handler
 pub trait AiPrompt: Send + Sync {
     // Require the result to be serializable so we can store it in the db
-    type PromptResult : serde::Serialize;
+    type PromptResult: serde::Serialize;
 
+    fn info(&self) -> PromptInfo {
+        PromptInfo {
+            name: self.name().into(),
+            version: self.version(),
+        }
+    }
     /// Used to disambiguate different prompts. Should be unique for every use-case
     fn name(&self) -> &str;
     /// Version to disambiguate different versions of one prompt. Used for regenerations

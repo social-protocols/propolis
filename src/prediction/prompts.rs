@@ -1,11 +1,11 @@
 use std::borrow::Borrow;
 
 use crate::structs::{Statement, StatementPrediction};
-use serde::Deserialize;
 use sqlx::SqlitePool;
 
 use super::{api::{AiMessage, AiPrompt, PromptResponse, AiEnv}, prediction};
 
+/// A generic prompt yielding a single result
 pub struct GenericPrompt {
     pub name: String,
     pub version: u16,
@@ -30,6 +30,8 @@ impl AiPrompt for GenericPrompt {
 
     fn handle_response(&self, r: PromptResponse) -> Self::PromptResult {
         PromptResponse {
+            env_info: r.env_info,
+            prompt_info: r.prompt_info,
             content: (self.handler)(r.content),
             completion_tokens: r.completion_tokens,
             prompt_tokens: r.prompt_tokens,
@@ -119,36 +121,9 @@ pub struct ScoredValue {
     pub score: Score,
 }
 
-/// A single row of the result that we get back via the multi_statement_predictor
-#[derive(Deserialize)]
-pub struct MultiStatementPredictorResultRow {
-    pub statement_id: u64,
-    pub category: String,
-    pub label1: String,
-    pub label2: String,
-    pub label3: String,
-    pub tag1: String,
-    pub tag2: String,
-    pub tag3: String,
-}
+pub struct MultiStatementPredictorV1 {}
 
-impl MultiStatementPredictorResultRow {
-    // pub fn from_lines(s: &str) -> Vec<Self> {
-    //     /// What the csv record looks like in data types
-    //     type CsvRecord = (u64, String, String, String, String, String, String);
-
-    //     let mut result : Vec<Self> = vec![];
-    //     let mut rdr = csv::Reader::from_reader(s);
-    //     for result in rdr.deserialize() {
-    //         let record: CsvRecord = result?;
-    //     }
-
-    // }
-}
-
-pub struct MultiStatementPredictor {}
-
-impl MultiStatementPredictor {
+impl MultiStatementPredictorV1 {
     /// Given multiple statements, predict: category (political / personal),
     /// political ideology or bfp traits and tags
     pub fn prompt<S: Borrow<Statement>>(&self, stmts: &[S]) -> GenericPrompt {
@@ -193,13 +168,17 @@ num|category|label1|label2|label3|tag1|tag2|tag3
         }
     }
 
+    /// Run the actual prediction against the specified environment
     pub async fn run<S: Borrow<Statement>, E: AiEnv>(
         &self,
         stmts: &[S],
         env: &E,
         pool: &SqlitePool,
     ) -> anyhow::Result<Vec<StatementPrediction>> {
-        let result = prediction::run(stmts[0].borrow(), self.prompt(&stmts), env, &pool).await?;
+        let result = prediction::run(stmts, self.prompt(&stmts), env, &pool).await?;
+
+        // TODO: Return a Vec<MultiStatementPredictorResultRow>
+
         Ok(vec![result])
     }
 }

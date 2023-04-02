@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use sqlx::SqlitePool;
 
 use crate::structs::{Statement, StatementPrediction};
@@ -26,16 +28,17 @@ async fn find_existing_prediction(
     .await?)
 }
 
-pub async fn run<E: AiEnv>(
-    s: &Statement,
+/// Runs a prediction against a set of statements. Ignores any caches.
+pub async fn run<S: Borrow<Statement>, E: AiEnv>(
+    stmts: &[S],
     prompt: GenericPrompt,
     env: &E,
     pool: &SqlitePool,
 ) -> anyhow::Result<StatementPrediction> {
-
+    let s = stmts.first().unwrap().borrow();
     let mut prediction = StatementPrediction {
         statement_id: s.id,
-        ai_env: env.name().to_string(),
+        ai_env: env.info().into(),
         prompt_name: prompt.name.clone(),
         prompt_version: prompt.version.into(),
         prompt_result: "".to_string(),
@@ -79,9 +82,6 @@ pub async fn run<E: AiEnv>(
                 .clone();
         }
     }
-
-    // Ok(serde_json::to_string_pretty(&prediction)
-    //     .expect("Serialization of StatementPrediction failed"))
 
     Ok(prediction)
 }

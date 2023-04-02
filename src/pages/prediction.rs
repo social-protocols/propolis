@@ -7,7 +7,7 @@ use crate::{
     error::Error,
     prediction::{
         openai::{OpenAiEnv, OpenAiModel},
-        prediction::run, prompts::MultiStatementPredictor,
+        prompts::MultiStatementPredictorV1,
     },
     structs::Statement,
 };
@@ -27,7 +27,7 @@ pub async fn prediction_page(
 
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
     let stmts = vec![statement];
-    let pred = MultiStatementPredictor {};
+    let pred = MultiStatementPredictorV1 {};
     let result = pred.run(
         &stmts,
         &env,

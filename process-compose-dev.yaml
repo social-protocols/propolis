@@ -28,7 +28,7 @@ processes:
     #   initial_delay_seconds: 1
     #   period_seconds: 1
     environment:
-      - RUST_LOG=info,sqlx::query=warn
+      - RUST_LOG=info,sqlx::query=warn,propolis=debug
       # - RUST_LOG=sqlx::query=info,tower_http=trace
     command: |
       touch .cargo-built
