@@ -129,6 +129,10 @@ pub struct ScoredValue {
     pub score: Score,
 }
 
+pub fn is_valid_value(s: &str) -> bool {
+    !vec!["none", "null", "-", ""].contains(&s.trim())
+}
+
 impl TryFrom<&str> for ScoredValue {
     type Error = anyhow::Error;
 
@@ -138,7 +142,7 @@ impl TryFrom<&str> for ScoredValue {
                 value: value.into(),
                 score: score.try_into()?,
             })
-        } else if value != "" {
+        } else if is_valid_value(value) {
             Ok(ScoredValue {
                 value: value.into(),
                 score: Score::Unknown("".into()),
@@ -195,7 +199,7 @@ impl StatementMeta {
     /// Creates a container of StatementMeta from CSV data with "|" delimiter and no header
     pub fn from_lines(s: &str) -> anyhow::Result<StatementMetaContainer> {
         debug!("Deserializing CSV results:\n\n{}\n\n", s);
-        /// What the csv record looks like in data types
+        // What the csv record looks like in data types
         type CsvRecord = (u64, String, String, String, String, String, String, String);
 
         let mut result: Vec<Self> = vec![];
@@ -253,7 +257,7 @@ impl StatementMeta {
         }
         MultiStatementPrompt {
             name: "statement_meta".into(),
-            version: 6,
+            version: 8,
             handler: |s| {
                 let s_without_header = s.trim().splitn(2, "\n").nth(1).unwrap_or("").to_string();
                 let target_delim_count = 7;
