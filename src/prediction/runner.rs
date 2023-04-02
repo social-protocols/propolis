@@ -10,7 +10,7 @@ use super::{
         MultiStatementPrompt, MultiStatementPromptGen, MultiStatementPromptResult,
         MultiStatementResultTypes,
     },
-    openai::{OpenAiEnv, OpenAiModel}, prompts::StatementMetaContainer,
+    openai::{OpenAiEnv, OpenAiModel}, prompts::{StatementMetaContainer, StatementMeta},
 };
 
 /// Runs given prompts and yields results
@@ -67,7 +67,7 @@ pub async fn run(pool: &SqlitePool) {
 
     let prompt_gen = MultiStatementPromptGen::<StatementMetaContainer> {
         batch_size: 5,
-        prompt: |stmts| MultiStatementPrompt::statement_meta(&stmts),
+        prompt: |stmts| StatementMeta::prompt(&stmts),
         pool,
     };
 

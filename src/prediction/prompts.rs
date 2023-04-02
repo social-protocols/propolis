@@ -4,7 +4,7 @@ use tracing::debug;
 
 use crate::structs::Statement;
 
-use super::api::{AiMessage, AiPrompt, PromptResponse};
+use super::{api::{AiMessage, AiPrompt, PromptResponse}, multi_statement_classifier::MultiStatementPrompt};
 
 /// A generic prompt yielding a single result
 pub struct GenericPrompt {
@@ -102,20 +102,6 @@ pub fn statement_ideology(s: &Statement) -> GenericPrompt {
     }
 }
 
-/// Contains various meta information about a statement
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
-pub enum StatementMeta {
-    Politics {
-        tags: Vec<ScoredValue>,
-        ideologies: Vec<ScoredValue>,
-    },
-    Personal {
-        tags: Vec<ScoredValue>,
-        bfp_traits: Vec<ScoredValue>,
-    },
-    Unparseable(String),
-}
-
 /// Holds a weighting score
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
 pub enum Score {
@@ -163,6 +149,20 @@ impl TryFrom<&str> for ScoredValue {
     }
 }
 
+/// Contains various meta information about a statement
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub enum StatementMeta {
+    Politics {
+        tags: Vec<ScoredValue>,
+        ideologies: Vec<ScoredValue>,
+    },
+    Personal {
+        tags: Vec<ScoredValue>,
+        bfp_traits: Vec<ScoredValue>,
+    },
+    Unparseable(String),
+}
+
 /// Container for several StatementMeta instances
 #[derive(Serialize, Clone, PartialEq, Eq)]
 pub struct StatementMetaContainer {
@@ -192,7 +192,7 @@ impl TryFrom<String> for StatementMetaContainer {
 }
 
 impl StatementMeta {
-    /// Creates a container of statements from CSV data without a header
+    /// Creates a container of StatementMeta from CSV data with "|" delimiter and no header
     pub fn from_lines(s: &str) -> anyhow::Result<StatementMetaContainer> {
         debug!("Deserializing CSV results:\n\n{}\n\n", s);
         /// What the csv record looks like in data types
@@ -243,6 +243,72 @@ impl StatementMeta {
         }
 
         Ok(StatementMetaContainer { value: result })
+    }
+
+    /// Gives a prompt that computes various meta information on the passed statements
+    pub fn prompt(stmts: &[Statement]) -> MultiStatementPrompt<StatementMetaContainer> {
+        let mut stmts_s = String::from("");
+        for s in stmts {
+            stmts_s += format!("{}: {}", s.id, s.text).as_str();
+        }
+        MultiStatementPrompt {
+            name: "statement_meta".into(),
+            version: 6,
+            handler: |s| {
+                let s_without_header = s.trim().splitn(2, "\n").nth(1).unwrap_or("").to_string();
+                let target_delim_count = 7;
+                s_without_header
+                    .split("\n")
+                    // -- fixup delimiter count, since the ai does not reliably do that --
+                    .map(|s| -> String {
+                        let s = s.to_string();
+                        let delim_count = s.match_indices("|").collect::<Vec<_>>().len();
+                        if delim_count < target_delim_count {
+                            s + "|".repeat(target_delim_count - delim_count).as_str().into()
+                        } else if delim_count > target_delim_count {
+                            s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
+                                .unwrap()
+                                .into()
+                        } else {
+                            s
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    // -- finally try to return an R (result type) --
+                    .try_into()
+                    .expect("Unable to extract from string")
+            },
+            primer: vec![
+                AiMessage::system(
+                    "
+You will be given multiple statements, each starting on their own line,
+and your task is to determine whether the statement falls into the category
+of politics or personal statements. In the case of it being a political category,
+give which political ideologies (e.g., liberalism, conservatism, socialism)
+each quote aligns with the most.
+In the case of it being a personal category, give the big five personality traits instead.
+
+In addition, also output up to three topic tags. The output should be a csv table with empty values as \"-\".
+All cells should be followed by a strength score (w=weak, s=strong) after a \":\" delimiter.
+If you are not sure, use \"-\"",
+                ),
+                AiMessage::user(
+                    "
+1. The global economy is at risk of recession due to the trade war and uncertainty it creates.
+2. In clubs kann man hervorragend neue Freunde kennenlernen",
+                ),
+                AiMessage::assistant(
+                    "
+num|category|label1|label2|label3|tag1|tag2|tag3
+1|politics|neoliberalism:s|conservatism:w|socialism:w|global economy:s|trade war:s|uncertainty:s
+2|personal|extraversion:s|openness:w|agreeableness:s|clubs:s|friendship:s|socializing:w
+",
+                ),
+                AiMessage::user(format!("{}", stmts_s).as_str()),
+            ],
+            stmts: stmts.to_vec(),
+        }
     }
 }
 
