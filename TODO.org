@@ -14,8 +14,9 @@
 - [X] DB caching
   - [X] Create DB migration with new table for GPT-data
   - [X] Cache tokens used
+- [X] make prediction toggleable via feature flag
+- [ ] Get rid of all =.unwrap()= locations
 - [ ] Add gpt response time to table
-- [ ] make prediction toggleable via feature flag
 - [ ] how to handle different prompt versions when deserializing?
 - [X] Write a combined predictor
 - [-] Add political spectrum/ideology categorization
@@ -37,6 +38,9 @@
 *** Refactor
 - [X] runner ⇒ MultiStatementClassifier
   - [X] classify_batch
+** TODO Support multiple api-keys
+- [ ] Write per-key token statistics into DB
+- [ ] Select key with least # tokens in last week
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
