@@ -258,96 +258,6 @@
     },
     "query": "INSERT INTO vote_history (user_id, statement_id, vote) VALUES (?, ?, ?)"
   },
-  "e387b8074d634cf05428ee0f8dcd26af77b69363c7fbaea91687d4c259b3cfff": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "ai_env",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_version",
-          "ordinal": 3,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_result",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "completion_tokens",
-          "ordinal": 5,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_tokens",
-          "ordinal": 6,
-          "type_info": "Int64"
-        },
-        {
-          "name": "total_tokens",
-          "ordinal": 7,
-          "type_info": "Int64"
-        },
-        {
-          "name": "timestamp",
-          "ordinal": 8,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 4
-      }
-    },
-    "query": "SELECT statement_id, ai_env, prompt_name, prompt_version, prompt_result,\n                  completion_tokens, prompt_tokens, total_tokens, timestamp\n        FROM statement_predictions\n        WHERE statement_id = ? and ai_env = ? and prompt_name = ? and prompt_version = ?"
-  },
-  "e90d0ae3f05dbdb49d9f6fbeab76e9d46d4c0c9069b8cd2fad67a783b6efd6ca": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "text",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "SELECT id,text FROM statements WHERE\nid NOT IN (SELECT statement_id FROM statement_predictions)\nLIMIT ?"
-  },
   "eb249830a9036b2c77f7db1436bec513f4c4555a999bf05c4228ad4ddf14db05": {
     "describe": {
       "columns": [
@@ -365,6 +275,72 @@
       }
     },
     "query": "INSERT INTO statements (text) VALUES (?) RETURNING id"
+  },
+  "f2ec43d44b3f8181c72780c93ef32c80d41df5cd7b04ccd18c98b10616094411": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id!",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "ai_env!",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_name!",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_version!",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "prompt_result!",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "completion_tokens!",
+          "ordinal": 5,
+          "type_info": "Int64"
+        },
+        {
+          "name": "prompt_tokens!",
+          "ordinal": 6,
+          "type_info": "Int64"
+        },
+        {
+          "name": "total_tokens!",
+          "ordinal": 7,
+          "type_info": "Int64"
+        },
+        {
+          "name": "timestamp!",
+          "ordinal": 8,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  timestamp as \"timestamp!\"\nfrom statement_predictions\nwhere statement_id = ? order by timestamp desc"
   },
   "fa547048a2ff6f7db4a3b154acfe0a3d9632a2b0b286a3a99f63548179b6e8b2": {
     "describe": {
