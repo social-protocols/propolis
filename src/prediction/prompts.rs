@@ -174,6 +174,7 @@ pub struct StatementMetaContainer {
     pub value: Vec<StatementMeta>,
 }
 
+// FIXME: Probably this should instead be implemented via a trait on the result type
 impl IntoIterator for StatementMetaContainer {
     type Item = String;
 
@@ -182,7 +183,7 @@ impl IntoIterator for StatementMetaContainer {
     fn into_iter(self) -> Self::IntoIter {
         self.value
             .into_iter()
-            .map(|s| serde_json::to_string(&s).unwrap())
+            .map(|s| serde_json::to_string(&s).unwrap_or("<Unable to convert to str>".into()))
             .collect::<Vec<String>>()
             .into_iter()
     }
@@ -243,7 +244,9 @@ impl StatementMeta {
                     .flatten()
                     .collect(),
                 },
-                _ => Self::Unparseable(serde_json::to_string(&record).unwrap()),
+                _ => Self::Unparseable(
+                    serde_json::to_string(&record).unwrap_or("<Unable to convert to str>".into()),
+                ),
             })
         }
 
@@ -274,7 +277,7 @@ impl StatementMeta {
                             },
                             std::cmp::Ordering::Greater => {
                                 s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
-                                    .unwrap()
+                                    .unwrap_or(&s)
                                     .into()
                             },
                             std::cmp::Ordering::Equal => { s }

@@ -32,44 +32,40 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
     where
         R: MultiStatementResultTypes,
     {
-        let result: Option<MultiStatementPromptResult<R>>;
-        loop {
-            if self.token_rate_limiter.check() {
-                info!("Running prompt: {}, V{}", prompt.name, prompt.version);
-                let response = self.env.send_prompt(&prompt).await?;
-                match self
-                    .token_rate_limiter
-                    .add(response.response.total_tokens as f64)
-                {
-                    QuotaState::ExceededUntil(exceeded_by, instant) => {
-                        warn!(
-                            "Exceeded token quota by {}. Waiting for: {}s",
-                            exceeded_by,
-                            (instant - Instant::now()).as_secs()
-                        );
-                    }
-                    QuotaState::Remaining(v) => {
-                        info!("Quota remaining: {}", v);
-                    }
-                }
-                result = Some(response);
-                break;
-            } else {
-                async_std::task::sleep(Duration::from_secs(1)).await;
+        self.token_rate_limiter.block_until_ok().await;
+
+        info!("Running prompt: {}, V{}", prompt.name, prompt.version);
+        let response = self.env.send_prompt(&prompt).await?;
+        match self
+            .token_rate_limiter
+            .add(response.response.total_tokens as f64)
+        {
+            QuotaState::ExceededUntil(exceeded_by, instant) => {
+                warn!(
+                    "Exceeded token quota by {}. Waiting for: {}s",
+                    exceeded_by,
+                    (instant - Instant::now()).as_secs()
+                );
+            }
+            QuotaState::Remaining(v) => {
+                info!("Quota remaining: {}", v);
             }
         }
 
-        // unwrap fine, since the loops only breaks if there is a result
-        Ok(result.unwrap())
+        Ok(response)
     }
 }
 
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub async fn run(pool: &SqlitePool) {
-    ai_prompt::openai::setup_openai().await.expect("Unable to setup openai");
+    use tracing::log::error;
+
+    ai_prompt::openai::setup_openai()
+        .await
+        .expect("Unable to setup openai");
 
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
@@ -84,12 +80,26 @@ pub async fn run(pool: &SqlitePool) {
         env: &env,
     };
     loop {
-        let prompt = prompt_gen.next_prompt().await.unwrap();
+        let prompt = prompt_gen
+            .next_prompt()
+            .await
+            .unwrap_or_else(|err| {
+                error!("next_prompt failed: {}", err);
+                None
+            });
+
         match prompt {
             Some(prompt) => {
-                let result = runner.run(prompt).await.unwrap();
-
-                result.store(pool).await.unwrap();
+                match runner.run(prompt).await {
+                    Ok(result) => {
+                        if let Err(err) = result.store(pool).await {
+                            error!("storing result failed: {err}");
+                        };
+                    },
+                    Err(err) => {
+                        error!("running prompt failed: {err}");
+                    }
+                };
             }
             None => {
                 async_std::task::sleep(Duration::from_secs(1)).await;

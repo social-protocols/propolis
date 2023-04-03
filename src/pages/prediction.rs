@@ -3,23 +3,15 @@ use maud::html;
 use sqlx::SqlitePool;
 
 use crate::{
-    db::get_statement,
-    error::Error,
-    prediction::prompts::StatementMeta,
-    structs::{Statement, StatementPrediction},
+    db::get_statement, error::Error, prediction::prompts::StatementMeta,
+    structs::StatementPrediction,
 };
 
 pub async fn prediction_page(
     Extension(pool): Extension<SqlitePool>,
     Path(statement_id): Path<i64>,
 ) -> Result<impl IntoResponse, Error> {
-    let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
-
-    if let None = statement {
-        return Err(Error::CustomError("No such statement".into()));
-    }
-
-    let statement = statement.unwrap();
+    let statement = get_statement(statement_id, &pool).await?;
 
     let pred = sqlx::query_as!(
         StatementPrediction,
@@ -43,9 +35,8 @@ where statement_id = ? order by timestamp desc",
     .map_or("no prediction yet".to_string(), |s| s.prompt_result.into());
 
     let pred_formatted = serde_json::to_string_pretty(
-        &serde_json::from_str::<StatementMeta>(pred.as_str()).unwrap(),
-    )
-    .unwrap();
+        &serde_json::from_str::<StatementMeta>(pred.as_str())?,
+    )?;
 
     let content = html! {
         p { (statement.text) }

@@ -35,6 +35,17 @@ impl RateLimiter {
         self.quota <= self.allowed_quota
     }
 
+    /// async block until add allowed again
+    pub async fn block_until_ok(&mut self) {
+        loop {
+            if !self.check() {
+                async_std::task::sleep(Duration::from_secs(1)).await;
+            } else {
+                break;
+            }
+        }
+    }
+
     /// Adds to quota & returns remaining quota or when it is going to be reset
     pub fn add<T: Into<f64>>(&mut self, quota: T) -> QuotaState {
         self.check();
@@ -43,17 +54,19 @@ impl RateLimiter {
         if self.quota <= self.allowed_quota {
             QuotaState::Remaining(self.allowed_quota - self.quota)
         } else {
-            QuotaState::ExceededUntil(self.quota - self.allowed_quota, Instant::now() + self.period)
+            QuotaState::ExceededUntil(
+                self.quota - self.allowed_quota,
+                Instant::now() + self.period,
+            )
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
 
-    use crate::{RateLimiter, QuotaState};
+    use crate::{QuotaState, RateLimiter};
 
     #[test]
     fn test_rate_limiter() {

@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
+async-std = "1.12.0"
 async-trait = "0.1.68"
