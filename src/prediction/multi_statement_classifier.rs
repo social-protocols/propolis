@@ -4,7 +4,7 @@ use tracing::debug;
 
 use crate::structs::{Statement, StatementPrediction};
 
-use super::api::{AiMessage, AiPrompt, PromptResponse};
+use ai_prompt::api::{AiMessage, AiPrompt, PromptResponse};
 
 /// Helper trait to specify which other traits a type must fulfil in order to be used as a result type
 /// of a prompt.

@@ -25,8 +25,8 @@
     - [X] restore data as a struct
   - [X] Parse result into a rust struct of known ideologies to work with them
   - [ ] own table for ideologies
-  - [ ] Show ideology on statement page
-  - [ ] Show ideologies on user overview page
+  - [ ] Show ideology & tags on statement page
+  - [ ] Show ideologies voted for with counter on user overview page
 - [X] Show total tokens & costs on endpoint
 - [X] Create async process for filling DB with GPT-data
   - [X] Run loop to process statements in background

@@ -4,7 +4,8 @@ use tracing::debug;
 
 use crate::structs::Statement;
 
-use super::{api::{AiMessage, AiPrompt, PromptResponse}, multi_statement_classifier::MultiStatementPrompt};
+use super::multi_statement_classifier::MultiStatementPrompt;
+use ai_prompt::api::{AiMessage, AiPrompt, PromptResponse};
 
 /// A generic prompt yielding a single result
 pub struct GenericPrompt {

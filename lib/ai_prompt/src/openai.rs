@@ -1,3 +1,4 @@
+use anyhow::Context;
 use async_trait::async_trait;
 use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
 use openai::set_key;
@@ -87,6 +88,6 @@ impl AiEnv for OpenAiEnv {
     }
 }
 
-pub async fn setup_openai() {
-    set_key(env::var("OPENAI_KEY").unwrap());
+pub async fn setup_openai() -> anyhow::Result<()> {
+    Ok(set_key(env::var("OPENAI_KEY").context("OPENAI_KEY environment variable not found.")?))
 }

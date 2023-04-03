@@ -5,12 +5,15 @@ use sqlx::SqlitePool;
 use tracing::log::{info, warn};
 
 use super::{
-    api::AiEnv,
     multi_statement_classifier::{
         MultiStatementPrompt, MultiStatementPromptGen, MultiStatementPromptResult,
         MultiStatementResultTypes,
     },
-    openai::{OpenAiEnv, OpenAiModel}, prompts::{StatementMetaContainer, StatementMeta},
+    prompts::{StatementMeta, StatementMetaContainer},
+};
+use ai_prompt::{
+    api::AiEnv,
+    openai::{OpenAiEnv, OpenAiModel},
 };
 
 /// Runs given prompts and yields results
@@ -64,7 +67,10 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
+#[cfg(feature="with_predictions")]
 pub async fn run(pool: &SqlitePool) {
+    ai_prompt::openai::setup_openai().await.expect("Unable to setup openai");
+
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
     let prompt_gen = MultiStatementPromptGen::<StatementMetaContainer> {
