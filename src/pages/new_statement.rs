@@ -1,11 +1,12 @@
 use super::base::base;
 use crate::db::{add_followup, get_statement};
+use crate::error::AppError;
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
 };
 use crate::structs::{TargetSegment, User};
 
-use crate::{db::autocomplete_statement, error::Error};
+use crate::db::autocomplete_statement;
 
 use axum::{extract::Query, response::Redirect, Extension, Form};
 use http::HeaderMap;
@@ -43,7 +44,7 @@ pub async fn new_statement(
     url_query: Query<NewStatementUrlQuery>,
     Extension(pool): Extension<SqlitePool>,
     headers: HeaderMap,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let target_statement = match url_query.target {
         Some(target_id) => get_statement(target_id, &pool).await.ok(),
         None => None,
@@ -114,7 +115,7 @@ pub async fn completions(
     maybe_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
     Form(form): Form<AddStatementForm>,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let statements = autocomplete_statement(form.statement_text.as_str(), &pool).await?;
     Ok(html! {
         @for search_result_statement in &statements {
@@ -140,7 +141,7 @@ pub async fn create_statement(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(form_data): Form<AddStatementForm>,
-) -> Result<Redirect, Error> {
+) -> Result<Redirect, AppError> {
     let user = User::get_or_create(&cookies, &pool).await?;
     let target_segment = match form_data.target {
         Some(target_id) => Some(TargetSegment {
@@ -159,7 +160,7 @@ pub async fn create_statement(
 pub async fn link_followup(
     Extension(pool): Extension<SqlitePool>,
     Form(form_data): Form<LinkFollowupForm>,
-) -> Result<Redirect, Error> {
+) -> Result<Redirect, AppError> {
     // TODO: is it ok that this linking can be done anonymously? Since no user record is needed for this query...
     add_followup(
         TargetSegment {

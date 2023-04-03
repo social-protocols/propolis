@@ -1,5 +1,6 @@
 //! Database access via sqlx
 
+use anyhow::Result;
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
     SqlitePool,
@@ -7,15 +8,12 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
+use crate::structs::{Statement, VoteHistoryItem};
 use crate::structs::{StatementStats, TargetSegment, User, Vote};
-use crate::{
-    error::Error,
-    structs::{Statement, VoteHistoryItem},
-};
 
 impl User {
     /// Returns number of statements added by [User]
-    pub async fn num_statements(&self, pool: &SqlitePool) -> Result<i32, Error> {
+    pub async fn num_statements(&self, pool: &SqlitePool) -> Result<i32> {
         Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM authors where user_id = ?",
             self.id,
@@ -26,7 +24,7 @@ impl User {
     }
 
     /// Returns number of votes added by [User]
-    pub async fn num_votes(&self, pool: &SqlitePool) -> Result<i32, Error> {
+    pub async fn num_votes(&self, pool: &SqlitePool) -> Result<i32> {
         Ok(sqlx::query!(
             "SELECT COUNT(*) as count FROM votes where user_id = ?",
             self.id,
@@ -37,7 +35,7 @@ impl User {
     }
 
     /// Moves content from one user to another
-    pub async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<()> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("UPDATE {} SET user_id=? WHERE user_id=?", table).as_str())
                 .bind(new_user.id)
@@ -49,7 +47,7 @@ impl User {
     }
 
     /// Deletes all content of a particular user
-    pub async fn delete_content(&self, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn delete_content(&self, pool: &SqlitePool) -> Result<()> {
         for table in vec!["authors", "votes", "vote_history", "queue"] {
             sqlx::query(format!("DELETE FROM {} WHERE user_id=?", table).as_str())
                 .bind(self.id)
@@ -60,7 +58,7 @@ impl User {
     }
 
     /// Deletes user without content
-    pub async fn delete(&self, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn delete(&self, pool: &SqlitePool) -> Result<()> {
         sqlx::query!("DELETE FROM users WHERE id=?", self.id)
             .execute(pool)
             .await?;
@@ -68,12 +66,7 @@ impl User {
     }
 
     /// Votes on a statement
-    pub async fn vote(
-        &self,
-        statement_id: i64,
-        vote: Vote,
-        pool: &SqlitePool,
-    ) -> Result<(), Error> {
+    pub async fn vote(&self, statement_id: i64, vote: Vote, pool: &SqlitePool) -> Result<()> {
         // TODO: voting on specialization gets generalizations and other specializations into queue
 
         let vote_i32 = vote as i32;
@@ -89,7 +82,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn is_subscribed(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool, Error> {
+    pub async fn is_subscribed(&self, statement_id: i64, pool: &SqlitePool) -> Result<bool> {
         let subscription = sqlx::query!(
             "select count(*) as subscription from subscriptions where user_id = ? and statement_id = ?",
             self.id,
@@ -100,11 +93,7 @@ impl User {
         Ok(subscription.subscription == 1)
     }
 
-    pub async fn get_vote(
-        &self,
-        statement_id: i64,
-        pool: &SqlitePool,
-    ) -> Result<Option<Vote>, Error> {
+    pub async fn get_vote(&self, statement_id: i64, pool: &SqlitePool) -> Result<Option<Vote>> {
         let vote = sqlx::query_scalar!(
             "select vote from votes where user_id = ? and statement_id = ?",
             self.id,
@@ -115,7 +104,7 @@ impl User {
         Ok(vote.map(|v| Vote::from(v).unwrap()))
     }
 
-    pub async fn subscribe(&self, statement_id: i64, pool: &SqlitePool) -> Result<(), Error> {
+    pub async fn subscribe(&self, statement_id: i64, pool: &SqlitePool) -> Result<()> {
         sqlx::query!(
             "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing",
             self.id,
@@ -129,7 +118,7 @@ impl User {
 
     /// Returns all votes taken by a [User]
     // TODO: just return what's in the vote_history table
-    pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>, Error> {
+    pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
             "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v
@@ -146,7 +135,7 @@ impl User {
         text: String,
         target_segment: Option<TargetSegment>,
         pool: &SqlitePool,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
         let created_statement = sqlx::query!(
@@ -189,7 +178,7 @@ impl User {
     }
 
     // Retrieve next statement id for [User]
-    pub async fn next_statement_for_user(&self, pool: &SqlitePool) -> Result<Option<i64>, Error> {
+    pub async fn next_statement_for_user(&self, pool: &SqlitePool) -> Result<Option<i64>> {
         // try to pick a statement from the user's personal queue
         let statement_id = self.next_statement_id_from_queue(pool).await?;
 
@@ -201,10 +190,7 @@ impl User {
     }
 
     /// Retrieve next statement id from [User] queue
-    pub async fn next_statement_id_from_queue(
-        &self,
-        pool: &SqlitePool,
-    ) -> Result<Option<i64>, Error> {
+    pub async fn next_statement_id_from_queue(&self, pool: &SqlitePool) -> Result<Option<i64>> {
         // TODO: sqlx bug: adding `order by timestamp` infers wrong type in macro
         Ok(sqlx::query_scalar::<_, i64>(
             "select statement_id from queue where user_id = ? order by created asc limit 1",
@@ -214,10 +200,7 @@ impl User {
         .await?)
     }
 
-    pub async fn random_unvoted_statement_id(
-        &self,
-        pool: &SqlitePool,
-    ) -> Result<Option<i64>, Error> {
+    pub async fn random_unvoted_statement_id(&self, pool: &SqlitePool) -> Result<Option<i64>> {
         Ok(sqlx::query_scalar::<_, i64>(
             "select id from statements where id not in (select statement_id from votes v where v.user_id = ?) order by random() limit 1")
             .bind(self.id)
@@ -226,10 +209,7 @@ impl User {
     }
 }
 
-pub async fn statement_stats(
-    statement_id: i64,
-    pool: &SqlitePool,
-) -> Result<StatementStats, Error> {
+pub async fn statement_stats(statement_id: i64, pool: &SqlitePool) -> Result<StatementStats> {
     Ok(
         // TODO: sqlx bug: computed column types are wrong
         sqlx::query_as::<_, StatementStats>(
@@ -288,7 +268,7 @@ pub async fn setup_db() -> SqlitePool {
     sqlite_pool
 }
 
-pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error> {
+pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>> {
     // for anonymous users, pick a random statement
     Ok(sqlx::query_scalar::<_, i64>(
         // TODO: https://github.com/launchbadge/sqlx/issues/1524
@@ -298,7 +278,7 @@ pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>, Error
     .await?)
 }
 
-pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<Statement, Error> {
+pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<Statement> {
     Ok(sqlx::query_as!(
         Statement,
         "SELECT id, text from statements where id = ?",
@@ -308,10 +288,7 @@ pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<State
     .await?)
 }
 
-pub async fn autocomplete_statement(
-    text: &str,
-    pool: &SqlitePool,
-) -> Result<Vec<Statement>, Error> {
+pub async fn autocomplete_statement(text: &str, pool: &SqlitePool) -> Result<Vec<Statement>> {
     Ok(sqlx::query_as::<_, Statement>(
         "SELECT id, highlight(statements_fts, 1, '<b>', '</b>') as text
 FROM statements_fts
@@ -323,7 +300,7 @@ LIMIT 25",
     .await?)
 }
 
-pub async fn get_subscriptions(user: &User, pool: &SqlitePool) -> Result<Vec<Statement>, Error> {
+pub async fn get_subscriptions(user: &User, pool: &SqlitePool) -> Result<Vec<Statement>> {
     // TODO: https://github.com/launchbadge/sqlx/issues/1524
     Ok(sqlx::query_as::<_, Statement>(
         "select s.id, s.text from subscriptions sub join statements s on s.id = sub.statement_id where sub.user_id = ?",
@@ -337,7 +314,7 @@ pub async fn add_followup(
     segment: TargetSegment,
     followup_id: i64,
     pool: &SqlitePool,
-) -> Result<(), Error> {
+) -> Result<()> {
     sqlx::query!(
         "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)
          on conflict(statement_id, followup_id) do update
@@ -354,7 +331,7 @@ pub async fn add_followup(
     Ok(())
 }
 
-pub async fn get_followups(statement_id: i64, pool: &SqlitePool) -> Result<Vec<i64>, Error> {
+pub async fn get_followups(statement_id: i64, pool: &SqlitePool) -> Result<Vec<i64>> {
     Ok(sqlx::query_scalar!(
         "select followup_id from followups where statement_id = ?",
         statement_id,

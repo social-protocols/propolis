@@ -1,5 +1,6 @@
 //! Authentication & user management
 
+use anyhow::Result;
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::StatusCode;
@@ -10,12 +11,11 @@ use rand::{thread_rng, Rng};
 use sqlx::SqlitePool;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::error::Error;
 use crate::structs::User;
 
 impl User {
     /// If logged in with a secret, will return a [User]
-    pub async fn from_cookies(cookies: &Cookies, pool: &SqlitePool) -> Result<Option<Self>, Error> {
+    pub async fn from_cookies(cookies: &Cookies, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(match cookies.get("secret") {
             Some(cookie) => User::from_secret(cookie.value().to_string(), pool).await?,
             None => None,
@@ -23,7 +23,7 @@ impl User {
     }
 
     /// returns [User] via secret
-    pub async fn from_secret(secret: String, pool: &SqlitePool) -> Result<Option<Self>, Error> {
+    pub async fn from_secret(secret: String, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             User,
             "SELECT id, secret from users WHERE secret = ?",
@@ -34,7 +34,7 @@ impl User {
     }
 
     /// returns logged in [User] or creates a new one and returns that
-    pub async fn get_or_create(cookies: &Cookies, pool: &SqlitePool) -> Result<User, Error> {
+    pub async fn get_or_create(cookies: &Cookies, pool: &SqlitePool) -> Result<User> {
         let existing_user: Option<User> = User::from_cookies(cookies, pool).await?;
 
         Ok(match existing_user {
@@ -49,7 +49,7 @@ impl User {
     }
 
     /// Creates a new [User] inside the database and return it
-    async fn create(pool: &SqlitePool) -> Result<User, Error> {
+    pub async fn create(pool: &SqlitePool) -> Result<User> {
         let secret = generate_secret();
         let user =
             sqlx::query_as::<_, User>("INSERT INTO users (secret) VALUES (?) RETURNING id, secret")
