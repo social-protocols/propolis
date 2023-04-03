@@ -6,37 +6,37 @@ use http::StatusCode;
 /// Our custom wrapper type for various errors, so we can implement IntoResponse for e.g. sqlx::Error
 #[derive(Debug)]
 pub enum Error {
-    SqlxError(sqlx::Error),
-    IoError(std::io::Error),
-    AnyhowError(anyhow::Error),
-    CustomError(String),
+    Sqlx(sqlx::Error),
+    Io(std::io::Error),
+    Anyhow(anyhow::Error),
+    Custom(String),
 }
 
 impl From<sqlx::Error> for Error {
     fn from(err: sqlx::Error) -> Error {
-        Error::SqlxError(err)
+        Error::Sqlx(err)
     }
 }
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Error {
-        Error::IoError(err)
+        Error::Io(err)
     }
 }
 
 impl From<anyhow::Error> for Error {
     fn from(err: anyhow::Error) -> Error {
-        Error::AnyhowError(err)
+        Error::Anyhow(err)
     }
 }
 
 impl From<Error> for String {
     fn from(err: Error) -> String {
         match err {
-            Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
-            Error::IoError(io_error) => io_error.to_string(),
-            Error::AnyhowError(error) => error.to_string(),
-            Error::CustomError(msg) => msg,
+            Error::Sqlx(sqlx_error) => sqlx_error.to_string(),
+            Error::Io(io_error) => io_error.to_string(),
+            Error::Anyhow(error) => error.to_string(),
+            Error::Custom(msg) => msg,
         }
     }
 }
@@ -48,7 +48,7 @@ impl IntoResponse for Error {
         tracing::error!(error_msg);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("INTERNAL SERVER ERROR:\n\n{}", error_msg),
+            format!("INTERNAL SERVER ERROR:\n\n{error_msg}"),
         )
             .into_response()
     }

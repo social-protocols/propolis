@@ -40,7 +40,7 @@ pub enum Vote {
 
 impl Vote {
     pub fn from(vote: i64) -> Result<Vote, Error> {
-        FromPrimitive::from_i64(vote).ok_or(Error::CustomError("Unknown vote value".to_string()))
+        FromPrimitive::from_i64(vote).ok_or(Error::Custom("Unknown vote value".to_string()))
     }
 }
 

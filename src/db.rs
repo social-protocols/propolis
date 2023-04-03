@@ -38,8 +38,8 @@ impl User {
 
     /// Moves content from one user to another
     pub async fn move_content_to(&self, new_user: &User, pool: &SqlitePool) -> Result<(), Error> {
-        for table in vec!["authors", "votes", "vote_history", "queue"] {
-            sqlx::query(format!("UPDATE {} SET user_id=? WHERE user_id=?", table).as_str())
+        for table in ["authors", "votes", "vote_history", "queue"] {
+            sqlx::query(format!("UPDATE {table} SET user_id=? WHERE user_id=?").as_str())
                 .bind(new_user.id)
                 .bind(self.id)
                 .execute(pool)
@@ -50,8 +50,8 @@ impl User {
 
     /// Deletes all content of a particular user
     pub async fn delete_content(&self, pool: &SqlitePool) -> Result<(), Error> {
-        for table in vec!["authors", "votes", "vote_history", "queue"] {
-            sqlx::query(format!("DELETE FROM {} WHERE user_id=?", table).as_str())
+        for table in ["authors", "votes", "vote_history", "queue"] {
+            sqlx::query(format!("DELETE FROM {table} WHERE user_id=?").as_str())
                 .bind(self.id)
                 .execute(pool)
                 .await?;
@@ -274,7 +274,7 @@ pub async fn setup_db() -> SqlitePool {
             .expect("Unable to migrate");
     }
 
-    for option in vec![
+    for option in [
         "pragma temp_store = memory;",
         "pragma mmap_size = 30000000000;",
         "pragma page_size = 4096;",
@@ -282,7 +282,7 @@ pub async fn setup_db() -> SqlitePool {
         sqlx::query(option)
             .execute(&sqlite_pool)
             .await
-            .expect(format!("Unable to set option: {}", option).as_str());
+            .unwrap_or_else(|_| panic!("Unable to set option: {option}"));
     }
 
     sqlite_pool

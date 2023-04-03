@@ -60,8 +60,7 @@ pub async fn merge(
         content,
         &headers,
         None,
-    )
-    .into())
+    ))
 }
 
 pub async fn merge_post(

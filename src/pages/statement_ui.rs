@@ -34,7 +34,7 @@ pub async fn small_statement_content(
                     a style="text-decoration: none; font-weight: bold; letter-spacing: 0.1em; font-size: 85%; padding: 0.4em 0em; margin-right: 1em" href=(format!("/new?target={}", statement.id)) {
                         "↳ Add Follow-Up"
                     }
-                    (subscribe_button(statement.id, &maybe_user, &pool).await?)
+                    (subscribe_button(statement.id, maybe_user, pool).await?)
                 }
             }
         }
@@ -47,7 +47,7 @@ pub async fn small_statement_piechart(
 ) -> Result<Markup, Error> {
     Ok(html! {
         div style="padding: 5px 0px; align-self: center;" {
-            (yes_no_pie_chart(statement_id, &pool).await?)
+            (yes_no_pie_chart(statement_id, pool).await?)
         }
     })
 }

@@ -8,6 +8,7 @@ in pkgs.mkShell {
   buildInputs = with pkgs; [ 
     cargo
     cargo-watch
+    clippy
     direnv
     just
     rustfmt

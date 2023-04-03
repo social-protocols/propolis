@@ -55,7 +55,7 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
                 ai_env: self.response.env_info.to_owned().into(),
                 prompt_name: self.response.prompt_info.to_owned().name,
                 prompt_version: self.response.prompt_info.version as i64,
-                prompt_result: stmt.into(),
+                prompt_result: stmt,
                 completion_tokens: self.response.completion_tokens / num_stmts,
                 prompt_tokens: self.response.prompt_tokens / num_stmts,
                 total_tokens: self.response.total_tokens / num_stmts,
@@ -114,7 +114,7 @@ impl<R: MultiStatementResultTypes> AiPrompt for MultiStatementPrompt<R> {
     }
 
     fn handle_response(&self, response: PromptResponse) -> Self::PromptResult {
-        let result: R = (self.handler)(response.content.clone()).try_into().unwrap();
+        let result = (self.handler)(response.content.clone());
         MultiStatementPromptResult::<R> {
             response,
             result,
@@ -151,7 +151,7 @@ LIMIT ?",
         )
         .fetch_all(self.pool)
         .await?;
-        if stmts.len() > 0 {
+        if !stmts.is_empty() {
             debug!(
                 "Next batch len for {} V{}: {}",
                 dummy_prompt.name,
@@ -165,7 +165,7 @@ LIMIT ?",
     /// Returns a prompt for the next batch of statements
     pub async fn next_prompt(&self) -> anyhow::Result<Option<MultiStatementPrompt<R>>> {
         let batch = self.next_batch().await?;
-        if batch.len() > 0 {
+        if !batch.is_empty() {
             let prompt = (self.prompt)(batch);
 
             Ok(Some(prompt))

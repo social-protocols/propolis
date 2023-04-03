@@ -21,7 +21,7 @@ pub async fn redirect_to_next_statement(
     let statement_id = next_statement_id(existing_user, Extension(pool)).await?;
 
     Ok(match statement_id {
-        Some(id) => Redirect::to(format!("/statement/{}", id).as_str()),
+        Some(id) => Redirect::to(format!("/statement/{id}").as_str()),
         None => Redirect::to("/statement/0"), // TODO
     })
 }
@@ -30,5 +30,5 @@ pub async fn index(
     existing_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
 ) -> Result<Redirect, Error> {
-    Ok(redirect_to_next_statement(existing_user, Extension(pool)).await?)
+    redirect_to_next_statement(existing_user, Extension(pool)).await
 }

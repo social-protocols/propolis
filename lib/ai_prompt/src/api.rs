@@ -21,7 +21,7 @@ pub struct PromptInfo {
 
 impl From<AiEnvInfo> for String {
     fn from(value: AiEnvInfo) -> Self {
-        format!("{},{}", value.model, value.name).to_string()
+        format!("{},{}", value.model, value.name)
     }
 }
 

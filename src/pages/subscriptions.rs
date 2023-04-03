@@ -18,13 +18,13 @@ pub async fn subscriptions(
     headers: HeaderMap,
 ) -> Result<Markup, Error> {
     let subscriptions = match &maybe_user {
-        Some(user) => get_subscriptions(&user, &pool).await?,
+        Some(user) => get_subscriptions(user, &pool).await?,
         None => Vec::new(),
     };
 
     let content = html! {
         h1 { "My Subscriptions" }
-        @if subscriptions.len() == 0 {
+        @if subscriptions.is_empty() {
             p { "You have not subscribed any statements yet" }
         }
         @for statement in subscriptions {

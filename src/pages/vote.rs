@@ -32,14 +32,14 @@ pub async fn vote(
         Vote::Yes | Vote::No | Vote::Skip => {
             let id = next_statement_id(Some(user), Extension(pool.to_owned())).await?;
             let redirect_url = match id {
-                Some(id) => format!("/statement/{}", id),
+                Some(id) => format!("/statement/{id}"),
                 None => "/".to_string(),
             };
 
             let body = votes(Path(vote_form.statement_id), Extension(pool)).await?;
             Ok((
                 StatusCode::OK,
-                [("HX-Redirect", format!("{}", redirect_url))],
+                [("HX-Redirect", redirect_url.to_string())],
                 body,
             ))
         }

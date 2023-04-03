@@ -44,7 +44,7 @@ fn render_base(
                     @if let Some(url) = page_meta.url {
                         meta property="og:url" content=(url);
                     } @else {
-                        meta property="og:url" content=(base_url(&headers));
+                        meta property="og:url" content=(base_url(headers));
                     }
                 }
 
@@ -99,7 +99,7 @@ pub fn base(
         title,
         user,
         content,
-        &headers,
+        headers,
         page_meta,
     )
 }

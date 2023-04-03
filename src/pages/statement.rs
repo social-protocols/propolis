@@ -97,14 +97,11 @@ pub async fn statement_page(
         }
     };
 
-    let page_meta = match &statement {
-        Some(statement) => Some(PageMeta {
-            title: Some("Yes or no?".to_string()),
-            description: Some(statement.text.to_owned()),
-            url: Some(format!("{}/statement/{}", base_url(&headers), statement_id).to_string()),
-        }),
-        None => None,
-    };
+    let page_meta = statement.as_ref().map(|statement| PageMeta {
+        title: Some("Yes or no?".to_string()),
+        description: Some(statement.text.to_owned()),
+        url: Some(format!("{}/statement/{}", base_url(&headers), statement_id)),
+    });
 
     Ok(base(
         cookies,
@@ -118,7 +115,7 @@ pub async fn statement_page(
 
 async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {
     let history = match maybe_user {
-        Some(user) => user.vote_history(&pool).await?,
+        Some(user) => user.vote_history(pool).await?,
         None => Vec::new(),
     };
 
@@ -129,8 +126,8 @@ async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup,
                 text: item.statement_text,
             };
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_content(&statement, Some(item.vote_timestamp), true, &maybe_user, &pool).await?)
-                (small_statement_piechart(item.statement_id, &pool).await?)
+                (small_statement_content(&statement, Some(item.vote_timestamp), true, maybe_user, pool).await?)
+                (small_statement_piechart(item.statement_id, pool).await?)
                 (small_statement_vote(Some(Vote::from(item.vote)?))?)
             }
         }

@@ -28,7 +28,7 @@ fn html(theme: String, merge_url: &str, qr_code: &str) -> Markup {
     html! {
         fieldset {
             p { "Use this QR Code on another device to switch it to this account:" }
-            img id="qr-code" src=(format!("data:image/svg+xml;base64,{}", qr_code ));
+            img id="qr-code" src=(format!("data:image/svg+xml;base64,{qr_code}"));
             br;
             small {
                 "Or open ";
@@ -63,7 +63,7 @@ pub async fn options(
                 .map(|c| c.value().to_string())
                 .unwrap_or_else(|| String::from("light"));
             let content = html(theme, &merge_url, qr_code_base64(&merge_url).as_str());
-            Ok(base(cookies, title, &Some(user), content, &headers, None).into())
+            Ok(base(cookies, title, &Some(user), content, &headers, None))
         }
         None => Ok(base(
             cookies,

@@ -11,7 +11,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
         no_votes,
         itdepends_votes,
         ..
-    } = statement_stats(statement_id, &pool).await?;
+    } = statement_stats(statement_id, pool).await?;
     if total_votes == 0 {
         Ok(html! {})
     } else {
@@ -53,7 +53,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                   }},
                   "series": {}
                 }}"#,
-                json!([yes_votes, itdepends_votes, no_votes]).to_string(),
+                json!([yes_votes, itdepends_votes, no_votes]),
             )
             .as_str(),
         ))
@@ -67,8 +67,8 @@ pub fn apex_chart(options: &str) -> Markup {
     html! {
         div id=(chart_id) {}
         script {
-            (PreEscaped(format!("var options = {};", options)))
-            (PreEscaped(format!("var chart = new ApexCharts(document.querySelector(\"#{}\"), options);", chart_id)))
+            (PreEscaped(format!("var options = {options};")))
+                (PreEscaped(format!("var chart = new ApexCharts(document.querySelector(\"#{chart_id}\"), options);")))
             (PreEscaped("chart.render();"))
         }
     }

@@ -138,7 +138,7 @@ impl TryFrom<&str> for ScoredValue {
     type Error = anyhow::Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if let Some((value, score)) = value.rsplit_once(":") {
+        if let Some((value, score)) = value.rsplit_once(':') {
             Ok(ScoredValue {
                 value: value.into(),
                 score: score.try_into()?,
@@ -218,7 +218,7 @@ impl StatementMeta {
                 record.7.as_str().try_into(),
             ]
             .into_iter()
-            .flat_map(|i| i)
+            .flatten()
             .collect();
             result.push(match category {
                 "politics" => Self::Politics {
@@ -229,7 +229,7 @@ impl StatementMeta {
                         record.4.as_str().try_into(),
                     ]
                     .into_iter()
-                    .flat_map(|i| i)
+                    .flatten()
                     .collect(),
                 },
                 "personal" => Self::Personal {
@@ -240,7 +240,7 @@ impl StatementMeta {
                         record.4.as_str().try_into(),
                     ]
                     .into_iter()
-                    .flat_map(|i| i)
+                    .flatten()
                     .collect(),
                 },
                 _ => Self::Unparseable(serde_json::to_string(&record).unwrap()),
@@ -260,22 +260,24 @@ impl StatementMeta {
             name: "statement_meta".into(),
             version: 8,
             handler: |s| {
-                let s_without_header = s.trim().splitn(2, "\n").nth(1).unwrap_or("").to_string();
+                let s_without_header = s.trim().split_once('\n').map(|x| x.1).unwrap_or("").to_string();
                 let target_delim_count = 7;
                 s_without_header
-                    .split("\n")
+                    .split('\n')
                     // -- fixup delimiter count, since the ai does not reliably do that --
                     .map(|s| -> String {
                         let s = s.to_string();
-                        let delim_count = s.match_indices("|").collect::<Vec<_>>().len();
-                        if delim_count < target_delim_count {
-                            s + "|".repeat(target_delim_count - delim_count).as_str().into()
-                        } else if delim_count > target_delim_count {
-                            s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
-                                .unwrap()
-                                .into()
-                        } else {
-                            s
+                        let delim_count = s.match_indices('|').collect::<Vec<_>>().len();
+                        match delim_count.cmp(&target_delim_count) {
+                            std::cmp::Ordering::Less => {
+                                s + "|".repeat(target_delim_count - delim_count).as_str()
+                            },
+                            std::cmp::Ordering::Greater => {
+                                s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
+                                    .unwrap()
+                                    .into()
+                            },
+                            std::cmp::Ordering::Equal => { s }
                         }
                     })
                     .collect::<Vec<_>>()
@@ -310,7 +312,7 @@ num|category|label1|label2|label3|tag1|tag2|tag3
 2|personal|extraversion:s|openness:w|agreeableness:s|clubs:s|friendship:s|socializing:w
 ",
                 ),
-                AiMessage::user(format!("{}", stmts_s).as_str()),
+                AiMessage::user(stmts_s.to_string().as_str()),
             ],
             stmts: stmts.to_vec(),
         }

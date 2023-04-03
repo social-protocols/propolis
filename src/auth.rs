@@ -63,15 +63,11 @@ impl User {
 
 /// Changes the cookie containing the secret to a different value
 pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
-    match cookies.get("secret") {
-        Some(mut cookie) => {
-            // copy old cookie, but also set path, since it may come from e.g. /merge
-            cookie.set_value(secret);
-            cookie.set_path("/");
-            cookies.add(cookie.into_owned());
-        }
-
-        None => {}
+    if let Some(mut cookie) = cookies.get("secret") {
+        // copy old cookie, but also set path, since it may come from e.g. /merge
+        cookie.set_value(secret);
+        cookie.set_path("/");
+        cookies.add(cookie.into_owned());
     }
 }
 
