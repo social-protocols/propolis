@@ -80,13 +80,10 @@ pub async fn run(pool: &SqlitePool) {
         env: &env,
     };
     loop {
-        let prompt = prompt_gen
-            .next_prompt()
-            .await
-            .unwrap_or_else(|err| {
-                error!("next_prompt failed: {}", err);
-                None
-            });
+        let prompt = prompt_gen.next_prompt().await.unwrap_or_else(|err| {
+            error!("next_prompt failed: {}", err);
+            None
+        });
 
         match prompt {
             Some(prompt) => {
@@ -95,7 +92,7 @@ pub async fn run(pool: &SqlitePool) {
                         if let Err(err) = result.store(pool).await {
                             error!("storing result failed: {err}");
                         };
-                    },
+                    }
                     Err(err) => {
                         error!("running prompt failed: {err}");
                     }

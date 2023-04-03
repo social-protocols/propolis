@@ -34,9 +34,8 @@ where statement_id = ? order by timestamp desc",
     .await?
     .map_or("no prediction yet".to_string(), |s| s.prompt_result.into());
 
-    let pred_formatted = serde_json::to_string_pretty(
-        &serde_json::from_str::<StatementMeta>(pred.as_str())?,
-    )?;
+    let pred_formatted =
+        serde_json::to_string_pretty(&serde_json::from_str::<StatementMeta>(pred.as_str())?)?;
 
     let content = html! {
         p { (statement.text) }

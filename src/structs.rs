@@ -87,20 +87,19 @@ pub struct PageMeta {
 
 #[derive(Serialize, sqlx::FromRow, Clone)]
 pub struct StatementPrediction {
-    pub statement_id : i64,
-    pub ai_env : String,
-    pub prompt_name : String,
-    pub prompt_version : i64,
-    pub prompt_result : String,
-    pub completion_tokens : i64,
-    pub prompt_tokens : i64,
-    pub total_tokens : i64,
-    pub timestamp : i64,
+    pub statement_id: i64,
+    pub ai_env: String,
+    pub prompt_name: String,
+    pub prompt_version: i64,
+    pub prompt_result: String,
+    pub completion_tokens: i64,
+    pub prompt_tokens: i64,
+    pub total_tokens: i64,
+    pub timestamp: i64,
 }
 
 impl From<StatementPrediction> for String {
     fn from(value: StatementPrediction) -> Self {
-        serde_json::to_string_pretty(&value)
-            .unwrap_or("<serde_json failure>".to_string())
+        serde_json::to_string_pretty(&value).unwrap_or("<serde_json failure>".to_string())
     }
 }

@@ -50,4 +50,3 @@ pub struct BigFivePersonaTrait {
     pub axis: BigFivePersonaAxis,
     pub value: BigFivePersonaValue,
 }
-

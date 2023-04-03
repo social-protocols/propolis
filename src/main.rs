@@ -29,7 +29,7 @@ use axum::{
 use tower_cookies::CookieManagerLayer;
 use tower_http::trace::TraceLayer;
 use tracing::info;
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use std::net::SocketAddr;
 
@@ -55,7 +55,6 @@ async fn main() {
         .with(EnvFilter::from_default_env())
         .init();
 
-
     let mut app = Router::new()
         .route("/", get(index))
         .route("/vote", post(vote))
@@ -78,15 +77,17 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
-    if cfg!(feature="with_predictions") {
-        app = app.route("/prediction/:id", get(crate::pages::prediction::prediction_page));
+    if cfg!(feature = "with_predictions") {
+        app = app.route(
+            "/prediction/:id",
+            get(crate::pages::prediction::prediction_page),
+        );
     }
 
     let prediction_runner = prediction::runner::run(&sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("listening on {}", addr);
-    let axum_server = axum::Server::bind(&addr)
-        .serve(app.into_make_service());
+    let axum_server = axum::Server::bind(&addr).serve(app.into_make_service());
 
     let (_, axum_result) = futures::future::join(prediction_runner, axum_server).await;
     axum_result.unwrap();

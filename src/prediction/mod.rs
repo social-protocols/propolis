@@ -1,20 +1,18 @@
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub mod data;
 
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub mod multi_statement_classifier;
 
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub mod prompts;
 
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub mod runner;
 
-
-#[cfg(not(feature="with_predictions"))]
+#[cfg(not(feature = "with_predictions"))]
 pub mod runner {
     use sqlx::SqlitePool;
 
-    pub async fn run(_pool: &SqlitePool) {
-    }
+    pub async fn run(_pool: &SqlitePool) {}
 }
