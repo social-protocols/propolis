@@ -54,6 +54,9 @@ jobs:
       - name: Validate current schema
         run: cmp -s <(sqlite3 -init /dev/null data/data.sqlite '.schema') schema.sql
 
+      - name: Validate Tailwind styles
+        run: cmp -s <(false) static/css/tailwind.css
+
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check
 

@@ -52,8 +52,8 @@ pub async fn statement_page(
             div {
                 "Do you agree with this statement?"
             }
-            div.shadow style="display:flex; border-radius: 10px" {
-                div style="width: 100%; font-size: 1.5em; padding:1em;" {
+            div class="bg-white dark:bg-[#1a1304] rounded-lg shadow-lg flex" {
+                div class="w-full p-4 text-2xl" {
                     (statement.text)
                 }
                 @if user_vote.is_some() {
@@ -83,7 +83,7 @@ pub async fn statement_page(
                     }
                     @for statement_id in followups {
                         // TODO: different columns depending on vote-dependent follow up
-                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                        div class="rounded flex mb-4" {
                             (small_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
                             (small_statement_piechart(statement_id, &pool).await?)
                             (small_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
