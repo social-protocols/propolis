@@ -57,7 +57,7 @@ async fn main() {
 
     let mut app = Router::new();
 
-    if cfg!(feature = "with_predictions") {
+    #[cfg(feature = "with_predictions")] {
         app = app.route(
             "/prediction/:id",
             get(crate::pages::prediction::prediction_page),
