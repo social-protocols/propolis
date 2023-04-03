@@ -7,10 +7,13 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
-use crate::structs::{StatementStats, TargetSegment, User, Vote};
 use crate::{
     error::Error,
     structs::{Statement, VoteHistoryItem},
+};
+use crate::{
+    prediction::prompts::StatementMeta,
+    structs::{StatementPrediction, StatementStats, TargetSegment, User, Vote},
 };
 
 impl User {
@@ -223,6 +226,37 @@ impl User {
             .bind(self.id)
             .fetch_optional(pool)
             .await?)
+    }
+}
+
+impl Statement {
+    pub async fn get_meta(&self, pool: &SqlitePool) -> anyhow::Result<Option<StatementMeta>> {
+        let pred = sqlx::query_as!(
+            StatementPrediction,
+            "select
+-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY
+  statement_id as \"statement_id!\",
+  ai_env as \"ai_env!\",
+  prompt_name as \"prompt_name!\",
+  prompt_version as \"prompt_version!\",
+  prompt_result as \"prompt_result!\",
+  completion_tokens as \"completion_tokens!\",
+  prompt_tokens as \"prompt_tokens!\",
+  total_tokens as \"total_tokens!\",
+  timestamp as \"timestamp!\"
+from statement_predictions
+where statement_id = ? order by timestamp desc",
+            self.id
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        match pred {
+            Some(pred) => Ok(Some(serde_json::from_str::<StatementMeta>(
+                pred.prompt_result.as_str(),
+            )?)),
+            None => Ok(None),
+        }
     }
 }
 
