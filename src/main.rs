@@ -55,8 +55,16 @@ async fn main() {
         .with(EnvFilter::from_default_env())
         .init();
 
-    let mut app = Router::new()
-        .route("/", get(index))
+    let mut app = Router::new();
+
+    if cfg!(feature = "with_predictions") {
+        app = app.route(
+            "/prediction/:id",
+            get(crate::pages::prediction::prediction_page),
+        );
+    }
+
+    app = app.route("/", get(index))
         .route("/vote", post(vote))
         .route("/subscribe", post(subscribe))
         .route("/completions", post(completions))
@@ -76,13 +84,6 @@ async fn main() {
         .layer(CookieManagerLayer::new())
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
-
-    if cfg!(feature = "with_predictions") {
-        app = app.route(
-            "/prediction/:id",
-            get(crate::pages::prediction::prediction_page),
-        );
-    }
 
     let prediction_runner = prediction::runner::run(&sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
