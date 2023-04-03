@@ -85,6 +85,45 @@ pub async fn small_statement_vote_fetch(
     small_statement_vote(vote)
 }
 
+#[cfg(not(feature="with_predictions"))]
+pub async fn small_statement_predictions(
+    _statement: &Statement,
+    _pool: &SqlitePool,
+) -> Result<Markup, Error> {
+    Ok(html! {})
+}
+
+#[cfg(feature="with_predictions")]
+pub async fn small_statement_predictions(
+    statement: &Statement,
+    pool: &SqlitePool,
+) -> Result<Markup, Error> {
+    let btn_style = |clr| {
+        format!("color: white; background-color: {clr}; border-color: forestgreen; padding: 4px")
+    };
+    Ok(html! {
+        div style={"float: left; font-size: 0.8em; align-self: center"} {
+            @match statement.get_meta(&pool).await? {
+                Some(crate::prediction::prompts::StatementMeta::Politics{tags, ideologies: _}) => {
+                    @for tag in &tags {
+                        div {
+                            button style=(btn_style("#088")) { (tag.value) }
+                        }
+                    }
+                }
+                Some(crate::prediction::prompts::StatementMeta::Personal{tags, bfp_traits: _}) => {
+                    @for tag in &tags {
+                        div {
+                            button style=(btn_style("#0b9")) { (tag.value) }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    })
+}
+
 pub async fn subscribe_button(
     statement_id: i64,
     maybe_user: &Option<User>,

@@ -1,6 +1,6 @@
 use super::base::base;
 use crate::error::Error;
-use crate::pages::statement_ui::{small_statement_piechart, small_statement_vote_fetch};
+use crate::pages::statement_ui::{small_statement_piechart, small_statement_vote_fetch, small_statement_predictions};
 use crate::structs::User;
 
 use crate::{db::get_subscriptions, pages::statement_ui::small_statement_content};
@@ -29,6 +29,7 @@ pub async fn subscriptions(
         }
         @for statement in subscriptions {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                (small_statement_predictions(&statement, &pool).await?)
                 (small_statement_content(&statement, None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(statement.id, &pool).await?)
                 (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)

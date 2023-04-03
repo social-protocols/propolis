@@ -7,13 +7,10 @@ use sqlx::{
 use std::env;
 use std::str::FromStr;
 
+use crate::structs::{StatementStats, TargetSegment, User, Vote};
 use crate::{
     error::Error,
     structs::{Statement, VoteHistoryItem},
-};
-use crate::{
-    prediction::prompts::StatementMeta,
-    structs::{StatementPrediction, StatementStats, TargetSegment, User, Vote},
 };
 
 impl User {
@@ -230,7 +227,13 @@ impl User {
 }
 
 impl Statement {
-    pub async fn get_meta(&self, pool: &SqlitePool) -> anyhow::Result<Option<StatementMeta>> {
+    #[cfg(feature = "with_predictions")]
+    pub async fn get_meta(
+        &self,
+        pool: &SqlitePool,
+    ) -> anyhow::Result<Option<crate::prediction::prompts::StatementMeta>> {
+        use crate::structs::StatementPrediction;
+
         let pred = sqlx::query_as!(
             StatementPrediction,
             "select
@@ -252,9 +255,9 @@ where statement_id = ? order by timestamp desc",
         .await?;
 
         match pred {
-            Some(pred) => Ok(Some(serde_json::from_str::<StatementMeta>(
-                pred.prompt_result.as_str(),
-            )?)),
+            Some(pred) => Ok(Some(serde_json::from_str::<
+                crate::prediction::prompts::StatementMeta,
+            >(pred.prompt_result.as_str())?)),
             None => Ok(None),
         }
     }
