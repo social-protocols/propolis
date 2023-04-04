@@ -1640,6 +1640,7 @@ version = "0.1.0"
 dependencies = [
  "ai_prompt",
  "anyhow",
+ "async-std",
  "async-trait",
  "axum",
  "base64",
