@@ -127,5 +127,5 @@ pub trait AiPrompt: Send + Sync {
     /// String that will be use to prime the ai
     fn primer(&self) -> Vec<AiMessage>;
     /// Handle the response from the ai
-    fn handle_response(&self, r: PromptResponse) -> Self::PromptResult;
+    fn handle_response(&self, r: PromptResponse) -> anyhow::Result<Self::PromptResult>;
 }

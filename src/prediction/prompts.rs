@@ -30,15 +30,15 @@ impl AiPrompt for GenericPrompt {
         self.primer.clone()
     }
 
-    fn handle_response(&self, r: PromptResponse) -> Self::PromptResult {
-        PromptResponse {
+    fn handle_response(&self, r: PromptResponse) -> anyhow::Result<Self::PromptResult> {
+        Ok(PromptResponse {
             env_info: r.env_info,
             prompt_info: r.prompt_info,
             content: (self.handler)(r.content),
             completion_tokens: r.completion_tokens,
             prompt_tokens: r.prompt_tokens,
             total_tokens: r.total_tokens,
-        }
+        })
     }
 }
 
@@ -287,7 +287,6 @@ impl StatementMeta {
                     .join("\n")
                     // -- finally try to return an R (result type) --
                     .try_into()
-                    .expect("Unable to extract from string")
             },
             primer: vec![
                 AiMessage::system(

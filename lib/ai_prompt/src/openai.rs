@@ -80,14 +80,14 @@ impl AiEnv for OpenAiEnv {
         });
         let raw_result = result.choices.first().unwrap().message.content.to_owned();
 
-        Ok(prompt.handle_response(PromptResponse {
+        prompt.handle_response(PromptResponse {
             env_info: self.info(),
             prompt_info: prompt.info(),
             content: raw_result,
             completion_tokens: c.into(),
             prompt_tokens: p.into(),
             total_tokens: t.into(),
-        }))
+        })
     }
 }
 

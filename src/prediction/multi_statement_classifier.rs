@@ -28,7 +28,7 @@ pub struct MultiStatementPrompt<R: MultiStatementResultTypes> {
     /// Content to send for prediction
     pub primer: Vec<AiMessage>,
     /// Handler for the prediction result
-    pub handler: fn(String) -> R,
+    pub handler: fn(String) -> anyhow::Result<R>,
     /// The statements that this prompt is for
     pub stmts: Vec<Statement>,
 }
@@ -113,13 +113,13 @@ impl<R: MultiStatementResultTypes> AiPrompt for MultiStatementPrompt<R> {
         self.primer.clone()
     }
 
-    fn handle_response(&self, response: PromptResponse) -> Self::PromptResult {
-        let result = (self.handler)(response.content.clone());
-        MultiStatementPromptResult::<R> {
+    fn handle_response(&self, response: PromptResponse) -> anyhow::Result<Self::PromptResult> {
+        let result = (self.handler)(response.content.clone())?;
+        Ok(MultiStatementPromptResult::<R> {
             response,
             result,
             stmts: self.stmts.to_owned(),
-        }
+        })
     }
 }
 
