@@ -13,10 +13,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = [
-    # uncomment to enable chatgpt based predictions
-    # "with_predictions"
-]
+default = ["with_predictions"]
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
@@ -27,6 +24,7 @@ rl_queue = { path = "lib/rl_queue" }
 
 # faster compiles with latest sqlx version
 # sqlx = { version = "0.7.0-alpha.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
+anyhow = "1.0.70"
 async-trait = "0.1.68"
 axum = "0.6.12"
 base64 = "0.21.0"
