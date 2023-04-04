@@ -92,6 +92,6 @@ impl AiEnv for OpenAiEnv {
 }
 
 pub async fn setup_openai() -> anyhow::Result<()> {
-    set_key(env::var("OPENAI_KEY").context("OPENAI_KEY environment variable not found.")?);
+    set_key(env::var("OPENAI_API_KEY").context("OPENAI_API_KEY environment variable not found.")?);
     Ok(())
 }
