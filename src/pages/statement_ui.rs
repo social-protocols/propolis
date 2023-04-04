@@ -103,7 +103,7 @@ pub async fn small_statement_predictions(
     };
     Ok(html! {
         div style={"float: left; font-size: 0.8em; align-self: center"} {
-            @match statement.get_meta(&pool).await? {
+            @match statement.get_meta(pool).await? {
                 Some(crate::prediction::prompts::StatementMeta::Politics{tags, ideologies: _}) => {
                     @for tag in &tags {
                         div {
