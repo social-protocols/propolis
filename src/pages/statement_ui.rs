@@ -85,7 +85,7 @@ pub async fn small_statement_vote_fetch(
     small_statement_vote(vote)
 }
 
-#[cfg(not(feature="with_predictions"))]
+#[cfg(not(feature = "with_predictions"))]
 pub async fn small_statement_predictions(
     _statement: &Statement,
     _pool: &SqlitePool,
@@ -93,7 +93,7 @@ pub async fn small_statement_predictions(
     Ok(html! {})
 }
 
-#[cfg(feature="with_predictions")]
+#[cfg(feature = "with_predictions")]
 pub async fn small_statement_predictions(
     statement: &Statement,
     pool: &SqlitePool,

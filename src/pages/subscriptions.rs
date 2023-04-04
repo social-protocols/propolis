@@ -1,6 +1,8 @@
 use super::base::base;
 use crate::error::Error;
-use crate::pages::statement_ui::{small_statement_piechart, small_statement_vote_fetch, small_statement_predictions};
+use crate::pages::statement_ui::{
+    small_statement_piechart, small_statement_predictions, small_statement_vote_fetch,
+};
 use crate::structs::User;
 
 use crate::{db::get_subscriptions, pages::statement_ui::small_statement_content};

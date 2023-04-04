@@ -57,14 +57,16 @@ async fn main() {
 
     let mut app = Router::new();
 
-    #[cfg(feature = "with_predictions")] {
+    #[cfg(feature = "with_predictions")]
+    {
         app = app.route(
             "/prediction/:id",
             get(crate::pages::prediction::prediction_page),
         );
     }
 
-    app = app.route("/", get(index))
+    app = app
+        .route("/", get(index))
         .route("/vote", post(vote))
         .route("/subscribe", post(subscribe))
         .route("/completions", post(completions))
