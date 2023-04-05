@@ -29,6 +29,7 @@ async-trait = "0.1.68"
 axum = "0.6.12"
 base64 = "0.21.0"
 chrono = "0.4.24"
+clap = { version = "4.2.1", features = ["env", "derive"] }
 csv = "1.2.1"
 function_name = "0.3.0"
 futures = "0.3.28"

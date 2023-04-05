@@ -60,7 +60,7 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
 ///
 /// Will store prompt results in the db
 #[cfg(feature = "with_predictions")]
-pub async fn run(pool: &SqlitePool) {
+pub async fn run(opts: crate::opts::PredictionOpts, pool: &SqlitePool) {
     use tracing::log::error;
 
     ai_prompt::openai::setup_openai()
@@ -76,7 +76,10 @@ pub async fn run(pool: &SqlitePool) {
     };
 
     let mut runner = PromptRunner {
-        token_rate_limiter: RateLimiter::new(100.0, Duration::from_secs(30)),
+        token_rate_limiter: RateLimiter::new(
+            opts.tokens_per_duration as f64,
+            Duration::from_secs(opts.seconds_per_duration),
+        ),
         env: &env,
     };
     loop {

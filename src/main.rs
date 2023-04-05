@@ -1,6 +1,7 @@
 mod auth;
 mod db;
 mod error;
+mod opts;
 mod pages;
 mod prediction;
 
@@ -10,6 +11,7 @@ mod structs;
 mod util;
 
 use axum::response::Html;
+use clap::Parser;
 use http::StatusCode;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
@@ -34,6 +36,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use std::net::SocketAddr;
 
 use crate::db::setup_db;
+use crate::opts::ProgramOpts;
 use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
 use crate::pages::statement::votes;
@@ -47,6 +50,7 @@ struct StaticAsset;
 
 #[tokio::main]
 async fn main() {
+    let opts = ProgramOpts::parse();
     let sqlite_pool = setup_db().await;
 
     // Setup tracing
@@ -87,7 +91,7 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
-    let prediction_runner = prediction::runner::run(&sqlite_pool);
+    let prediction_runner = prediction::runner::run(opts.prediction, &sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("listening on {}", addr);
     let axum_server = axum::Server::bind(&addr).serve(app.into_make_service());
