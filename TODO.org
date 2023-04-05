@@ -8,6 +8,8 @@
     not provide a simple button, we might not conform to european standards and
     get into trouble. A simple deletion of the cookie might suffice though.
 ** TODO Statement category prediction
+*** DONE [10/10] M1
+CLOSED: [2023-04-05 Mi 20:16]
 - [X] Simple OpenAI integration
 - [X] Create API to write versioned GPT prompts
 - [X] Create endpoint to get GPT-data for a statement
@@ -15,19 +17,14 @@
   - [X] Create DB migration with new table for GPT-data
   - [X] Cache tokens used
 - [X] make prediction toggleable via feature flag
-- [ ] Get rid of all =.unwrap()= locations
-- [ ] Add gpt response time to table
-- [ ] how to handle different prompt versions when deserializing?
+- [X] Get rid of all =.unwrap()/.expect()= locations
 - [X] Write a combined predictor
-- [-] Add political spectrum/ideology categorization
+- [X] Add political spectrum/ideology categorization
   - [X] Determine ideology: environmentalist, capitalist, etc.
   - [X] multi statement predictor
     - [X] do not store CSV header row in table
     - [X] restore data as a struct
   - [X] Parse result into a rust struct of known ideologies to work with them
-  - [ ] own table for ideologies
-  - [ ] Show ideology & tags on statement page
-  - [ ] Show ideologies voted for with counter on user overview page
 - [X] Show total tokens & costs on endpoint
 - [X] Create async process for filling DB with GPT-data
   - [X] Run loop to process statements in background
@@ -35,12 +32,42 @@
   - [X] multi statement prediction...
     - [X] Predict more than one statement at the same time
     - [X] adjust prediction::run to accept several statements
-*** Refactor
-- [X] runner ⇒ MultiStatementClassifier
-  - [X] classify_batch
-** TODO Support multiple api-keys
-- [ ] Write per-key token statistics into DB
-- [ ] Select key with least # tokens in last week
+*** TODO [0/1] M2
+**** TODO [0/2] Core
+1. [ ] Low-hanging-fruit...
+   1. [ ] rate limiter configuration via environment / cmdline args
+   2. [ ] use triple quotes on user input
+   3. [ ] limit statement length
+   4. [ ] Add gpt request response time to table
+2. [ ] Storage Backend...
+   1. [ ] Support reading of old versions
+   2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
+   3. [ ] Add SQLite support for vector embeddings
+3. [0/4] Compute embeddings for...
+   - [ ] Anything: support embeddings for any kind of String?
+   - [ ] Statements
+   - [ ] Tags: to find similar tags
+   - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
+4. [0/2] Statement prediction queue...
+   1. [ ] Queue statements into a prediction queue on viewing or creating them
+   2. [ ] Use view count as order by clause when getting them out of the queue
+5. [0/2] OpenAI Moderation API...
+   1. [ ] Figure out: just statements or entire prompt?
+   2. [ ] Use moderation api to precheck
+6. [0/6] Multi API key support...
+   1. [ ] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
+   2. [ ] use the one that has been used the least in the last week
+   3. [ ] store API keys' last few characters in DB
+   4. [ ] store used API key id with every cached result
+   5. [ ] use API key which had fewest used tokens in last N days
+   6. [ ] Write per-key token statistics into DB
+**** TODO [1/5] UI
+1. [X] Show tags on subscriptions page
+2. [ ] Make tags clickable & show similar tags
+   - Requires embeddings first
+3. [ ] own table for ideologies?
+4. [ ] Show ideologies voted for with counter on user overview page
+5. [ ] Comparison page against a different user with respect to ideologies / bfp traits
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
