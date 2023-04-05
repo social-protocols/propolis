@@ -41,6 +41,7 @@ use crate::pages::new_statement::completions;
 use crate::pages::new_statement::create_statement;
 use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
+use crate::pages::user::user_page;
 use crate::pages::vote::vote;
 
 // embed static files into release binary
@@ -73,6 +74,7 @@ async fn main() {
         .route("/", get(index))
         .route("/vote", post(vote))
         .route("/subscribe", post(subscribe))
+        .route("/user", get(user_page))
         .route("/completions", post(completions))
         .route("/statement/:id", get(statement_page))
         .route("/votes/:id", get(votes))

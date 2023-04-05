@@ -68,7 +68,9 @@ fn render_base(
                         @if let Some(user) = user {
                             li {
                                 span style="margin-right: 0.5em" { "👤" }
-                                (user.secret.chars().take(4).collect::<String>())
+                                a href="/user" {
+                                    (user.secret.chars().take(4).collect::<String>())
+                                }
                             }
                         }
                         li { a href="/options" { "⚙" } }
