@@ -32,33 +32,33 @@ CLOSED: [2023-04-05 Mi 20:16]
   - [X] multi statement prediction...
     - [X] Predict more than one statement at the same time
     - [X] adjust prediction::run to accept several statements
-*** TODO [0/1] M2
-**** TODO [0/2] Core
-1. [ ] Low-hanging-fruit...
-   1. [ ] rate limiter configuration via environment / cmdline args
+*** TODO [0/3] M2
+**** TODO [0/6] Core
+1. [-] [1/4] Low-hanging-fruit...
+   1. [X] rate limiter configuration via environment / cmdline args
    2. [ ] use triple quotes on user input
    3. [ ] limit statement length
    4. [ ] Add gpt request response time to table
-2. [ ] Storage Backend...
-   1. [ ] Support reading of old versions
+2. [-] [1/3] Storage Backend...
+   1. [X] Support reading of old versions
    2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
    3. [ ] Add SQLite support for vector embeddings
-3. [0/4] Compute embeddings for...
+3. [ ] [0/4] Compute embeddings for...
    - [ ] Anything: support embeddings for any kind of String?
    - [ ] Statements
    - [ ] Tags: to find similar tags
    - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
-4. [0/2] Statement prediction queue...
+4. [ ] [0/2] Statement prediction queue...
    1. [ ] Queue statements into a prediction queue on viewing or creating them
    2. [ ] Use view count as order by clause when getting them out of the queue
-5. [0/2] OpenAI Moderation API...
+5. [ ] [0/2] OpenAI Moderation API...
    1. [ ] Figure out: just statements or entire prompt?
    2. [ ] Use moderation api to precheck
-6. [0/6] Multi API key support...
+6. [ ] [0/6] Multi API key support...
    1. [ ] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [ ] use the one that has been used the least in the last week
-   3. [ ] store API keys' last few characters in DB
-   4. [ ] store used API key id with every cached result
+   3. [ ] new table: =prediction_api_key= with last few chars of key in DB
+   4. [ ] store used API key =id= with every cached result
    5. [ ] use API key which had fewest used tokens in last N days
    6. [ ] Write per-key token statistics into DB
 **** TODO [1/5] UI
@@ -66,8 +66,16 @@ CLOSED: [2023-04-05 Mi 20:16]
 2. [ ] Make tags clickable & show similar tags
    - Requires embeddings first
 3. [ ] own table for ideologies?
-4. [ ] Show ideologies voted for with counter on user overview page
+4. [ ] User page
+   1. [ ] Show ideologies voted for with counter on user overview page
+   2. [ ] Statistics
+      1. [ ] Radar chart on most common ideologies
+      2. [ ] ideologies on a one dimensional scale: e.g. liberalist vs socialist
 5. [ ] Comparison page against a different user with respect to ideologies / bfp traits
+**** TODO [0/1] Refactorings
+- [ ] [0/2] Utils crate
+  - [ ] Create a =util= crate to store utility fns
+  - [ ] Move: CSV data preprocessing fn (see statement_meta handler)
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
