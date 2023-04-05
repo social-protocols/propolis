@@ -14,5 +14,5 @@ pub mod runner;
 pub mod runner {
     use sqlx::SqlitePool;
 
-    pub async fn run(_pool: &SqlitePool) {}
+    pub async fn run(_opts: crate::opts::PredictionOpts, _pool: &SqlitePool) {}
 }
