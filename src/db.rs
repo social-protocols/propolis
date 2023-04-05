@@ -116,6 +116,71 @@ impl User {
         Ok(())
     }
 
+    /// Return a hashmap with weighted ideologies
+    #[cfg(feature = "with_predictions")]
+    pub async fn num_ideologies(
+        &self,
+        pool: &SqlitePool,
+    ) -> Result<std::collections::HashMap<String, (i64, f64)>, Error> {
+        use std::collections::HashMap;
+
+        use crate::prediction::prompts::Score;
+
+        let vhist = self.vote_history(pool).await?;
+        let mut hmap: HashMap<String, i64> = HashMap::new();
+        for item in vhist {
+            let stmt = Statement {
+                id: item.statement_id,
+                text: item.statement_text,
+            };
+            if let Some(crate::prediction::prompts::StatementMeta::Politics {
+                tags: _,
+                ideologies,
+            }) = stmt.get_meta(pool).await?
+            {
+                for i in ideologies {
+                    let score : i64 = match i.score {
+                        Score::Strong => 2,
+                        Score::Weak => 1,
+                        _ => 0,
+                    };
+                    let dir : i64 = match Vote::from(item.vote)? {
+                        Vote::No => -1,
+                        Vote::Skip => 0,
+                        Vote::Yes => 1,
+                        Vote::ItDepends => 0,
+                    };
+                    hmap.entry(i.value).and_modify(|i| *i += score * dir).or_insert(1);
+                }
+            }
+        }
+
+        let mut sorted_vec: Vec<(&String, &i64)> = hmap.iter().collect();
+        sorted_vec.sort_by(|a, b| b.1.cmp(a.1));
+        let largest_value = sorted_vec.first().map(|i| *i.1).unwrap_or(0);
+        // we determine the smallest value to offset all values upwards so lowest starts at 0
+        // FIXME:
+        // - Map values in [0, inf] to [0, 1] *and*
+        // - Map values from [-inf, 0] to [-1, 0]
+        // - This way, unvoted entries should be at 0 instead of being pulled towards the side with
+        //   a larger amplitude
+        let smallest_value = sorted_vec.last().map(|i| *i.1).unwrap_or(0);
+
+        let weighted_hmap: HashMap<String, (i64, f64)> = hmap
+            .iter()
+            .map(|(k, v)| {
+                (
+                    k.to_owned(),
+                    (
+                        *v,
+                        (*v - smallest_value) as f64 / (largest_value - smallest_value) as f64,
+                    ),
+                )
+            })
+            .collect();
+        Ok(weighted_hmap)
+    }
+
     /// Returns all votes taken by a [User]
     // TODO: just return what's in the vote_history table
     pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>> {

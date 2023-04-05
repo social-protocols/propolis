@@ -11,6 +11,7 @@ in pkgs.mkShell {
     clippy
     direnv
     just
+    jq
     rustfmt
     rustc
     rust-analyzer # for language server
