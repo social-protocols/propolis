@@ -140,8 +140,8 @@ impl User {
             {
                 for i in ideologies {
                     let score : i64 = match i.score {
-                        Score::Strong => 2,
-                        Score::Weak => 1,
+                        Score::Strong => 1,
+                        Score::Weak => continue,
                         _ => 0,
                     };
                     let dir : i64 = match Vote::from(item.vote)? {
