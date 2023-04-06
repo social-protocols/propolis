@@ -95,7 +95,7 @@ pub struct StatementPrediction {
     pub completion_tokens: i64,
     pub prompt_tokens: i64,
     pub total_tokens: i64,
-    pub timestamp: i64,
+    pub created: i64,
 }
 
 impl From<StatementPrediction> for String {

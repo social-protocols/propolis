@@ -24,6 +24,72 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "2c36f28b43d87b8c0cbc87289ab2ab158593567f55f117e54af99eae3b6b3a78": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id!",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "ai_env!",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_name!",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "prompt_version!",
+          "ordinal": 3,
+          "type_info": "Int64"
+        },
+        {
+          "name": "prompt_result!",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "completion_tokens!",
+          "ordinal": 5,
+          "type_info": "Int64"
+        },
+        {
+          "name": "prompt_tokens!",
+          "ordinal": 6,
+          "type_info": "Int64"
+        },
+        {
+          "name": "total_tokens!",
+          "ordinal": 7,
+          "type_info": "Int64"
+        },
+        {
+          "name": "created!",
+          "ordinal": 8,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  created as \"created!\"\nfrom statement_predictions\nwhere statement_id = ? order by created desc"
+  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -275,72 +341,6 @@
       }
     },
     "query": "INSERT INTO statements (text) VALUES (?) RETURNING id"
-  },
-  "f2ec43d44b3f8181c72780c93ef32c80d41df5cd7b04ccd18c98b10616094411": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id!",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "ai_env!",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_name!",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_version!",
-          "ordinal": 3,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_result!",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "completion_tokens!",
-          "ordinal": 5,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_tokens!",
-          "ordinal": 6,
-          "type_info": "Int64"
-        },
-        {
-          "name": "total_tokens!",
-          "ordinal": 7,
-          "type_info": "Int64"
-        },
-        {
-          "name": "timestamp!",
-          "ordinal": 8,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  timestamp as \"timestamp!\"\nfrom statement_predictions\nwhere statement_id = ? order by timestamp desc"
   },
   "fa547048a2ff6f7db4a3b154acfe0a3d9632a2b0b286a3a99f63548179b6e8b2": {
     "describe": {

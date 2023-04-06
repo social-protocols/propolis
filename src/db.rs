@@ -246,9 +246,9 @@ impl Statement {
   completion_tokens as \"completion_tokens!\",
   prompt_tokens as \"prompt_tokens!\",
   total_tokens as \"total_tokens!\",
-  timestamp as \"timestamp!\"
+  created as \"created!\"
 from statement_predictions
-where statement_id = ? order by timestamp desc",
+where statement_id = ? order by created desc",
             self.id
         )
         .fetch_optional(pool)

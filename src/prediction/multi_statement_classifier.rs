@@ -59,7 +59,7 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
                 completion_tokens: self.response.completion_tokens / num_stmts,
                 prompt_tokens: self.response.prompt_tokens / num_stmts,
                 total_tokens: self.response.total_tokens / num_stmts,
-                timestamp: 0,
+                created: 0,
             });
         }
 
