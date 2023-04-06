@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use axum::extract::FromRequestParts;
 use http::HeaderMap;
 use maud::{html, Markup, DOCTYPE};
 use tower_cookies::{Cookie, Cookies};
@@ -114,4 +116,85 @@ pub fn warning_dialog(msg: &str, caption: Option<&str>) -> Markup {
             p { (msg) }
         }
     )
+}
+
+#[derive(Clone)]
+pub struct BaseTemplate {
+    pub user: Option<User>,
+    pub cookies: Cookies,
+    pub headers: HeaderMap,
+    pub title: Option<String>,
+    pub content: Markup,
+    pub page_meta: Option<PageMeta>,
+}
+
+impl BaseTemplate {
+    /// Set the page title
+    pub fn title(mut self, s: &str) -> Self {
+        self.title = Some(s.into());
+        self
+    }
+    /// Set the page content
+    pub fn content(mut self, c: Markup) -> Self {
+        self.content = c;
+        self
+    }
+    /// Set the page meta data
+    pub fn page_meta(mut self, m: PageMeta) -> Self {
+        self.page_meta = Some(m);
+        self
+    }
+    /// Render BaseTemplate into markup
+    pub fn render(self) -> Markup {
+        base(
+            self.cookies.to_owned(),
+            self.title,
+            &self.user,
+            self.content,
+            &self.headers,
+            self.page_meta,
+        )
+    }
+}
+
+impl From<BaseTemplate> for Markup {
+    fn from(value: BaseTemplate) -> Self {
+        value.render()
+    }
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for BaseTemplate
+where
+    S: Send + Sync,
+{
+    type Rejection = (http::StatusCode, &'static str);
+
+    async fn from_request_parts(
+        parts: &mut http::request::Parts,
+        _: &S,
+    ) -> Result<Self, Self::Rejection> {
+        use axum::RequestPartsExt;
+        let cookies = parts
+            .extract::<Cookies>()
+            .await
+            .expect("Unable to get cookies");
+        let user = parts
+            .extract::<Option<User>>()
+            .await
+            .expect("Unable to get user");
+        let headers = parts
+            .extract::<HeaderMap>()
+            .await
+            .expect("Unable to get headers");
+
+        Ok(BaseTemplate {
+            user,
+            cookies,
+            headers,
+            title: None,
+            content: html! {},
+            page_meta: None,
+        })
+    }
 }
