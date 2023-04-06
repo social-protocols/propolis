@@ -1,8 +1,8 @@
-use crate::error::Error;
-use crate::structs::User;
+use crate::{error::AppError, structs::User};
 
 use axum::{Extension, Form};
 
+use anyhow::Result;
 use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
@@ -17,7 +17,7 @@ pub async fn subscribe(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(form_data): Form<FollowForm>,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let user = User::get_or_create(&cookies, &pool).await?;
     user.subscribe(form_data.statement_id, &pool).await?;
 

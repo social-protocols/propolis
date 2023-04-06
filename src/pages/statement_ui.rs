@@ -1,9 +1,9 @@
 use crate::{
-    error::Error,
     pages::charts::yes_no_pie_chart,
     structs::{Statement, User, Vote},
 };
 
+use anyhow::Result;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 
@@ -15,7 +15,7 @@ pub async fn small_statement_content(
     show_controls: bool,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
-) -> Result<Markup, Error> {
+) -> Result<Markup> {
     Ok(html! {
         div style="display:flex; flex-direction: column; width: 100%; padding: 15px" {
             @if let Some(timestamp) = timestamp {
@@ -41,10 +41,7 @@ pub async fn small_statement_content(
     })
 }
 
-pub async fn small_statement_piechart(
-    statement_id: i64,
-    pool: &SqlitePool,
-) -> Result<Markup, Error> {
+pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     Ok(html! {
         div style="padding: 5px 0px; align-self: center;" {
             (yes_no_pie_chart(statement_id, &pool).await?)
@@ -52,7 +49,7 @@ pub async fn small_statement_piechart(
     })
 }
 
-pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup, Error> {
+pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
     let vote_color = match vote {
         Some(Vote::Yes) => "forestgreen",
         Some(Vote::No) => "firebrick",
@@ -77,7 +74,7 @@ pub async fn small_statement_vote_fetch(
     statement_id: i64,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
-) -> Result<Markup, Error> {
+) -> Result<Markup> {
     let vote = match maybe_user {
         Some(user) => user.get_vote(statement_id, pool).await?,
         None => None,
@@ -89,7 +86,7 @@ pub async fn subscribe_button(
     statement_id: i64,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
-) -> Result<Markup, Error> {
+) -> Result<Markup> {
     let is_subscribed = match maybe_user {
         Some(user) => user.is_subscribed(statement_id, pool).await?,
         None => false,
