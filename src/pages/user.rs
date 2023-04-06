@@ -1,5 +1,6 @@
-use crate::{error::Error, pages::charts::ideologies_radar_chart};
+use crate::{pages::charts::ideologies_radar_chart, error::AppError};
 use crate::structs::User;
+use anyhow::Result;
 
 use axum::Extension;
 
@@ -15,8 +16,7 @@ pub async fn user_page(
     cookies: Cookies,
     headers: HeaderMap,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Markup, Error> {
-
+) -> Result<Markup, AppError> {
     let ideologies_map = user.num_ideologies(&pool).await?;
 
     let content = html! {
@@ -35,5 +35,4 @@ pub async fn user_page(
         &headers,
         None,
     ))
-
 }
