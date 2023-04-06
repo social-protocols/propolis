@@ -13,7 +13,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["with_predictions"]
+# default = ["with_predictions"]
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
