@@ -121,7 +121,7 @@ impl User {
     pub async fn num_ideologies(
         &self,
         pool: &SqlitePool,
-    ) -> Result<std::collections::HashMap<String, (i64, f64)>, Error> {
+    ) -> Result<std::collections::HashMap<String, (i64, f64)>> {
         use std::collections::HashMap;
 
         use crate::prediction::prompts::Score;
