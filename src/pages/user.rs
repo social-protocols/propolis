@@ -1,21 +1,18 @@
-use crate::{pages::charts::ideologies_radar_chart, error::AppError};
 use crate::structs::User;
+use crate::{error::AppError, pages::charts::ideologies_radar_chart};
 use anyhow::Result;
 
 use axum::Extension;
 
-use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
-use tower_cookies::Cookies;
 
-use super::base::base;
+use super::base::BaseTemplate;
 
 pub async fn user_page(
     user: User,
-    cookies: Cookies,
-    headers: HeaderMap,
     Extension(pool): Extension<SqlitePool>,
+    base: BaseTemplate,
 ) -> Result<Markup, AppError> {
     let ideologies_map = user.num_ideologies(&pool).await?;
 
@@ -25,14 +22,8 @@ pub async fn user_page(
         }
     };
 
-    let maybe_user = Some(user);
-
-    Ok(base(
-        cookies,
-        Some("User page".to_string()),
-        &maybe_user,
-        content,
-        &headers,
-        None,
-    ))
+    Ok(base
+       .title("User page")
+       .content(content)
+       .into())
 }
