@@ -1,8 +1,10 @@
 use super::base::{base, warning_dialog};
+use crate::error::AppError;
 use crate::structs::User;
-use crate::{error::Error, util::base_url};
+use crate::util::base_url;
 use maud::{html, Markup};
 
+use anyhow::Result;
 use axum::{response::Redirect, Form};
 use http::HeaderMap;
 use serde::Deserialize;
@@ -52,7 +54,7 @@ pub async fn options(
     headers: HeaderMap,
     maybe_user: Option<User>,
     cookies: Cookies,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let title = Some("Options".to_string());
 
     match maybe_user {
@@ -79,7 +81,7 @@ pub async fn options(
 pub async fn options_post(
     cookies: Cookies,
     Form(options_form): Form<OptionsForm>,
-) -> Result<Redirect, Error> {
+) -> Result<Redirect, AppError> {
     cookies.add(Cookie::new("theme", options_form.theme));
 
     Ok(Redirect::to("/options"))

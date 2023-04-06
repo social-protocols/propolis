@@ -1,11 +1,11 @@
 //! Various structs used all over
 
+use anyhow::anyhow;
+use anyhow::Result;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::error::Error;
 
 /// Representation of a user. Provides various methods to find & update them
 #[derive(Serialize, sqlx::FromRow, Debug)]
@@ -39,8 +39,8 @@ pub enum Vote {
 }
 
 impl Vote {
-    pub fn from(vote: i64) -> Result<Vote, Error> {
-        FromPrimitive::from_i64(vote).ok_or(Error::Custom("Unknown vote value".to_string()))
+    pub fn from(vote: i64) -> Result<Vote> {
+        FromPrimitive::from_i64(vote).ok_or(Err(anyhow!("Unknown vote value: {}", vote))?)
     }
 }
 

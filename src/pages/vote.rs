@@ -1,5 +1,6 @@
+use crate::error::AppError;
 use crate::structs::User;
-use crate::{error::Error, structs::Vote};
+use crate::structs::Vote;
 
 use axum::extract::Path;
 use axum::{response::IntoResponse, Extension, Form};
@@ -22,7 +23,7 @@ pub async fn vote(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     Form(vote_form): Form<VoteForm>,
-) -> Result<impl IntoResponse, Error> {
+) -> Result<impl IntoResponse, AppError> {
     let user = User::get_or_create(&cookies, &pool).await?;
 
     user.vote(vote_form.statement_id, vote_form.vote, &pool)

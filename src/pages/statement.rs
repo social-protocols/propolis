@@ -1,7 +1,7 @@
 use super::base::base;
 use crate::{
     db::{get_followups, get_statement, statement_stats},
-    error::Error,
+    error::AppError,
     pages::statement_ui::{
         small_statement_content, small_statement_piechart, small_statement_vote,
         small_statement_vote_fetch,
@@ -20,7 +20,7 @@ use tower_cookies::Cookies;
 pub async fn votes(
     Path(statement_id): Path<i64>,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let StatementStats {
         yes_votes,
         skip_votes,
@@ -41,7 +41,7 @@ pub async fn statement_page(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     headers: HeaderMap,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let statement: Option<Statement> = get_statement(statement_id, &pool).await.ok();
     let user_vote = match &maybe_user {
         Some(user) => user.get_vote(statement_id, &pool).await?,
@@ -113,7 +113,7 @@ pub async fn statement_page(
     ))
 }
 
-async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, Error> {
+async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, AppError> {
     let history = match maybe_user {
         Some(user) => user.vote_history(pool).await?,
         None => Vec::new(),

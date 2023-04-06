@@ -1,10 +1,11 @@
+use anyhow::Result;
 use maud::{html, Markup, PreEscaped};
 use serde_json::json;
 use sqlx::SqlitePool;
 
-use crate::{db::statement_stats, error::Error, structs::StatementStats};
+use crate::{db::statement_stats, structs::StatementStats};
 
-pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Markup, Error> {
+pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     let StatementStats {
         total_votes,
         yes_votes,

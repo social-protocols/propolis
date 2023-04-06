@@ -1,7 +1,7 @@
 use super::base::base;
-use crate::auth::change_auth_cookie;
-use crate::error::Error;
+
 use crate::structs::User;
+use crate::{auth::change_auth_cookie, error::AppError};
 
 use axum::{extract::Path, Extension, Form};
 use http::HeaderMap;
@@ -28,7 +28,7 @@ pub async fn merge(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     headers: HeaderMap,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let num_votes = user.num_votes(&pool).await?;
     let num_statements = user.num_statements(&pool).await?;
 
@@ -69,7 +69,7 @@ pub async fn merge_post(
     Path(secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     Ok(match User::from_secret(secret, &pool).await? {
         Some(new_user) => {
             if user.id == new_user.id {

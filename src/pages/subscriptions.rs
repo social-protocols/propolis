@@ -1,5 +1,6 @@
 use super::base::base;
-use crate::error::Error;
+
+use crate::error::AppError;
 use crate::pages::statement_ui::{
     small_statement_piechart, small_statement_predictions, small_statement_vote_fetch,
 };
@@ -18,7 +19,7 @@ pub async fn subscriptions(
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     headers: HeaderMap,
-) -> Result<Markup, Error> {
+) -> Result<Markup, AppError> {
     let subscriptions = match &maybe_user {
         Some(user) => get_subscriptions(user, &pool).await?,
         None => Vec::new(),
