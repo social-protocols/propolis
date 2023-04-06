@@ -58,6 +58,7 @@ pub async fn new_statement(
                 style="width: 100%"
                 rows = "4"
                 name="statement_text"
+                placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
                 _="on htmx:validation:validate
                       if my.value.length < 3
                         call me.setCustomValidity('Please enter a value')

@@ -75,9 +75,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axum"
-version = "0.6.11"
+version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13d8068b6ccb8b34db9de397c7043f91db8b4c66414952c6db944f238c4d3db3"
+checksum = "349f8ccfd9221ee7d1f3d4b33e1f8319b3a81ed8f61f2ea40b37b859794b4491"
 dependencies = [
  "async-trait",
  "axum-core",
@@ -766,7 +766,7 @@ checksum = "b87248edafb776e59e6ee64a79086f65890d3510f2c656c000bf2a7e8a0aea40"
 [[package]]
 name = "maud"
 version = "0.24.0"
-source = "git+https://github.com/lambda-fairy/maud#cdb9d3a48d5e08957fd4a6ba5a551f5e35af9287"
+source = "git+https://github.com/lambda-fairy/maud#c42153f20cff3f9d53a2aad887d5fd006d9d3821"
 dependencies = [
  "axum-core",
  "http",
@@ -777,7 +777,7 @@ dependencies = [
 [[package]]
 name = "maud_macros"
 version = "0.24.0"
-source = "git+https://github.com/lambda-fairy/maud#cdb9d3a48d5e08957fd4a6ba5a551f5e35af9287"
+source = "git+https://github.com/lambda-fairy/maud#c42153f20cff3f9d53a2aad887d5fd006d9d3821"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -1267,18 +1267,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.158"
+version = "1.0.159"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "771d4d9c4163ee138805e12c710dd365e4f44be8be0503cb1bb9eb989425d9c9"
+checksum = "3c04e8343c3daeec41f58990b9d77068df31209f2af111e059e9fe9646693065"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.158"
+version = "1.0.159"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e801c1712f48475582b7696ac71e0ca34ebb30e09338425384269d9717c62cad"
+checksum = "4c614d17805b093df4b147b51339e7e44bf05ef59fba1e45d83500bcfb4d8585"
 dependencies = [
  "proc-macro2",
  "quote",
