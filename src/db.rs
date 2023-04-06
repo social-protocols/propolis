@@ -101,7 +101,7 @@ impl User {
         )
         .fetch_optional(pool)
         .await?;
-        Ok(vote.map(|v| Vote::from(v).unwrap()))
+        Ok(vote.map(|v| Vote::from(v).ok()).flatten())
     }
 
     pub async fn subscribe(&self, statement_id: i64, pool: &SqlitePool) -> Result<()> {
