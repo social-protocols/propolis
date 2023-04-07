@@ -5,7 +5,10 @@ use maud::{html, Markup, PreEscaped};
 use serde_json::json;
 use sqlx::SqlitePool;
 
-use crate::{db::statement_stats, structs::StatementStats};
+use crate::{
+    db::{statement_stats, UserIdeologyStats},
+    structs::StatementStats,
+};
 
 pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     let StatementStats {
@@ -64,21 +67,29 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
 }
 
 /// Yield code for a radar chart displaying the most common ideologies of a user
-pub async fn ideologies_radar_chart(
-    ideologies_map: &HashMap<String, (i64, f64)>,
+pub fn ideologies_radar_chart(
+    ideologies_map: &HashMap<String, UserIdeologyStats>,
 ) -> Result<Markup> {
-    let mut hash_vec: Vec<(&String, &(i64, f64))> = ideologies_map.iter().collect();
-    hash_vec.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+    let mut hash_vec: Vec<(&String, &UserIdeologyStats)> = ideologies_map.iter().collect();
+    hash_vec.sort_by(|a, b| {
+        b.1.votes_weight
+            .partial_cmp(&a.1.votes_weight)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
-    let _ideologies = json!(hash_vec.iter().map(|i| i.0).collect::<Vec<&String>>());
-    let _nums = json!(hash_vec.iter().map(|i| i.1 .0).collect::<Vec<i64>>());
-    let _weights = json!(hash_vec.iter().map(|i| i.1 .1).collect::<Vec<f64>>());
     let mut data: Vec<HashMap<&str, String>> = vec![];
-    for (ideology, (total, weighted)) in hash_vec {
+    for (
+        ideology,
+        UserIdeologyStats {
+            votes_cast,
+            votes_weight,
+        },
+    ) in hash_vec
+    {
         data.push(HashMap::from([
             ("x", ideology.into()),
-            ("y", weighted.to_string()),
-            ("total", total.to_string()),
+            ("y", votes_weight.to_string()),
+            ("total", votes_cast.to_string()),
         ]));
     }
     let data_json = json!(data);
