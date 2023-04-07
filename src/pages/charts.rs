@@ -1,14 +1,10 @@
 use anyhow::Result;
-use std::collections::HashMap;
 
 use maud::{html, Markup, PreEscaped};
 use serde_json::json;
 use sqlx::SqlitePool;
 
-use crate::{
-    db::{statement_stats, UserIdeologyStats},
-    structs::StatementStats,
-};
+use crate::{db::statement_stats, structs::StatementStats};
 
 pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     let StatementStats {
@@ -66,11 +62,14 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
     }
 }
 
+#[cfg(feature = "with_predictions")]
 /// Yield code for a radar chart displaying the most common ideologies of a user
 pub fn ideologies_radar_chart(
-    ideologies_map: &HashMap<String, UserIdeologyStats>,
+    ideologies_map: &std::collections::HashMap<String, crate::db::UserIdeologyStats>,
 ) -> Result<Markup> {
-    let mut hash_vec: Vec<(&String, &UserIdeologyStats)> = ideologies_map.iter().collect();
+    use std::collections::HashMap;
+    let mut hash_vec: Vec<(&String, &crate::db::UserIdeologyStats)> =
+        ideologies_map.iter().collect();
     hash_vec.sort_by(|a, b| {
         b.1.votes_weight
             .partial_cmp(&a.1.votes_weight)
@@ -80,7 +79,7 @@ pub fn ideologies_radar_chart(
     let mut data: Vec<HashMap<&str, String>> = vec![];
     for (
         ideology,
-        UserIdeologyStats {
+        crate::db::UserIdeologyStats {
             votes_cast,
             votes_weight,
         },

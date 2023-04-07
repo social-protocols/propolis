@@ -11,6 +11,7 @@ use std::str::FromStr;
 use crate::structs::{Statement, VoteHistoryItem};
 use crate::structs::{StatementStats, TargetSegment, User, Vote};
 
+#[cfg(feature = "with_predictions")]
 pub struct UserIdeologyStats {
     /// Total votes cast for this ideology. Disagree votes count towards negative
     pub votes_cast: i64,
