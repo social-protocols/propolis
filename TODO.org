@@ -54,13 +54,13 @@ CLOSED: [2023-04-05 Mi 20:16]
 5. [ ] [0/2] OpenAI Moderation API...
    1. [ ] Figure out: just statements or entire prompt?
    2. [ ] Use moderation api to precheck
-6. [ ] [0/6] Multi API key support...
-   1. [ ] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
-   2. [ ] use the one that has been used the least in the last week
-   3. [ ] new table: =prediction_api_key= with last few chars of key in DB
-   4. [ ] store used API key =id= with every cached result
-   5. [ ] use API key which had fewest used tokens in last N days
-   6. [ ] Write per-key token statistics into DB
+6. [-] [5/6] Multi API key support...
+   1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
+   2. [X] use random key
+   3. [X] new table: =api_keys= for api keys
+   4. [X] store used API key =id= with every cached result
+   5. [X] Write per-key token statistics into DB
+   6. [ ] use API key which had fewest used tokens in last N days
 **** TODO [1/5] UI
 1. [X] Show tags on subscriptions page
 2. [ ] Make tags clickable & show similar tags
