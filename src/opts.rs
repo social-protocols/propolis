@@ -12,8 +12,7 @@ pub struct PredictionOpts {
 }
 #[cfg(not(feature = "with_predictions"))]
 #[derive(Parser, Clone, Debug)]
-pub struct PredictionOpts {
-}
+pub struct PredictionOpts {}
 
 /// Program options to be read via clap
 #[derive(Parser, Debug)]

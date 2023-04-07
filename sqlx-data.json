@@ -24,72 +24,6 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
-  "2c36f28b43d87b8c0cbc87289ab2ab158593567f55f117e54af99eae3b6b3a78": {
-    "describe": {
-      "columns": [
-        {
-          "name": "statement_id!",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "ai_env!",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_name!",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "prompt_version!",
-          "ordinal": 3,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_result!",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "completion_tokens!",
-          "ordinal": 5,
-          "type_info": "Int64"
-        },
-        {
-          "name": "prompt_tokens!",
-          "ordinal": 6,
-          "type_info": "Int64"
-        },
-        {
-          "name": "total_tokens!",
-          "ordinal": 7,
-          "type_info": "Int64"
-        },
-        {
-          "name": "created!",
-          "ordinal": 8,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  created as \"created!\"\nfrom statement_predictions\nwhere statement_id = ? order by created desc"
-  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -216,30 +150,6 @@
     },
     "query": "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing"
   },
-  "b87f7e4bdcbd696333ba504294e6a540330bf3b01469dfb9b7b1581d9b355c80": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "text",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Right": 3
-      }
-    },
-    "query": "SELECT id,text FROM statements WHERE\nid NOT IN\n  (SELECT statement_id\n   FROM statement_predictions\n   WHERE\n     prompt_name = ? AND\n     prompt_version = ?\n)\nLIMIT ?"
-  },
   "c1ab324d9d4906db350799402fb741abb2b45bf4a4d310c087f53b79987abd8c": {
     "describe": {
       "columns": [
@@ -293,16 +203,6 @@
       }
     },
     "query": "select count(*) as subscription from subscriptions where user_id = ? and statement_id = ?"
-  },
-  "ce9bf725a63cf2960c257f249e9f2f81743bda920ec555d381afde99caf6a699": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 7
-      }
-    },
-    "query": "INSERT INTO statement_predictions\n                (statement_id, ai_env, prompt_name, prompt_version,\n                 prompt_result, completion_tokens, prompt_tokens)\n                VALUES (?, ?, ?, ?, ?, ?, ?)"
   },
   "cf0316052868e5672509eb7219d8ba3e771a39defb8ac954caa153de4fd66f35": {
     "describe": {
