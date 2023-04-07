@@ -2,6 +2,9 @@
 pub mod data;
 
 #[cfg(feature = "with_predictions")]
+pub mod key;
+
+#[cfg(feature = "with_predictions")]
 pub mod multi_statement_classifier;
 
 #[cfg(feature = "with_predictions")]
