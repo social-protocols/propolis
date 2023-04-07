@@ -1,8 +1,5 @@
-use anyhow::Context;
 use async_trait::async_trait;
 use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
-use openai::set_key;
-use std::env;
 
 use super::api::{AiEnv, AiEnvInfo, AiPrompt, AiRole, PromptResponse};
 
@@ -37,6 +34,7 @@ impl From<OpenAiModel> for &str {
 }
 
 /// Environment for running stuff against OpenAI models
+#[derive(PartialEq, Eq, Debug)]
 pub struct OpenAiEnv {
     pub model: &'static str, // e.g. gpt-3.5-turbo, text-davinci-003, etc.
 }
@@ -91,7 +89,7 @@ impl AiEnv for OpenAiEnv {
     }
 }
 
-pub async fn setup_openai() -> anyhow::Result<()> {
-    set_key(env::var("OPENAI_API_KEY").context("OPENAI_API_KEY environment variable not found.")?);
+pub async fn set_key(s: String) -> anyhow::Result<()> {
+    openai::set_key(s);
     Ok(())
 }

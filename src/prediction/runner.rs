@@ -60,14 +60,30 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
 ///
 /// Will store prompt results in the db
 #[cfg(feature = "with_predictions")]
-pub async fn run(opts: crate::opts::PredictionOpts, pool: &SqlitePool) {
+pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
+    use std::collections::HashMap;
+
+    use rand::seq::SliceRandom;
     use tracing::log::error;
 
-    ai_prompt::openai::setup_openai()
-        .await
-        .expect("Unable to setup openai");
+    use crate::prediction::key::ApiKey;
 
+    let mut keys: HashMap<String, ApiKey> = HashMap::new();
+    let mut raw_keys: Vec<String> = opts.openai_api_keys;
+    if let Some(rk) = opts.openai_api_key {
+        raw_keys.push(rk);
+    }
+    for raw_key in raw_keys {
+        let rkey = crate::prediction::key::TransientApiKey::Raw(raw_key.to_owned());
+        let key = ApiKey::get_or_create(pool, &rkey)
+            .await
+            .expect("Unable to get_or_create key.");
+        keys.insert(raw_key, key);
+    }
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
+
+    info!("API keys loaded: {}", keys.len());
+    info!("Prediction environment: {:?}", env);
 
     let prompt_gen = MultiStatementPromptGen::<StatementMetaContainer> {
         batch_size: 5,
@@ -83,6 +99,14 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &SqlitePool) {
         env: &env,
     };
     loop {
+        let raw_key = keys
+            .keys()
+            .collect::<Vec<&String>>()
+            .choose(&mut rand::thread_rng())
+            .expect("Unable to select any API key.")
+            .to_string();
+        let api_key = keys.get(&raw_key).unwrap();
+
         let prompt = prompt_gen.next_prompt().await.unwrap_or_else(|err| {
             error!("next_prompt failed: {}", err);
             None
@@ -90,9 +114,13 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &SqlitePool) {
 
         match prompt {
             Some(prompt) => {
+                ai_prompt::openai::set_key(raw_key)
+                    .await
+                    .expect("Unable to setup openai");
+
                 match runner.run(prompt).await {
                     Ok(result) => {
-                        if let Err(err) = result.store(pool).await {
+                        if let Err(err) = result.store(api_key, pool).await {
                             error!("storing result failed: {err}");
                         };
                     }

@@ -25,6 +25,7 @@ rl_queue = { path = "lib/rl_queue" }
 db = { path = "lib/db" }
 
 anyhow = "1.0.70"
+argon2 = "0.5.0"
 async-std = "1.12.0"
 async-trait = "0.1.68"
 axum = "0.6.12"
@@ -39,7 +40,6 @@ maud = { git= "https://github.com/lambda-fairy/maud", features = ["axum"] } # ht
 mime_guess = "2.0.4"
 num-derive = "0.3.3"
 num-traits = "0.2.15"
-pwhash = "1.0.0"
 qrcode = "0.12.0"
 rand = "0.8.5"
 rust-embed = "6.6.1"

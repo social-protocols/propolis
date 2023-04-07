@@ -52,7 +52,7 @@ struct StaticAsset;
 #[tokio::main]
 async fn main() {
     let opts = ProgramOpts::parse();
-    let sqlite_pool = setup_db().await;
+    let mut sqlite_pool = setup_db().await;
 
     // Setup tracing
     tracing_subscriber::registry()
@@ -93,7 +93,7 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
-    let prediction_runner = prediction::runner::run(opts.prediction, &sqlite_pool);
+    let prediction_runner = prediction::runner::run(opts.prediction, &mut sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("listening on {}", addr);
     let axum_server = axum::Server::bind(&addr).serve(app.into_make_service());
