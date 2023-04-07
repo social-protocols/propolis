@@ -11,6 +11,13 @@ use std::str::FromStr;
 use crate::structs::{Statement, VoteHistoryItem};
 use crate::structs::{StatementStats, TargetSegment, User, Vote};
 
+pub struct UserIdeologyStats {
+    /// Total votes cast for this ideology. Disagree votes count towards negative
+    pub votes_cast: i64,
+    /// A normalized weight across all votes and all ideologies for this user
+    pub votes_weight: f64,
+}
+
 impl User {
     /// Returns number of statements added by [User]
     pub async fn num_statements(&self, pool: &SqlitePool) -> Result<i32> {
@@ -101,7 +108,7 @@ impl User {
         )
         .fetch_optional(pool)
         .await?;
-        Ok(vote.map(|v| Vote::from(v).ok()).flatten())
+        Ok(vote.and_then(|v| Vote::from(v).ok()))
     }
 
     pub async fn subscribe(&self, statement_id: i64, pool: &SqlitePool) -> Result<()> {
@@ -118,16 +125,16 @@ impl User {
 
     /// Return a hashmap with weighted ideologies
     #[cfg(feature = "with_predictions")]
-    pub async fn num_ideologies(
+    pub async fn ideology_stats_map(
         &self,
         pool: &SqlitePool,
-    ) -> Result<std::collections::HashMap<String, (i64, f64)>> {
+    ) -> Result<std::collections::HashMap<String, UserIdeologyStats>> {
         use std::collections::HashMap;
 
         use crate::prediction::prompts::Score;
 
         let vhist = self.vote_history(pool).await?;
-        let mut hmap: HashMap<String, i64> = HashMap::new();
+        let mut votes: HashMap<String, i64> = HashMap::new();
         for item in vhist {
             let stmt = Statement {
                 id: item.statement_id,
@@ -139,23 +146,26 @@ impl User {
             }) = stmt.get_meta(pool).await?
             {
                 for i in ideologies {
-                    let score : i64 = match i.score {
+                    let score: i64 = match i.score {
                         Score::Strong => 1,
                         Score::Weak => continue,
                         _ => 0,
                     };
-                    let dir : i64 = match Vote::from(item.vote)? {
+                    let dir: i64 = match Vote::from(item.vote)? {
                         Vote::No => -1,
                         Vote::Skip => 0,
                         Vote::Yes => 1,
                         Vote::ItDepends => 0,
                     };
-                    hmap.entry(i.value).and_modify(|i| *i += score * dir).or_insert(1);
+                    votes
+                        .entry(i.value)
+                        .and_modify(|i| *i += score * dir)
+                        .or_insert(1);
                 }
             }
         }
 
-        let mut sorted_vec: Vec<(&String, &i64)> = hmap.iter().collect();
+        let mut sorted_vec: Vec<(&String, &i64)> = votes.iter().collect();
         sorted_vec.sort_by(|a, b| b.1.cmp(a.1));
         let largest_value = sorted_vec.first().map(|i| *i.1).unwrap_or(0);
         // we determine the smallest value to offset all values upwards so lowest starts at 0
@@ -166,15 +176,16 @@ impl User {
         //   a larger amplitude
         let smallest_value = sorted_vec.last().map(|i| *i.1).unwrap_or(0);
 
-        let weighted_hmap: HashMap<String, (i64, f64)> = hmap
+        let weighted_hmap: HashMap<String, UserIdeologyStats> = votes
             .iter()
             .map(|(k, v)| {
                 (
                     k.to_owned(),
-                    (
-                        *v,
-                        (*v - smallest_value) as f64 / (largest_value - smallest_value) as f64,
-                    ),
+                    UserIdeologyStats {
+                        votes_cast: *v,
+                        votes_weight: (*v - smallest_value) as f64
+                            / ((largest_value - smallest_value) as f64).max(1.0),
+                    },
                 )
             })
             .collect();

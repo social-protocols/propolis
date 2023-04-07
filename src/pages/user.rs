@@ -14,11 +14,11 @@ pub async fn user_page(
     Extension(pool): Extension<SqlitePool>,
     base: BaseTemplate,
 ) -> Result<Markup, AppError> {
-    let ideologies_map = user.num_ideologies(&pool).await?;
+    let ideologies_map = user.ideology_stats_map(&pool).await?;
 
     let content = html! {
         div style="padding: 5px 0px; align-self: center;" {
-            (ideologies_radar_chart(&ideologies_map).await?)
+            (ideologies_radar_chart(&ideologies_map)?)
         }
     };
 
