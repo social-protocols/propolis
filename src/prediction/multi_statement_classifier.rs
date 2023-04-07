@@ -6,6 +6,8 @@ use crate::structs::{Statement, StatementPrediction};
 
 use ai_prompt::api::{AiMessage, AiPrompt, PromptResponse};
 
+use super::key::ApiKey;
+
 /// Helper trait to specify which other traits a type must fulfil in order to be used as a result type
 /// of a prompt.
 pub trait MultiStatementResultTypes:
@@ -45,7 +47,7 @@ pub struct MultiStatementPromptResult<R: MultiStatementResultTypes> {
 }
 
 impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
-    pub async fn store(&self, pool: &SqlitePool) -> anyhow::Result<()> {
+    pub async fn store(&self, api_key: &ApiKey, pool: &SqlitePool) -> anyhow::Result<()> {
         let mut predictions: Vec<StatementPrediction> = vec![];
         let num_stmts = 1;
 
@@ -71,8 +73,8 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
             sqlx::query!(
                 r#"INSERT INTO statement_predictions
                 (statement_id, ai_env, prompt_name, prompt_version,
-                 prompt_result, completion_tokens, prompt_tokens)
-                VALUES (?, ?, ?, ?, ?, ?, ?)"#,
+                 prompt_result, completion_tokens, prompt_tokens, api_key_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#,
                 prediction.statement_id,
                 prediction.ai_env,
                 prediction.prompt_name,
@@ -80,6 +82,7 @@ impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
                 prediction.prompt_result,
                 prediction.completion_tokens,
                 prediction.prompt_tokens,
+                api_key.id,
             )
             .execute(pool)
             .await?;

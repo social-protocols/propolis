@@ -5,10 +5,10 @@ use clap::Parser;
 pub struct PredictionOpts {
     /// API key used for requests to openai
     #[arg(long, env)]
-    openai_api_key: Option<String>,
+    pub openai_api_key: Option<String>,
     /// API keys used for requests to openai delimited via ":"
     #[arg(long, env, value_parser, num_args=1.., value_delimiter=':')]
-    openai_api_keys: Vec<String>,
+    pub openai_api_keys: Vec<String>,
     /// Used (openai) tokens allowed per duration before rate limiting takes action
     #[arg(long, env, default_value_t = 1000)]
     pub tokens_per_duration: u64,
