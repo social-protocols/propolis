@@ -221,6 +221,20 @@ CREATE TABLE statement_predictions (
   prompt_tokens integer not null,
   total_tokens integer GENERATED ALWAYS AS (completion_tokens + prompt_tokens) VIRTUAL,
   -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
-  created integer not null default (strftime('%s', 'now')),
+  created integer not null default (strftime('%s', 'now')), api_key_id integer not null references api_keys (id),
   primary key (statement_id, prompt_name, prompt_version)
 ) strict;
+CREATE TABLE api_keys (
+  id integer not null primary key,
+  hash text not null,
+  note text,
+  total_tokens integer not null default 0,
+  created integer not null default (strftime('%s', 'now'))
+) strict;
+CREATE TRIGGER api_key_stats AFTER INSERT ON statement_predictions
+  BEGIN
+    -- update stats
+    UPDATE api_keys
+       SET total_tokens = total_tokens + new.total_tokens
+     WHERE id = new.api_key_id;
+  END;
