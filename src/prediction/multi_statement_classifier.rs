@@ -49,7 +49,8 @@ pub struct MultiStatementPromptResult<R: MultiStatementResultTypes> {
 impl<R: MultiStatementResultTypes> MultiStatementPromptResult<R> {
     pub async fn store(&self, api_key: &ApiKey, pool: &SqlitePool) -> anyhow::Result<()> {
         let mut predictions: Vec<StatementPrediction> = vec![];
-        let num_stmts = 1;
+        // FIXME: Can we somehow get rid of the .clone() calls here?
+        let num_stmts = self.result.clone().into_iter().count() as i64;
 
         for (i, stmt) in self.result.clone().into_iter().enumerate() {
             predictions.push(StatementPrediction {
