@@ -36,6 +36,17 @@ pub struct StatementFlag {
     pub created: i64,
 }
 
+// impl TryFrom<i64> for StatementFlagState {
+//     type Error = anyhow::Error;
+
+//     fn try_from(value: i64) -> Result<Self, Self::Error> {
+//         Ok(match value {
+//             1 => StatementFlagState::MaybeFlagged,
+//             2 => StatementFlagState::Flagged,
+//             _ => StatementFlagState::Clear,
+//         })
+//     }
+// }
 impl From<i64> for StatementFlagState {
     fn from(value: i64) -> Self {
         match value {
