@@ -21,6 +21,8 @@ use ai_prompt::{
 pub struct PromptRunner<'a, E: AiEnv + 'a> {
     /// Used to set a rate based on the amount of tokens that we have used overall
     token_rate_limiter: RateLimiter,
+    /// Used to set a rate based on how many API calls were done
+    api_calls_rate_limiter: RateLimiter,
     env: &'a E,
 }
 
@@ -34,6 +36,9 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
         R: MultiStatementResultTypes,
     {
         self.token_rate_limiter.block_until_ok().await;
+        self.api_calls_rate_limiter.block_until_ok().await;
+
+        self.api_calls_rate_limiter.add(1 as f64);
 
         info!("Running prompt: {}, V{}", prompt.name, prompt.version);
         if let CheckResult::Flagged(err) = self.env.check_prompt(&prompt).await? {
@@ -99,7 +104,11 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     let mut runner = PromptRunner {
         token_rate_limiter: RateLimiter::new(
             opts.tokens_per_duration as f64,
-            Duration::from_secs(opts.seconds_per_duration),
+            Duration::from_secs(opts.tokens_seconds_per_duration),
+        ),
+        api_calls_rate_limiter: RateLimiter::new(
+            opts.api_calls_per_duration as f64,
+            Duration::from_secs(opts.api_calls_seconds_per_duration),
         ),
         env: &env,
     };
