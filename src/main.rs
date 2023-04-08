@@ -52,7 +52,7 @@ struct StaticAsset;
 #[tokio::main]
 async fn main() {
     let opts = ProgramOpts::parse();
-    let mut sqlite_pool = setup_db().await;
+    let mut sqlite_pool = setup_db(&opts.database).await;
 
     // Setup tracing
     tracing_subscriber::registry()
