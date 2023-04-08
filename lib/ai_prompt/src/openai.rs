@@ -1,5 +1,12 @@
+use anyhow::anyhow;
 use async_trait::async_trait;
-use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
+use openai::{
+    chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole},
+    moderations::{ModerationBuilder, ModerationResult, Categories},
+};
+use serde_json::json;
+
+use crate::api::CheckResult;
 
 use super::api::{AiEnv, AiEnvInfo, AiPrompt, AiRole, PromptResponse};
 
@@ -36,13 +43,15 @@ impl From<OpenAiModel> for &str {
 /// Environment for running stuff against OpenAI models
 #[derive(PartialEq, Eq, Debug)]
 pub struct OpenAiEnv {
-    pub model: &'static str, // e.g. gpt-3.5-turbo, text-davinci-003, etc.
+    pub model: &'static str,       // e.g. gpt-3.5-turbo, text-davinci-003, etc.
+    pub check_model: &'static str, // e.g. text-moderation-stable, text-moderation-latest etc.
 }
 
 impl OpenAiEnv {
     pub fn from(model: OpenAiModel) -> Self {
         Self {
             model: model.into(),
+            check_model: "text-moderation-stable",
         }
     }
 }
@@ -53,6 +62,47 @@ impl AiEnv for OpenAiEnv {
         AiEnvInfo {
             name: "openai".into(),
             model: self.model.into(),
+            check_model: Some(self.check_model.into()),
+        }
+    }
+
+    async fn check_prompt<Prompt: AiPrompt>(&self, prompt: &Prompt) -> anyhow::Result<CheckResult> {
+        let data = prompt.primer().iter().fold(String::new(), |result, msg| {
+            let content = &msg.content;
+            format!("{result}\n{content}")
+        });
+        let result = ModerationBuilder::default()
+            .input(data)
+            .model(self.check_model)
+            .create()
+            .await??;
+        match result.results.as_slice() {
+            [ModerationResult {
+                flagged,
+                categories: Categories {
+                    hate,
+                    hate_threatening,
+                    self_harm,
+                    sexual,
+                    sexual_minors,
+                    violence,
+                    violence_graphic,
+                    ..
+                },
+                ..
+            }, ..] => Ok(match flagged {
+                false => CheckResult::Ok,
+                true => CheckResult::Flagged(serde_json::to_string(&json!([{
+                    "hate": hate,
+                    "hate_threatening": hate_threatening,
+                    "self_harm": self_harm,
+                    "sexual": sexual,
+                    "sexual_minors": sexual_minors,
+                    "violence": violence,
+                    "violence_graphic": violence_graphic,
+                }]))?.into()),
+            }),
+            _ => Err(anyhow!("OpenAI moderation API yielded an empty result")),
         }
     }
 
