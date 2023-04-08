@@ -128,8 +128,7 @@ impl<R: MultiStatementResultTypes> AiPrompt for MultiStatementPrompt<R> {
 }
 
 impl<'a, R: MultiStatementResultTypes> MultiStatementPromptGen<'a, R> {
-    /// Returns the next batch of statements to predict
-    pub async fn next_batch(&self) -> anyhow::Result<Vec<Statement>> {
+    pub async fn unflagged_batch(&self) -> anyhow::Result<Vec<Statement>> {
         // -- create a dummy prompt so we can figure out for which (name, version) pair to look for --
         let dummy_statement = Statement {
             id: 0,
@@ -147,14 +146,76 @@ id NOT IN
    WHERE
      prompt_name = ? AND
      prompt_version = ?
+) AND
+-- id must not be flagged
+id NOT IN
+(SELECT statement_id
+   FROM statement_flags
 )
 LIMIT ?",
             dummy_prompt.name,
             dummy_prompt.version,
             self.batch_size,
         )
-        .fetch_all(self.pool)
-        .await?;
+            .fetch_all(self.pool)
+            .await?;
+        Ok(stmts)
+    }
+
+    /// Return those statements that are flagged with a particular flag_state
+    pub async fn next_with_flag(&self, flag_state: i64) -> anyhow::Result<Vec<Statement>> {
+        // -- create a dummy prompt so we can figure out for which (name, version) pair to look for --
+        let dummy_statement = Statement {
+            id: 0,
+            text: "".into(),
+        };
+        let dummy_prompt = (self.prompt)(vec![dummy_statement]);
+
+        // -- find those statements for which a prediction is missing --
+        let stmts = sqlx::query_as!(
+            Statement,
+            "SELECT id,text FROM statements WHERE
+id NOT IN
+  (SELECT statement_id
+   FROM statement_predictions
+   WHERE
+     prompt_name = ? AND
+     prompt_version = ?
+) AND
+-- id must not be flagged
+id IN
+(SELECT statement_id
+   FROM statement_flags
+   WHERE
+     state = ?
+)
+LIMIT 1",
+            dummy_prompt.name,
+            dummy_prompt.version,
+            flag_state,
+        )
+            .fetch_all(self.pool)
+            .await?;
+        Ok(stmts)
+    }
+
+    /// Returns the next batch of statements to predict
+    pub async fn next_batch(&self) -> anyhow::Result<Vec<Statement>> {
+        // -- create a dummy prompt so we can figure out for which (name, version) pair to look for --
+        let dummy_statement = Statement {
+            id: 0,
+            text: "".into(),
+        };
+        let dummy_prompt = (self.prompt)(vec![dummy_statement]);
+
+        // -- find those statements for which a prediction is missing --
+        let unflagged = self.unflagged_batch().await?;
+        // -- also, go through those statements that have been flagged with MaybeFlagged individually --
+        let stmts = match unflagged.as_slice() {
+            [] => self.next_with_flag(1).await?,
+            _ => unflagged
+        };
+
         if !stmts.is_empty() {
             debug!(
                 "Next batch len for {} V{}: {}",
