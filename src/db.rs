@@ -8,7 +8,10 @@ use sqlx::{
 use std::str::FromStr;
 
 use crate::structs::{Statement, VoteHistoryItem};
-use crate::{structs::{StatementStats, TargetSegment, User, Vote}, opts::DatabaseOpts};
+use crate::{
+    opts::DatabaseOpts,
+    structs::{StatementStats, TargetSegment, User, Vote},
+};
 
 #[cfg(feature = "with_predictions")]
 pub struct UserIdeologyStats {

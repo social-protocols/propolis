@@ -64,7 +64,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     use std::collections::HashMap;
 
     use rand::seq::SliceRandom;
-    use tracing::{log::error, debug};
+    use tracing::{debug, log::error};
 
     use propolis_datas::apikey::{ApiKey, TransientApiKey};
 
