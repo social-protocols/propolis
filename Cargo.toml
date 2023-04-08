@@ -27,8 +27,8 @@ async-trait = "0.1.68"
 db = { path = "lib/db" }
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
-# sqlx = { version = "0.7.0-alpha.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
-sqlx = { version = "0.6.3", features = ["sqlite", "macros", "runtime-tokio-rustls", "offline"] }
+# faster compiles with latest sqlx version
+sqlx = { version = "0.7.0-alpha.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
 tracing = "0.1.37"
 tokio = { version = "1.27.0", features = ["full"] }
 num-derive = "0.3.3"
@@ -63,7 +63,6 @@ rand = "0.8.5"
 rust-embed = "6.6.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
-# faster compiles with latest sqlx version
 sqlx = { workspace = true }
 timediff = "0.2.3"
 tokio = { workspace = true }
