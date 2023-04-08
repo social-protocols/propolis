@@ -79,7 +79,7 @@ CLOSED: [2023-04-05 Mi 20:16]
 - [X] =base= should be retrievable via an axum extension / injection
 - [ ] [0/3] Restructure code
   - [ ] valuetypes into =propolis-datas= crate
-  - [ ] sqlite specific code into =propolis-sqlite= crate
+  - [ ] sqlite specific code into own =sqlite.rs= file based on traits
   - [ ] prediction specific code into =propolis-predictions=
 - [ ] =promptineer= crate with generic prompt/openai structs & traits
 * Experiments

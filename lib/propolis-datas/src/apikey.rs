@@ -15,7 +15,7 @@ pub fn trim_key(s: &str) -> anyhow::Result<String> {
         KEY_PART_LEN
     );
 
-    let mut trimmed_key : String = s.into();
+    let mut trimmed_key: String = s.into();
     let len = trimmed_key.chars().count() - KEY_PART_LEN;
     let _ = trimmed_key.drain(0..len);
     Ok(trimmed_key)
