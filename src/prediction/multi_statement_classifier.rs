@@ -157,8 +157,8 @@ LIMIT ?",
             dummy_prompt.version,
             self.batch_size,
         )
-            .fetch_all(self.pool)
-            .await?;
+        .fetch_all(self.pool)
+        .await?;
         Ok(stmts)
     }
 
@@ -194,8 +194,8 @@ LIMIT 1",
             dummy_prompt.version,
             flag_state,
         )
-            .fetch_all(self.pool)
-            .await?;
+        .fetch_all(self.pool)
+        .await?;
         Ok(stmts)
     }
 
@@ -213,7 +213,7 @@ LIMIT 1",
         // -- also, go through those statements that have been flagged with MaybeFlagged individually --
         let stmts = match unflagged.as_slice() {
             [] => self.next_with_flag(1).await?,
-            _ => unflagged
+            _ => unflagged,
         };
 
         if !stmts.is_empty() {

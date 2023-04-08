@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use openai::{
     chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole},
-    moderations::{ModerationBuilder, ModerationResult, Categories},
+    moderations::{Categories, ModerationBuilder, ModerationResult},
 };
 use serde_json::json;
 
@@ -79,28 +79,32 @@ impl AiEnv for OpenAiEnv {
         match result.results.as_slice() {
             [ModerationResult {
                 flagged,
-                categories: Categories {
-                    hate,
-                    hate_threatening,
-                    self_harm,
-                    sexual,
-                    sexual_minors,
-                    violence,
-                    violence_graphic,
-                    ..
-                },
+                categories:
+                    Categories {
+                        hate,
+                        hate_threatening,
+                        self_harm,
+                        sexual,
+                        sexual_minors,
+                        violence,
+                        violence_graphic,
+                        ..
+                    },
                 ..
             }, ..] => Ok(match flagged {
                 false => CheckResult::Ok,
-                true => CheckResult::Flagged(serde_json::to_string(&json!([{
-                    "hate": hate,
-                    "hate_threatening": hate_threatening,
-                    "self_harm": self_harm,
-                    "sexual": sexual,
-                    "sexual_minors": sexual_minors,
-                    "violence": violence,
-                    "violence_graphic": violence_graphic,
-                }]))?.into()),
+                true => CheckResult::Flagged(
+                    serde_json::to_string(&json!([{
+                        "hate": hate,
+                        "hate_threatening": hate_threatening,
+                        "self_harm": self_harm,
+                        "sexual": sexual,
+                        "sexual_minors": sexual_minors,
+                        "violence": violence,
+                        "violence_graphic": violence_graphic,
+                    }]))?
+                    .into(),
+                ),
             }),
             _ => Err(anyhow!("OpenAI moderation API yielded an empty result")),
         }
