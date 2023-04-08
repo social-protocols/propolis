@@ -58,7 +58,7 @@ jobs:
         run: cargo sqlx prepare --check
 
       - name: Check default build
-        run: cargo check
+        run: cargo build
 
       - name: Check feature 'embed_migrations'
         run: cargo check --features embed_migrations
@@ -71,3 +71,23 @@ jobs:
 
       - name: Check formatting
         run: cargo fmt --check
+
+      - name: Start webserver in background
+        run: |
+          target/debug/propolis &
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install yarn dependencies
+        run: yarn
+      - name: Install Playwright Browsers
+        run: yarn playwright install --with-deps
+      - name: Run Playwright tests
+        run: yarn playwright test
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

@@ -92,7 +92,7 @@ pub async fn new_statement(
                 }
             }
             div style="display:flex; justify-content: flex-end;" {
-                button { "Add Statement" }
+                button data-testid="create-statement-submit" { "Add Statement" }
             }
         }
         @if target_statement.is_some() {
