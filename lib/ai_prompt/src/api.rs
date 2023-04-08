@@ -8,6 +8,8 @@ pub struct AiEnvInfo {
     pub name: String,
     /// Actual model used
     pub model: String,
+    /// Model to use for checking / moderating
+    pub check_model: Option<String>,
 }
 
 /// Contains the information to identify a used prompt
@@ -19,6 +21,14 @@ pub struct PromptInfo {
     pub version: u16,
 }
 
+/// Contains the result of checking a prompt against e.g. a moderation api
+pub enum CheckResult {
+    /// Everything OK
+    Ok,
+    /// Flagged as inappropriate
+    Flagged(String),
+}
+
 impl From<AiEnvInfo> for String {
     fn from(value: AiEnvInfo) -> Self {
         format!("{},{}", value.model, value.name)
@@ -27,7 +37,16 @@ impl From<AiEnvInfo> for String {
 
 #[async_trait]
 pub trait AiEnv {
+    /// Returns information on the ai environment
     fn info(&self) -> AiEnvInfo;
+
+    /// Check the prompt against e.g. moderation api
+    async fn check_prompt<Prompt: AiPrompt>(
+        &self,
+        r: &Prompt
+    ) -> anyhow::Result<CheckResult>;
+
+    /// Run prompt against actual model
     async fn send_prompt<Prompt: AiPrompt>(
         &self,
         r: &Prompt,

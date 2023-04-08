@@ -1,5 +1,6 @@
 use std::time::{Duration, Instant};
 
+use anyhow::anyhow;
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
 use tracing::log::{info, warn};
@@ -12,7 +13,7 @@ use super::{
     prompts::{StatementMeta, StatementMetaContainer},
 };
 use ai_prompt::{
-    api::AiEnv,
+    api::{AiEnv, CheckResult},
     openai::{OpenAiEnv, OpenAiModel},
 };
 
@@ -35,6 +36,10 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
         self.token_rate_limiter.block_until_ok().await;
 
         info!("Running prompt: {}, V{}", prompt.name, prompt.version);
+        if let CheckResult::Flagged(err) = self.env.check_prompt(&prompt).await? {
+            // TODO: Increase trys and blacklist
+            return Err(anyhow!("Prompt failed check: {:?}", err));
+        }
         let response = self.env.send_prompt(&prompt).await?;
         match self
             .token_rate_limiter
