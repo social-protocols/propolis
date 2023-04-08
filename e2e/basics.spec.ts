@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("create statement", async ({ page }) => {
-  await page.goto("http://localhost:8000");
+  await page.goto("/");
 
   // create statement
   await page.getByTestId("nav-add-statement").click();

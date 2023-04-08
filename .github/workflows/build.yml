@@ -57,7 +57,7 @@ jobs:
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check
 
-      - name: Check default build
+      - name: Cargo build
         run: cargo build
 
       - name: Check feature 'embed_migrations'
@@ -82,7 +82,7 @@ jobs:
       - name: Install yarn dependencies
         run: yarn
       - name: Install Playwright Browsers
-        run: yarn playwright install --with-deps
+        run: yarn playwright install --with-deps chromium
       - name: Run Playwright tests
         run: yarn playwright test
       - uses: actions/upload-artifact@v3
