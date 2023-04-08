@@ -53,10 +53,12 @@ CLOSED: [2023-04-05 Mi 20:16]
    2. [ ] Use view count as order by clause when getting them out of the queue
 5. [ ] Statement blacklisting
    1. [ ] Add failure counter and blacklist statement when failed too often
-6. [ ] [0/3] OpenAI Moderation API...
-   1. [ ] Figure out: just statements or entire prompt?
-   2. [ ] Use moderation api to precheck
-   3. [ ] Blacklist in case of denied
+6. [-] [2/3] OpenAI Moderation API...
+   1. [X] Figure out: just statements or entire prompt? ⇒ sending entire prompt
+   2. [X] Use moderation api to precheck
+   3. [-] Blacklist in case of denied
+      1. [X] New table =flagged_statements=
+      2. [ ] Re-try those statements individually that were of a batch that was flagged
 7. [-] [5/6] Multi API key support...
    1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [X] use random key
