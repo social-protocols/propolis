@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.70"
-async-trait = "0.1.68"
+anyhow = { workspace = true }
+async-trait = { workspace = true }
 openai = "1.0.0-alpha.8"
-serde = "1.0.159"
-tracing = "0.1.37"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
