@@ -41,10 +41,7 @@ pub trait AiEnv {
     fn info(&self) -> AiEnvInfo;
 
     /// Check the prompt against e.g. moderation api
-    async fn check_prompt<Prompt: AiPrompt>(
-        &self,
-        r: &Prompt
-    ) -> anyhow::Result<CheckResult>;
+    async fn check_prompt<Prompt: AiPrompt>(&self, r: &Prompt) -> anyhow::Result<CheckResult>;
 
     /// Run prompt against actual model
     async fn send_prompt<Prompt: AiPrompt>(
