@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use propolis_utils::CsvFixup;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
@@ -264,27 +265,8 @@ impl StatementMeta {
             version: 8,
             handler: |s| {
                 let s_without_header = s.trim().split_once('\n').map(|x| x.1).unwrap_or("").to_string();
-                let target_delim_count = 7;
-                s_without_header
-                    .split('\n')
-                    // -- fixup delimiter count, since the ai does not reliably do that --
-                    .map(|s| -> String {
-                        let s = s.to_string();
-                        let delim_count = s.match_indices('|').collect::<Vec<_>>().len();
-                        match delim_count.cmp(&target_delim_count) {
-                            std::cmp::Ordering::Less => {
-                                s + "|".repeat(target_delim_count - delim_count).as_str()
-                            },
-                            std::cmp::Ordering::Greater => {
-                                s.strip_suffix("|".repeat(delim_count - target_delim_count).as_str())
-                                    .unwrap_or(&s)
-                                    .into()
-                            },
-                            std::cmp::Ordering::Equal => { s }
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n")
+                let target_column_count = 8;
+                CsvFixup::ensure_columns(&s_without_header, '|', Some(target_column_count))?
                     // -- finally try to return an R (result type) --
                     .try_into()
             },
