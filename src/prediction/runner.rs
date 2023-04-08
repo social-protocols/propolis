@@ -66,7 +66,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     use rand::seq::SliceRandom;
     use tracing::log::error;
 
-    use crate::prediction::key::ApiKey;
+    use propolis_datas::apikey::{ApiKey, TransientApiKey};
 
     let mut keys: HashMap<String, ApiKey> = HashMap::new();
     let mut raw_keys: Vec<String> = opts.openai_api_keys;
@@ -74,7 +74,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         raw_keys.push(rk);
     }
     for raw_key in raw_keys {
-        let rkey = crate::prediction::key::TransientApiKey::Raw(raw_key.to_owned());
+        let rkey = TransientApiKey::Raw(raw_key.to_owned());
         let key = ApiKey::get_or_create(pool, &rkey, None::<String>)
             .await
             .expect("Unable to get_or_create key.");

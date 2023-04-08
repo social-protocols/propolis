@@ -72,12 +72,25 @@ CLOSED: [2023-04-05 Mi 20:16]
       1. [ ] Radar chart on most common ideologies
       2. [ ] ideologies on a one dimensional scale: e.g. liberalist vs socialist
 5. [ ] Comparison page against a different user with respect to ideologies / bfp traits
-**** TODO [1/3] Refactorings
+**** TODO [1/4] Refactorings
 - [ ] [0/2] Utils crate
   - [ ] Create a =util= crate to store utility fns
   - [ ] Move: CSV data preprocessing fn (see statement_meta handler)
 - [X] =base= should be retrievable via an axum extension / injection
+- [ ] [0/3] Restructure code
+  - [ ] valuetypes into =propolis-datas= crate
+  - [ ] sqlite specific code into =propolis-sqlite= crate
+  - [ ] prediction specific code into =propolis-predictions=
 - [ ] =promptineer= crate with generic prompt/openai structs & traits
+* Experiments
+** DONE Try out mold
+CLOSED: [2023-04-08 Sa 06:23]
+Put this into =shellHook=
+#+begin_src sh
+export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=${pkgs.clang_15}/bin/clang
+export RUSTFLAGS="-C link-arg=-fuse-ld=${pkgs.mold}/bin/mold"
+#+end_src
+No significant speed gains during compilation however.
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
