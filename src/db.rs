@@ -5,11 +5,10 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
     SqlitePool,
 };
-use std::env;
 use std::str::FromStr;
 
 use crate::structs::{Statement, VoteHistoryItem};
-use crate::structs::{StatementStats, TargetSegment, User, Vote};
+use crate::{structs::{StatementStats, TargetSegment, User, Vote}, opts::DatabaseOpts};
 
 #[cfg(feature = "with_predictions")]
 pub struct UserIdeologyStats {
@@ -338,14 +337,13 @@ pub async fn statement_stats(statement_id: i64, pool: &SqlitePool) -> Result<Sta
 
 /// Create db connection & configure it
 //TODO: move to own file
-pub async fn setup_db() -> SqlitePool {
+pub async fn setup_db(opts: &DatabaseOpts) -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // if embed_migrations is enabled, we create the database if it doesn't exist
     let create_database_if_missing = cfg!(feature = "embed_migrations");
 
-    let connection_options = SqliteConnectOptions::from_str(&database_url)
+    let connection_options = SqliteConnectOptions::from_str(&opts.database_url)
         .unwrap()
         .create_if_missing(create_database_if_missing)
         .journal_mode(SqliteJournalMode::Wal)

@@ -20,10 +20,19 @@ pub struct PredictionOpts {
 #[derive(Parser, Clone, Debug)]
 pub struct PredictionOpts {}
 
+#[derive(Parser, Clone, Debug)]
+pub struct DatabaseOpts {
+    /// URL to database
+    #[arg(long, env, required = true)]
+    pub database_url: String,
+}
+
 /// Program options to be read via clap
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct ProgramOpts {
     #[command(flatten)]
     pub prediction: PredictionOpts,
+    #[command(flatten)]
+    pub database: DatabaseOpts,
 }
