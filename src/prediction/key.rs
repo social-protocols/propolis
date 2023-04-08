@@ -36,6 +36,7 @@ pub enum TransientApiKey {
     /// A key that has not yet been hashed
     Raw(String),
     /// A key that has already been hashed
+    #[allow(dead_code)]
     Hashed(String),
 }
 
@@ -55,7 +56,7 @@ pub trait ApiKeyStore {
     /// Retrieve by id
     async fn by_id(&self, id: i64) -> anyhow::Result<Option<ApiKey>>;
     /// Retrieve by TransientApiKey
-    async fn by_transient(&self, tkey: &TransientApiKey) -> anyhow::Result<Option<ApiKey>>;
+    async fn by_hash(&self, hash: &str) -> anyhow::Result<Option<ApiKey>>;
 }
 
 impl ApiKey {
@@ -81,35 +82,23 @@ impl ApiKey {
         store: &Store,
         tkey: &TransientApiKey,
     ) -> Result<Option<Self>> {
-        store.by_transient(tkey).await
+        let hash : String = match tkey {
+            TransientApiKey::Raw(raw_api_key) => api_key_partial_hash(raw_api_key)?,
+            TransientApiKey::Hashed(hash) => hash.into(),
+        };
+        store.by_hash(hash.as_str()).await
     }
-    pub async fn get_or_create<Store: ApiKeyStore>(
+    /// Read from DB or create the key
+    pub async fn get_or_create<S: ToString, Store: ApiKeyStore>(
         store: &mut Store,
         tkey: &TransientApiKey,
+        note: Option<S>,
     ) -> Result<Self> {
         let maybe_key = Self::by_transient(store, tkey).await?;
         Ok(match maybe_key {
             Some(key) => key,
-            None => Self::create(store, tkey, Some("")).await?,
+            None => Self::create(store, tkey, note).await?,
         })
-    }
-}
-
-#[async_trait::async_trait]
-impl ApiKeyStore for db::InMemoryStore<String, ApiKey> {
-    async fn store(&mut self, item: &ApiKey) -> anyhow::Result<ApiKey> {
-        self.values.insert(item.hash.to_owned(), item.to_owned());
-        Ok(self.values.get(&item.hash).unwrap().to_owned())
-    }
-    async fn by_id(&self, _id: i64) -> anyhow::Result<Option<ApiKey>> {
-        todo!()
-    }
-    async fn by_transient(&self, tkey: &TransientApiKey) -> anyhow::Result<Option<ApiKey>> {
-        let hashed: String = match tkey {
-            TransientApiKey::Raw(raw_api_key) => api_key_partial_hash(raw_api_key)?,
-            TransientApiKey::Hashed(hashed) => hashed.into(),
-        };
-        Ok(self.values.get(&hashed).cloned())
     }
 }
 
@@ -117,6 +106,21 @@ impl ApiKeyStore for db::InMemoryStore<String, ApiKey> {
 mod tests {
     use super::*;
     use db::InMemoryStore;
+
+    #[async_trait::async_trait]
+    impl ApiKeyStore for InMemoryStore<String, ApiKey> {
+        async fn store(&mut self, item: &ApiKey) -> anyhow::Result<ApiKey> {
+            self.values.insert(item.hash.to_owned(), item.to_owned());
+            Ok(self.values.get(&item.hash).unwrap().to_owned())
+        }
+        async fn by_id(&self, _id: i64) -> anyhow::Result<Option<ApiKey>> {
+            todo!()
+        }
+        async fn by_hash(&self, hash: &str) -> anyhow::Result<Option<ApiKey>> {
+            Ok(self.values.get(hash.into()).cloned())
+        }
+    }
+
 
     #[tokio::test]
     async fn test_api_key_from_unhashed() -> Result<()> {
@@ -137,8 +141,10 @@ mod tests {
         let hashed: String = "abcdefgabcdefgabcdefg".into();
         let tkey = TransientApiKey::Hashed(hashed.to_owned());
         let note = Some("".to_string());
-        let key = ApiKey::create(&mut db, &tkey, note.to_owned()).await?;
+        let key = ApiKey::get_or_create(&mut db, &tkey, note.to_owned()).await?;
         assert_eq!(key.hash, hashed);
+        assert_eq!(key.note, note);
+        assert_eq!(key, ApiKey::by_transient(&mut db, &tkey).await?.unwrap());
         Ok(())
     }
 }

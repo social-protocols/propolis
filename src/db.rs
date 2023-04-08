@@ -9,7 +9,7 @@ use std::env;
 use std::str::FromStr;
 
 #[cfg(feature = "with_predictions")]
-use crate::prediction::key::{api_key_partial_hash, ApiKey, ApiKeyStore, TransientApiKey};
+use crate::prediction::key::{ApiKey, ApiKeyStore};
 use crate::structs::{Statement, VoteHistoryItem};
 use crate::structs::{StatementStats, TargetSegment, User, Vote};
 
@@ -467,9 +467,7 @@ impl ApiKeyStore for SqlitePool {
         )
         .execute(self as &SqlitePool)
         .await?;
-        let r = self
-            .by_transient(&TransientApiKey::Hashed(item.hash.to_owned()))
-            .await?;
+        let r = self.by_hash(item.hash.as_str()).await?;
         r.ok_or(anyhow::anyhow!("Unable to retrieve just stored value"))
     }
     async fn by_id(&self, id: i64) -> anyhow::Result<Option<ApiKey>> {
@@ -481,15 +479,11 @@ impl ApiKeyStore for SqlitePool {
         .fetch_optional(self)
         .await?)
     }
-    async fn by_transient(&self, tkey: &TransientApiKey) -> anyhow::Result<Option<ApiKey>> {
-        let hashed: String = match tkey {
-            TransientApiKey::Raw(raw_api_key) => api_key_partial_hash(raw_api_key)?,
-            TransientApiKey::Hashed(hashed) => hashed.into(),
-        };
+    async fn by_hash(&self, hash: &str) -> anyhow::Result<Option<ApiKey>> {
         Ok(sqlx::query_as!(
             ApiKey,
             "SELECT id, hash, note FROM api_keys WHERE hash = ?",
-            hashed
+            hash
         )
         .fetch_optional(self)
         .await?)

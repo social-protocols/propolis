@@ -75,7 +75,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     }
     for raw_key in raw_keys {
         let rkey = crate::prediction::key::TransientApiKey::Raw(raw_key.to_owned());
-        let key = ApiKey::get_or_create(pool, &rkey)
+        let key = ApiKey::get_or_create(pool, &rkey, None::<String>)
             .await
             .expect("Unable to get_or_create key.");
         keys.insert(raw_key, key);
