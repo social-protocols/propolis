@@ -89,7 +89,7 @@ impl AiEnv for OpenAiEnv {
     }
 }
 
-pub async fn set_key(s: String) -> anyhow::Result<()> {
+/// Set the key to be used when next sending a request to openai
+pub fn set_key(s: String) {
     openai::set_key(s);
-    Ok(())
 }

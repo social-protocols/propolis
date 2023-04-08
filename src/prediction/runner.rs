@@ -64,7 +64,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     use std::collections::HashMap;
 
     use rand::seq::SliceRandom;
-    use tracing::log::error;
+    use tracing::{log::error, debug};
 
     use propolis_datas::apikey::{ApiKey, TransientApiKey};
 
@@ -114,10 +114,11 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
         match prompt {
             Some(prompt) => {
-                ai_prompt::openai::set_key(raw_key)
-                    .await
-                    .expect("Unable to setup openai");
-
+                let mut trimmed_key = raw_key.clone();
+                let len = trimmed_key.chars().count() - 4;
+                let _ = trimmed_key.drain(0..len);
+                debug!("Using key ({}): sk..{}", api_key.id, trimmed_key);
+                ai_prompt::openai::set_key(raw_key);
                 match runner.run(prompt).await {
                     Ok(result) => {
                         if let Err(err) = result.store(api_key, pool).await {

@@ -7,15 +7,23 @@ static SALT: &str = "staticsalt";
 // how many characters to use from the original API key
 static KEY_PART_LEN: usize = 12;
 
-/// Returns a hash based on a trimmed(!) API key
-pub fn api_key_partial_hash(s: &str) -> anyhow::Result<String> {
+pub fn trim_key(s: &str) -> anyhow::Result<String> {
     assert!(
         s.len() > KEY_PART_LEN,
         "Key is below minimum size. Key: {}. Size: {}",
         s.len(),
         KEY_PART_LEN
     );
-    let s = &s[0..KEY_PART_LEN];
+
+    let mut trimmed_key : String = s.into();
+    let len = trimmed_key.chars().count() - KEY_PART_LEN;
+    let _ = trimmed_key.drain(0..len);
+    Ok(trimmed_key)
+}
+
+/// Returns a hash based on a trimmed(!) API key
+pub fn api_key_partial_hash(s: &str) -> anyhow::Result<String> {
+    let s = trim_key(s)?;
     let salt = match SaltString::encode_b64(SALT.as_bytes()) {
         Ok(salt) => Ok(salt),
         Err(err) => Err(anyhow!(err)),
