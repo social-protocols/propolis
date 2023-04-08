@@ -1,0 +1,15 @@
+[package]
+name = "propolis-datas"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+db = { workspace = true }
+anyhow = { workspace = true }
+argon2 = "0.5.0"
+async-trait = { workspace = true }
+serde = { workspace = true }
+sqlx = {workspace = true}
+tokio = { workspace = true }

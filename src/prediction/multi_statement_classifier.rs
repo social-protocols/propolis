@@ -6,7 +6,7 @@ use crate::structs::{Statement, StatementPrediction};
 
 use ai_prompt::api::{AiMessage, AiPrompt, PromptResponse};
 
-use super::key::ApiKey;
+use propolis_datas::apikey::ApiKey;
 
 /// Helper trait to specify which other traits a type must fulfil in order to be used as a result type
 /// of a prompt.

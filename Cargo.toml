@@ -3,7 +3,8 @@
 members = [
     "lib/ai_prompt",
     "lib/rl_queue",
-    "lib/db"
+    "lib/db",
+    "lib/propolis-datas"
 ]
 
 [package]
@@ -18,16 +19,26 @@ edition = "2021"
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
+[workspace.dependencies]
+anyhow = "1.0.70"
+async-trait = "0.1.68"
+db = { path = "lib/db" }
+serde = { version = "1.0.159", features = ["derive"] }
+# sqlx = { version = "0.7.0-alpha.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
+sqlx = { version = "0.6.3", features = ["sqlite", "macros", "runtime-tokio-rustls", "offline"] }
+tokio = { version = "1.27.0", features = ["full"] }
+
 [dependencies]
 # local deps
 ai_prompt = { path = "lib/ai_prompt", optional = true }
+db = { workspace = true }
 rl_queue = { path = "lib/rl_queue" }
-db = { path = "lib/db" }
+propolis-datas = { path = "lib/propolis-datas" }
 
-anyhow = "1.0.70"
+anyhow = { workspace = true }
 argon2 = "0.5.0"
 async-std = "1.12.0"
-async-trait = "0.1.68"
+async-trait = { workspace = true }
 axum = "0.6.12"
 base64 = "0.21.0"
 chrono = "0.4.24"
@@ -43,13 +54,12 @@ num-traits = "0.2.15"
 qrcode = "0.12.0"
 rand = "0.8.5"
 rust-embed = "6.6.1"
-serde = { version = "1.0.159", features = ["derive"] }
+serde = { workspace = true }
 serde_json = "1.0.95"
 # faster compiles with latest sqlx version
-# sqlx = { version = "0.7.0-alpha.2", features = ["sqlite", "macros", "runtime-tokio-rustls"] }
-sqlx = { version = "0.6.3", features = ["sqlite", "macros", "runtime-tokio-rustls", "offline"] }
+sqlx = { workspace = true }
 timediff = "0.2.3"
-tokio = { version = "1.27.0", features = ["full"] }
+tokio = { workspace = true }
 tower-cookies = "0.9.0"
 tower-http = { version = "0.4.0", features = ["fs", "compression-gzip", "trace"] }
 tracing = "0.1.37"

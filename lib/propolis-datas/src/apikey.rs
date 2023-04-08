@@ -82,7 +82,7 @@ impl ApiKey {
         store: &Store,
         tkey: &TransientApiKey,
     ) -> Result<Option<Self>> {
-        let hash : String = match tkey {
+        let hash: String = match tkey {
             TransientApiKey::Raw(raw_api_key) => api_key_partial_hash(raw_api_key)?,
             TransientApiKey::Hashed(hash) => hash.into(),
         };
@@ -120,7 +120,6 @@ mod tests {
             Ok(self.values.get(hash.into()).cloned())
         }
     }
-
 
     #[tokio::test]
     async fn test_api_key_from_unhashed() -> Result<()> {
