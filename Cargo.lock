@@ -1812,6 +1812,7 @@ dependencies = [
  "mime_guess",
  "num-derive",
  "num-traits",
+ "propolis-datas",
  "qrcode",
  "rand",
  "rl_queue",
@@ -1826,6 +1827,19 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+]
+
+[[package]]
+name = "propolis-datas"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "async-trait",
+ "db",
+ "serde",
+ "sqlx",
+ "tokio",
 ]
 
 [[package]]
