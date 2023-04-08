@@ -59,11 +59,13 @@ impl StatementFlagStore for sqlx::SqlitePool {
     async fn by_statement_id(&self, id: i64) -> anyhow::Result<Option<StatementFlag>> {
         Ok(sqlx::query_as!(
             StatementFlag,
-            "SELECT statement_id, state, categories, created FROM statement_flags WHERE statement_id = ?",
+            "SELECT statement_id, state, categories, created
+FROM statement_flags
+WHERE statement_id = ?",
             id
         )
-           .fetch_optional(self)
-           .await?)
+        .fetch_optional(self)
+        .await?)
     }
     async fn update(&self, item: &StatementFlag) -> anyhow::Result<()> {
         let state = item.state as i64;
