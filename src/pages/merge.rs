@@ -23,12 +23,12 @@ pub struct MergeForm {
 }
 
 pub async fn merge(
-    user: User,
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
     headers: HeaderMap,
 ) -> Result<Markup, AppError> {
+    let user = User::get_or_create(&cookies, &pool).await?;
     let num_votes = user.num_votes(&pool).await?;
     let num_statements = user.num_statements(&pool).await?;
 
