@@ -30,7 +30,7 @@ seed:
 
 # Create sqlx-data.json file for sqlx offline mode
 prepare-sqlx-offline-mode:
-	cargo sqlx prepare
+	cargo sqlx prepare --merged
 
 # Run server
 start:
@@ -45,7 +45,7 @@ test:
 
 fix:
   sqlx migrate run
-  cargo sqlx prepare
+  cargo sqlx prepare --merged
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
   cargo fix --allow-dirty --allow-staged
   cargo fmt
