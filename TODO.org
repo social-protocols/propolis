@@ -33,14 +33,14 @@ CLOSED: [2023-04-05 Mi 20:16]
     - [X] Predict more than one statement at the same time
     - [X] adjust prediction::run to accept several statements
 *** TODO [0/3] M2
-**** TODO [0/6] Core
+**** TODO [0/7] Core
 1. [-] [1/4] Low-hanging-fruit...
    1. [X] rate limiter configuration via environment / cmdline args
    2. [ ] use triple quotes on user input
    3. [ ] limit statement length
    4. [ ] Add gpt request response time to table
-2. [-] [1/3] Storage Backend...
-   1. [X] Support reading of old versions
+2. [ ] [0/3] Storage Backend...
+   1. [ ] Support reading of old versions
    2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
    3. [ ] Add SQLite support for vector embeddings
 3. [ ] [0/4] Compute embeddings for...
@@ -51,10 +51,15 @@ CLOSED: [2023-04-05 Mi 20:16]
 4. [ ] [0/2] Statement prediction queue...
    1. [ ] Queue statements into a prediction queue on viewing or creating them
    2. [ ] Use view count as order by clause when getting them out of the queue
-5. [ ] [0/2] OpenAI Moderation API...
-   1. [ ] Figure out: just statements or entire prompt?
-   2. [ ] Use moderation api to precheck
-6. [-] [5/6] Multi API key support...
+5. [ ] Statement blacklisting
+   1. [ ] Add failure counter and blacklist statement when failed too often
+6. [-] [2/3] OpenAI Moderation API...
+   1. [X] Figure out: just statements or entire prompt? ⇒ sending entire prompt
+   2. [X] Use moderation api to precheck
+   3. [-] Blacklist in case of denied
+      1. [X] New table =flagged_statements=
+      2. [ ] Re-try those statements individually that were of a batch that was flagged
+7. [-] [5/6] Multi API key support...
    1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [X] use random key
    3. [X] new table: =api_keys= for api keys
@@ -72,10 +77,10 @@ CLOSED: [2023-04-05 Mi 20:16]
       1. [ ] Radar chart on most common ideologies
       2. [ ] ideologies on a one dimensional scale: e.g. liberalist vs socialist
 5. [ ] Comparison page against a different user with respect to ideologies / bfp traits
-**** TODO [1/4] Refactorings
-- [ ] [0/2] Utils crate
-  - [ ] Create a =util= crate to store utility fns
-  - [ ] Move: CSV data preprocessing fn (see statement_meta handler)
+**** TODO [2/4] Refactorings
+- [X] [2/2] Utils crate
+  - [X] Create a =propolis-util= crate to store utility fns
+  - [X] Move: CSV data preprocessing fn (see statement_meta handler)
 - [X] =base= should be retrievable via an axum extension / injection
 - [ ] [0/3] Restructure code
   - [ ] valuetypes into =propolis-datas= crate

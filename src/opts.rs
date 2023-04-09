@@ -14,7 +14,14 @@ pub struct PredictionOpts {
     pub tokens_per_duration: u64,
     /// Duration length in seconds for rate limiting used (openai) tokens
     #[arg(long, env, default_value_t = 60)]
-    pub seconds_per_duration: u64,
+    pub tokens_seconds_per_duration: u64,
+
+    /// API calls allowed per duration
+    #[arg(long, env, default_value_t = 1)]
+    pub api_calls_per_duration: u64,
+    /// Duration length in seconds for rate limiting API calls
+    #[arg(long, env, default_value_t = 1)]
+    pub api_calls_seconds_per_duration: u64,
 }
 #[cfg(not(feature = "with_predictions"))]
 #[derive(Parser, Clone, Debug)]

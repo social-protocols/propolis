@@ -1,8 +1,12 @@
 use std::time::{Duration, Instant};
 
+use propolis_datas::statement::StatementFlag;
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
-use tracing::log::{info, warn};
+use tracing::{
+    debug,
+    log::{info, warn},
+};
 
 use super::{
     multi_statement_classifier::{
@@ -12,7 +16,7 @@ use super::{
     prompts::{StatementMeta, StatementMetaContainer},
 };
 use ai_prompt::{
-    api::AiEnv,
+    api::{AiEnv, CheckResult},
     openai::{OpenAiEnv, OpenAiModel},
 };
 
@@ -20,22 +24,48 @@ use ai_prompt::{
 pub struct PromptRunner<'a, E: AiEnv + 'a> {
     /// Used to set a rate based on the amount of tokens that we have used overall
     token_rate_limiter: RateLimiter,
+    /// Used to set a rate based on how many API calls were done
+    api_calls_rate_limiter: RateLimiter,
     env: &'a E,
+}
+
+#[derive(Debug)]
+pub enum PromptRunnerError {
+    CheckFailed,
+    Anyhow(anyhow::Error),
+}
+
+// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
+// `Result<_, PromptRunnerError>`. That way you don't need to do that manually.
+impl<E> From<E> for PromptRunnerError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self::Anyhow(err.into())
+    }
 }
 
 impl<'a, E: AiEnv> PromptRunner<'a, E> {
     /// Run the given prompt and return the result
     pub async fn run<R>(
         &mut self,
-        prompt: MultiStatementPrompt<R>,
-    ) -> anyhow::Result<MultiStatementPromptResult<R>>
+        prompt: &MultiStatementPrompt<R>,
+    ) -> anyhow::Result<MultiStatementPromptResult<R>, PromptRunnerError>
     where
         R: MultiStatementResultTypes,
     {
         self.token_rate_limiter.block_until_ok().await;
+        self.api_calls_rate_limiter.block_until_ok().await;
+
+        self.api_calls_rate_limiter.add(1 as f64);
 
         info!("Running prompt: {}, V{}", prompt.name, prompt.version);
-        let response = self.env.send_prompt(&prompt).await?;
+        if let CheckResult::Flagged(err) = self.env.check_prompt(prompt).await? {
+            debug!("Prompt failed check: {:?}", err);
+            return Err(PromptRunnerError::CheckFailed);
+        }
+        let response = self.env.send_prompt(prompt).await?;
         match self
             .token_rate_limiter
             .add(response.response.total_tokens as f64)
@@ -64,9 +94,12 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     use std::collections::HashMap;
 
     use rand::seq::SliceRandom;
-    use tracing::{debug, log::error};
+    use tracing::log::error;
 
-    use propolis_datas::apikey::{ApiKey, TransientApiKey};
+    use propolis_datas::{
+        apikey::{ApiKey, TransientApiKey},
+        statement::{FlagCategoryContainer, StatementFlagState},
+    };
 
     let mut keys: HashMap<String, ApiKey> = HashMap::new();
     let mut raw_keys: Vec<String> = opts.openai_api_keys;
@@ -85,6 +118,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     info!("API keys loaded: {}", keys.len());
     info!("Prediction environment: {:?}", env);
 
+    let mut pool2 = pool.to_owned();
     let prompt_gen = MultiStatementPromptGen::<StatementMetaContainer> {
         batch_size: 5,
         prompt: |stmts| StatementMeta::prompt(&stmts),
@@ -94,7 +128,11 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     let mut runner = PromptRunner {
         token_rate_limiter: RateLimiter::new(
             opts.tokens_per_duration as f64,
-            Duration::from_secs(opts.seconds_per_duration),
+            Duration::from_secs(opts.tokens_seconds_per_duration),
+        ),
+        api_calls_rate_limiter: RateLimiter::new(
+            opts.api_calls_per_duration as f64,
+            Duration::from_secs(opts.api_calls_seconds_per_duration),
         ),
         env: &env,
     };
@@ -119,14 +157,50 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
                 let _ = trimmed_key.drain(0..len);
                 debug!("Using key ({}): sk..{}", api_key.id, trimmed_key);
                 ai_prompt::openai::set_key(raw_key);
-                match runner.run(prompt).await {
+                match runner.run(&prompt).await {
                     Ok(result) => {
                         if let Err(err) = result.store(api_key, pool).await {
                             error!("storing result failed: {err}");
                         };
                     }
+                    Err(PromptRunnerError::CheckFailed) => {
+                        debug!("Updating statement_flags for failed statements");
+                        let num_stmts = &prompt.stmts.len();
+                        for stmt in prompt.stmts {
+                            match StatementFlag::by_statement_id(pool, stmt.id).await.unwrap() {
+                                Some(flag) => {
+                                    let mut newflag = flag.clone();
+                                    let flagstate = match num_stmts {
+                                        1 => StatementFlagState::Flagged,
+                                        _ => StatementFlagState::MaybeFlagged,
+                                    };
+                                    debug!("Setting flagstate to: {:?}", flagstate);
+                                    newflag.state = flagstate;
+                                    let _ = newflag
+                                        .update(&pool2)
+                                        .await
+                                        .expect("Unable to update StatementFlag");
+                                }
+                                None => {
+                                    let flagstate = match num_stmts {
+                                        1 => StatementFlagState::Flagged,
+                                        _ => StatementFlagState::MaybeFlagged,
+                                    };
+                                    debug!("Setting flagstate to: {:?}", flagstate);
+                                    let _ = StatementFlag::create(
+                                        &mut pool2,
+                                        stmt.id,
+                                        flagstate,
+                                        FlagCategoryContainer::Empty,
+                                    )
+                                    .await
+                                    .expect("Unable to create StatementFlag");
+                                }
+                            }
+                        }
+                    }
                     Err(err) => {
-                        error!("running prompt failed: {err}");
+                        error!("running prompt failed: {:?}", err);
                     }
                 };
             }
