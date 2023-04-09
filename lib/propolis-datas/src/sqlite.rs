@@ -72,8 +72,8 @@ FROM statement_flags
 WHERE statement_id = ?",
             id
         )
-            .fetch_optional(self)
-            .await?;
+        .fetch_optional(self)
+        .await?;
         Ok(row.map(|row| StatementFlag {
             statement_id: row.statement_id,
             state: row.state.into(),
