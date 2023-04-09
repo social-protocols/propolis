@@ -217,7 +217,7 @@ impl User {
     ) -> Result<()> {
         // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
-        // TODO: no compile time check here, because of foreign-key insert bug in sqlx
+        // TODO: no compile time check here, because of foreign-key bug in sqlx: https://github.com/launchbadge/sqlx/issues/2449
         let created_statement_id =
             sqlx::query_scalar::<_, i64>("INSERT INTO statements (text) VALUES (?) RETURNING id")
                 .bind(text)
