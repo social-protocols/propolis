@@ -26,27 +26,16 @@ pub enum StatementFlagState {
     Flagged = 2,
 }
 
-#[derive(serde::Serialize, sqlx::FromRow, Clone)]
+#[derive(serde::Serialize, Clone)]
 pub struct StatementFlag {
     pub statement_id: i64,
-    #[sqlx(try_from = "i64")]
+    //#[sqlx(try_from = "i64")]
     pub state: StatementFlagState,
-    #[sqlx(try_from = "String")]
+    //#[sqlx(try_from = "String")]
     pub categories: FlagCategoryContainer,
     pub created: i64,
 }
 
-// impl TryFrom<i64> for StatementFlagState {
-//     type Error = anyhow::Error;
-
-//     fn try_from(value: i64) -> Result<Self, Self::Error> {
-//         Ok(match value {
-//             1 => StatementFlagState::MaybeFlagged,
-//             2 => StatementFlagState::Flagged,
-//             _ => StatementFlagState::Clear,
-//         })
-//     }
-// }
 impl From<i64> for StatementFlagState {
     fn from(value: i64) -> Self {
         match value {
@@ -56,6 +45,17 @@ impl From<i64> for StatementFlagState {
         }
     }
 }
+
+// impl TryFrom<String> for FlagCategoryContainer {
+//     type Error = anyhow::Error;
+
+//     fn try_from(value: String) -> Result<Self, Self::Error> {
+//         match serde_json::from_str(value.as_str()) {
+//             Ok(v) => Ok(v),
+//             Err(err) => Err(anyhow!(err.to_string()))
+//         }
+//     }
+// }
 
 impl From<String> for FlagCategoryContainer {
     fn from(value: String) -> Self {

@@ -57,15 +57,29 @@ impl StatementFlagStore for sqlx::SqlitePool {
         r.ok_or(anyhow::anyhow!("Unable to retrieve just stored value"))
     }
     async fn by_statement_id(&self, id: i64) -> anyhow::Result<Option<StatementFlag>> {
-        Ok(sqlx::query_as!(
-            StatementFlag,
+        // Use an intermediary struct since FromRow and other sqlx gimmics do not work
+        // FIXME: Try again with sqlx 0.7 and its #[sqlx(try_from)] macro
+        struct Row {
+            pub statement_id: i64,
+            pub state: i64,
+            pub categories: String,
+            pub created: i64,
+        }
+        let row = sqlx::query_as!(
+            Row,
             "SELECT statement_id, state, categories, created
 FROM statement_flags
 WHERE statement_id = ?",
             id
         )
-        .fetch_optional(self)
-        .await?)
+            .fetch_optional(self)
+            .await?;
+        Ok(row.map(|row| StatementFlag {
+            statement_id: row.statement_id,
+            state: row.state.into(),
+            categories: row.categories.into(),
+            created: row.created,
+        }))
     }
     async fn update(&self, item: &StatementFlag) -> anyhow::Result<()> {
         let state = item.state as i64;
