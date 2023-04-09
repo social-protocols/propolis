@@ -55,7 +55,7 @@ jobs:
         run: cmp -s <(sqlite3 -init /dev/null data/data.sqlite '.schema') schema.sql
 
       - name: Validate sqlx offline mode data
-        run: cargo sqlx prepare --check
+        run: cargo sqlx prepare --check --merged
 
       - name: Cargo build
         run: cargo build
