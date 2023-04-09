@@ -217,17 +217,17 @@ impl User {
     ) -> Result<()> {
         // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
-        let created_statement = sqlx::query!(
-            "INSERT INTO statements (text) VALUES (?) RETURNING id",
-            text
-        )
-        .fetch_one(pool)
-        .await?;
+        // TODO: no compile time check here, because of foreign-key bug in sqlx: https://github.com/launchbadge/sqlx/issues/2449
+        let created_statement_id =
+            sqlx::query_scalar::<_, i64>("INSERT INTO statements (text) VALUES (?) RETURNING id")
+                .bind(text)
+                .fetch_one(pool)
+                .await?;
 
         sqlx::query!(
             "INSERT INTO authors (user_id, statement_id) VALUES (?, ?)",
             self.id,
-            created_statement.id
+            created_statement_id
         )
         .execute(pool)
         .await?;
@@ -235,7 +235,7 @@ impl User {
         sqlx::query!(
             "INSERT INTO subscriptions (user_id, statement_id) VALUES (?, ?)",
             self.id,
-            created_statement.id
+            created_statement_id
         )
         .execute(pool)
         .await?;
@@ -243,14 +243,14 @@ impl User {
         sqlx::query!(
             "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)",
             self.id,
-            created_statement.id
+            created_statement_id
         )
         .execute(pool)
         .await?;
 
         if let Some(target_segment) = target_segment {
             // add created statement as followup to target statement
-            add_followup(target_segment, created_statement.id, pool).await?;
+            add_followup(target_segment, created_statement_id, pool).await?;
         }
 
         Ok(())

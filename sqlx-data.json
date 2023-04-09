@@ -340,24 +340,6 @@
     },
     "query": "SELECT id, hash, note FROM api_keys WHERE hash = ?"
   },
-  "eb249830a9036b2c77f7db1436bec513f4c4555a999bf05c4228ad4ddf14db05": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Right": 1
-      }
-    },
-    "query": "INSERT INTO statements (text) VALUES (?) RETURNING id"
-  },
   "f19e2063a3761014f86e68d49ff642ee85852da18e2922981ebe665875fabe2c": {
     "describe": {
       "columns": [],
