@@ -30,8 +30,8 @@ pub async fn subscriptions(
         @if subscriptions.is_empty() {
             p { "You have not subscribed any statements yet" }
         }
-        @for statement in subscriptions {
-            div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+        @for (i, statement) in subscriptions.iter().enumerate() {
+            div.shadow data-testid={"subscription-statement-"(i)} style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                 (small_statement_predictions(&statement, &pool).await?)
                 (small_statement_content(&statement, None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(statement.id, &pool).await?)

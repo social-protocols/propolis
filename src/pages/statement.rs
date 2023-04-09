@@ -52,8 +52,8 @@ pub async fn statement_page(
             div {
                 "Do you agree with this statement?"
             }
-            div.shadow style="display:flex; border-radius: 10px" {
-                div style="width: 100%; font-size: 1.5em; padding:1em;" {
+            div.shadow data-testid="current-statement" style="display:flex; border-radius: 10px" {
+                div data-testid="statement-text" style="width: 100%; font-size: 1.5em; padding:1em;" {
                     (statement.text)
                 }
                 @if user_vote.is_some() {

@@ -25,7 +25,7 @@ pub async fn small_statement_content(
             }
             div style="height:100%" {
                 a href=(format!("/statement/{}", statement.id)) style="text-decoration: none"  {
-                    span style="color: var(--cfg);" { (statement.text) }
+                    span data-testid="statement-text" style="color: var(--cfg);" { (statement.text) }
                 }
             }
             @if show_controls {

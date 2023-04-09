@@ -63,9 +63,9 @@ fn render_base(
             body {
                 nav {
                     ul style="display:flex" {
-                        li { a href="/" { "Home" } }
-                        li { a href="/new" { "Add Statement" } }
-                        li  style="margin-right: auto" { a href="/subscriptions" { "My Subscriptions" } }
+                        li { a href="/" data-testid="nav-home" { "Home" } }
+                        li { a href="/new" data-testid="nav-add-statement" { "Add Statement" } }
+                        li  style="margin-right: auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
                         @if let Some(user) = user {
                             li {

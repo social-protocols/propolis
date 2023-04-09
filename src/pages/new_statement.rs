@@ -68,7 +68,9 @@ pub async fn new_statement(
                       hx-validate="true"
                       hx-target="#similar"
                       hx-post="/completions"
-                      hx-trigger="keyup changed delay:500ms" {};
+                      hx-trigger="keyup changed delay:500ms"
+                      data-testid="create-statement-field"
+                      {};
             @if let Some(ref statement) = target_statement {
                 input type="hidden" name="target" value=(statement.id);
                 div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed or voted on this statement."}
@@ -90,7 +92,7 @@ pub async fn new_statement(
                 }
             }
             div style="display:flex; justify-content: flex-end;" {
-                button { "Add Statement" }
+                button data-testid="create-statement-submit" { "Add Statement" }
             }
         }
         @if target_statement.is_some() {
