@@ -31,6 +31,9 @@ in pkgs.mkShell {
     # deployemnt
     flyctl
     docker
+
+    # building sqlite-vector
+    sqlite
   ];
 
   RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
@@ -42,5 +45,7 @@ echo DATABASE_URL: $DATABASE_URL
 if [ ! $DATABASE_URL = "" ] && [ ! -e data ]; then
    just create-db
 fi
+
+git submodule update --init --recursive
 '';
 }

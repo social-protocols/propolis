@@ -5,7 +5,8 @@ members = [
     "lib/rl_queue",
     "lib/db",
     "lib/propolis-datas",
-    "lib/propolis-utils"
+    "lib/propolis-utils",
+    "lib/sqlite-vector-wrapper"
 ]
 
 [package]
@@ -40,6 +41,7 @@ db = { workspace = true }
 rl_queue = { path = "lib/rl_queue" }
 propolis-datas = { path = "lib/propolis-datas" }
 propolis-utils = { path = "lib/propolis-utils" }
+sqlite-vector-wrapper = { path = "lib/sqlite-vector-wrapper" }
 
 anyhow = { workspace = true }
 argon2 = "0.5.0"

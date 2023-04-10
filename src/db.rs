@@ -355,6 +355,7 @@ pub async fn setup_db(opts: &DatabaseOpts) -> SqlitePool {
         .create_if_missing(create_database_if_missing)
         .journal_mode(SqliteJournalMode::Wal)
         .synchronous(SqliteSynchronous::Normal)
+        .extension("target/debug/build/sqlite-vector-wrapper-06b411c9076df799/out/build/vector0.so")
         .busy_timeout(std::time::Duration::from_secs(30));
 
     let sqlite_pool = SqlitePoolOptions::new()
