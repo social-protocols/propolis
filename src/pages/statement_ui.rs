@@ -1,13 +1,15 @@
 use crate::{
+    highlight::highlight_html,
     pages::charts::yes_no_pie_chart,
     structs::{Statement, User, Vote},
 };
 
 use anyhow::Result;
-use maud::{html, Markup};
+use maud::{html, Escaper, Markup, PreEscaped};
 use sqlx::SqlitePool;
 
 use crate::util::human_relative_time;
+use std::fmt::Write;
 
 pub async fn small_statement_content(
     statement: &Statement,
@@ -16,6 +18,13 @@ pub async fn small_statement_content(
     maybe_user: &Option<User>,
     pool: &SqlitePool,
 ) -> Result<Markup> {
+    let mut statement_text_html_escaped = String::new();
+    write!(
+        Escaper::new(&mut statement_text_html_escaped),
+        "{}",
+        statement.text
+    )?;
+    let statement_highlighted = highlight_html(&statement_text_html_escaped);
     Ok(html! {
         div style="display:flex; flex-direction: column; width: 100%; padding: 15px" {
             @if let Some(timestamp) = timestamp {
@@ -25,7 +34,7 @@ pub async fn small_statement_content(
             }
             div style="height:100%" {
                 a href=(format!("/statement/{}", statement.id)) style="text-decoration: none"  {
-                    span data-testid="statement-text" style="color: var(--cfg);" { (statement.text) }
+                    span data-testid="statement-text" style="color: var(--cfg);" { (PreEscaped(statement_highlighted)) }
                 }
             }
             @if show_controls {

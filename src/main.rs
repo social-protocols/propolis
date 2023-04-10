@@ -1,6 +1,7 @@
 mod auth;
 mod db;
 mod error;
+mod highlight;
 mod opts;
 mod pages;
 mod prediction;

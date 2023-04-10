@@ -7,7 +7,10 @@ use sqlx::{
 };
 use std::str::FromStr;
 
-use crate::structs::{Statement, VoteHistoryItem};
+use crate::{
+    highlight::{HIGHLIGHT_BEGIN, HIGHLIGHT_END},
+    structs::{Statement, VoteHistoryItem},
+};
 use crate::{
     opts::DatabaseOpts,
     structs::{StatementStats, TargetSegment, User, Vote},
@@ -405,11 +408,13 @@ pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<State
 
 pub async fn autocomplete_statement(text: &str, pool: &SqlitePool) -> Result<Vec<Statement>> {
     Ok(sqlx::query_as::<_, Statement>(
-        "SELECT id, highlight(statements_fts, 1, '<b>', '</b>') as text
+        "SELECT id, highlight(statements_fts, 1, ?, ?) as text
 FROM statements_fts
 WHERE text MATCH ?
 LIMIT 25",
     )
+    .bind(HIGHLIGHT_BEGIN)
+    .bind(HIGHLIGHT_END)
     .bind(text)
     .fetch_all(pool)
     .await?)
