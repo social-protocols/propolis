@@ -8,6 +8,8 @@ use tracing::{
     log::{info, warn},
 };
 
+use crate::structs::Statement;
+
 use super::{
     multi_statement_classifier::{
         MultiStatementPrompt, MultiStatementPromptGen, MultiStatementPromptResult,
@@ -86,6 +88,46 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
     }
 }
 
+/// Updates the flags on the particular statement, given that they failed the moderation check
+///
+/// In particular, this will initially flag multiple statements with StatementFlagState::MaybeFlagged
+/// and singly predicted statements with StatementFlagState::Flagged.
+/// Statements that are flagged via MaybeFlagged, will later be predicted individually.
+#[cfg(feature = "with_predictions")]
+pub async fn update_failing_statement_flags(
+    stmts: &[Statement],
+    pool: &mut SqlitePool,
+) -> anyhow::Result<()> {
+    use propolis_datas::statement::{FlagCategoryContainer, StatementFlagState};
+
+    debug!("Updating statement_flags for failed statements");
+    let num_stmts = stmts.len();
+    for stmt in stmts {
+        match StatementFlag::by_statement_id(pool, stmt.id).await.unwrap() {
+            Some(flag) => {
+                let mut newflag = flag.clone();
+                let flagstate = match num_stmts {
+                    1 => StatementFlagState::Flagged,
+                    _ => StatementFlagState::MaybeFlagged,
+                };
+                debug!("Setting flagstate to: {:?}", flagstate);
+                newflag.state = flagstate;
+                newflag.update(pool).await?;
+            }
+            None => {
+                let flagstate = match num_stmts {
+                    1 => StatementFlagState::Flagged,
+                    _ => StatementFlagState::MaybeFlagged,
+                };
+                debug!("Setting flagstate to: {:?}", flagstate);
+                StatementFlag::create(pool, stmt.id, flagstate, FlagCategoryContainer::Empty)
+                    .await?;
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
@@ -96,10 +138,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
     use rand::seq::SliceRandom;
     use tracing::log::error;
 
-    use propolis_datas::{
-        apikey::{ApiKey, TransientApiKey},
-        statement::{FlagCategoryContainer, StatementFlagState},
-    };
+    use propolis_datas::apikey::{ApiKey, TransientApiKey};
 
     let mut keys: HashMap<String, ApiKey> = HashMap::new();
     let mut raw_keys: Vec<String> = opts.openai_api_keys;
@@ -164,38 +203,10 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
                         };
                     }
                     Err(PromptRunnerError::CheckFailed) => {
-                        debug!("Updating statement_flags for failed statements");
-                        let num_stmts = &prompt.stmts.len();
-                        for stmt in prompt.stmts {
-                            match StatementFlag::by_statement_id(pool, stmt.id).await.unwrap() {
-                                Some(flag) => {
-                                    let mut newflag = flag.clone();
-                                    let flagstate = match num_stmts {
-                                        1 => StatementFlagState::Flagged,
-                                        _ => StatementFlagState::MaybeFlagged,
-                                    };
-                                    debug!("Setting flagstate to: {:?}", flagstate);
-                                    newflag.state = flagstate;
-                                    newflag
-                                        .update(&pool2)
-                                        .await
-                                        .expect("Unable to update StatementFlag");
-                                }
-                                None => {
-                                    let flagstate = match num_stmts {
-                                        1 => StatementFlagState::Flagged,
-                                        _ => StatementFlagState::MaybeFlagged,
-                                    };
-                                    debug!("Setting flagstate to: {:?}", flagstate);
-                                    let _ = StatementFlag::create(
-                                        &mut pool2,
-                                        stmt.id,
-                                        flagstate,
-                                        FlagCategoryContainer::Empty,
-                                    )
-                                    .await
-                                    .expect("Unable to create StatementFlag");
-                                }
+                        match update_failing_statement_flags(&prompt.stmts, &mut pool2).await {
+                            Ok(_) => {}
+                            Err(err) => {
+                                error!("Unable to update statement flags: {}", err)
                             }
                         }
                     }

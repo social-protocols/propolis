@@ -301,6 +301,14 @@ num|category|label1|label2|label3|tag1|tag2|tag3
 ```",
                 ),
                 AiMessage::user(stmts_s.to_string().as_str()),
+                // In case we get issues with the assistant not starting with the CSV data properly,
+                // it might work to start it properly ourselves like this:
+//                 AiMessage::assistant(
+//                     "
+// ```csv
+// num|category|label1|label2|label3|tag1|tag2|tag3
+// ",
+//                 )
             ],
             stmts: stmts.to_vec(),
         }
