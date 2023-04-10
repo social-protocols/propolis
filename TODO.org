@@ -33,7 +33,7 @@ CLOSED: [2023-04-05 Mi 20:16]
     - [X] Predict more than one statement at the same time
     - [X] adjust prediction::run to accept several statements
 *** TODO [0/3] M2
-**** TODO [2/7] Core
+**** TODO [2/8] Core
 1. [-] [2/4] Low-hanging-fruit...
    1. [X] rate limiter configuration via environment / cmdline args
    2. [X] use markdown on user input
@@ -43,9 +43,12 @@ CLOSED: [2023-04-05 Mi 20:16]
    1. [ ] Support reading of old versions
    2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
    3. [ ] Add SQLite support for vector embeddings
-3. [ ] [0/4] Compute embeddings for...
-   - [ ] Anything: support embeddings for any kind of String?
-   - [ ] Statements
+3. [ ] [0/5] Compute embeddings for...
+   - [ ] What to embed
+     - [ ] Statements
+     - [ ] Ideologies (should first create table for these)
+   - [ ] Use =Embeddings::create= to send multiple statements at the same time
+   - [ ] Only compute embeddings for those statements that are unflagged (i.e. already predicted)
    - [ ] Tags: to find similar tags
    - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
 4. [ ] [0/2] Statement prediction queue...
@@ -53,13 +56,15 @@ CLOSED: [2023-04-05 Mi 20:16]
    2. [ ] Use view count as order by clause when getting them out of the queue
 5. [X] Statement blacklisting
    1. [X] Blacklist / Flag via moderation API
-6. [X] [3/3] OpenAI Moderation API...
+6. [ ] Send hashed user-id with each request to openai to better find abuse
+7. [X] [3/3] OpenAI Moderation API...
    1. [X] Figure out: just statements or entire prompt? ⇒ sending entire prompt
    2. [X] Use moderation api to precheck
    3. [X] Blacklist in case of denied
       1. [X] New table =flagged_statements=
       2. [X] Re-try those statements individually that were of a batch that was flagged
-7. [-] [5/6] Multi API key support...
+
+8. [-] [5/6] Multi API key support...
    1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [X] use random key
    3. [X] new table: =api_keys= for api keys
