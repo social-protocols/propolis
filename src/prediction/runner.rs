@@ -1,4 +1,14 @@
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
+
+use anyhow::anyhow;
+use rand::seq::SliceRandom;
+use tracing::log::error;
+
+use propolis_datas::apikey::{ApiKey, TransientApiKey};
+
+use crate::opts::PredictionOpts;
+use crate::prediction::embedding::EmbeddingsRunner;
 
 use propolis_datas::statement::StatementFlag;
 use rl_queue::{QuotaState, RateLimiter};
@@ -93,7 +103,6 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
 /// In particular, this will initially flag multiple statements with StatementFlagState::MaybeFlagged
 /// and singly predicted statements with StatementFlagState::Flagged.
 /// Statements that are flagged via MaybeFlagged, will later be predicted individually.
-#[cfg(feature = "with_predictions")]
 pub async fn update_failing_statement_flags(
     stmts: &[Statement],
     pool: &mut SqlitePool,
@@ -128,33 +137,51 @@ pub async fn update_failing_statement_flags(
     Ok(())
 }
 
+/// Used to select next key to use for requests
+pub struct ApiKeySelector {
+    pub keys: HashMap<String, ApiKey>,
+}
+
+impl ApiKeySelector {
+    /// Create an instance, creating keys in the DB (for stats only) if necessary
+    pub async fn create(opts: &PredictionOpts, pool: &mut SqlitePool) -> anyhow::Result<Self> {
+        let mut keys: HashMap<String, ApiKey> = HashMap::new();
+        let mut raw_keys: Vec<String> = opts.openai_api_keys.to_owned();
+        if let Some(rk) = &opts.openai_api_key {
+            raw_keys.push(rk.into());
+        }
+        for raw_key in raw_keys {
+            let rkey = TransientApiKey::Raw(raw_key.to_owned());
+            let key = ApiKey::get_or_create(pool, &rkey, None::<String>).await?;
+            keys.insert(raw_key, key);
+        }
+        Ok(Self { keys })
+    }
+
+    /// Yield next key to use
+    pub fn next(&self) -> anyhow::Result<(String, ApiKey)> {
+        let raw_key = self
+            .keys
+            .keys()
+            .collect::<Vec<&String>>()
+            .choose(&mut rand::thread_rng())
+            .ok_or(anyhow!("Unable to select any API key."))?
+            .to_string();
+        let api_key = self.keys.get(&raw_key).unwrap();
+        Ok((raw_key, api_key.to_owned()))
+    }
+}
+
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
-#[cfg(feature = "with_predictions")]
-pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
-    use std::collections::HashMap;
-
-    use rand::seq::SliceRandom;
-    use tracing::log::error;
-
-    use propolis_datas::apikey::{ApiKey, TransientApiKey};
-
-    let mut keys: HashMap<String, ApiKey> = HashMap::new();
-    let mut raw_keys: Vec<String> = opts.openai_api_keys;
-    if let Some(rk) = opts.openai_api_key {
-        raw_keys.push(rk);
-    }
-    for raw_key in raw_keys {
-        let rkey = TransientApiKey::Raw(raw_key.to_owned());
-        let key = ApiKey::get_or_create(pool, &rkey, None::<String>)
-            .await
-            .expect("Unable to get_or_create key.");
-        keys.insert(raw_key, key);
-    }
+pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
+    let key_selector = ApiKeySelector::create(opts, pool)
+        .await
+        .expect("Unable to setup key selection.");
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
-    info!("API keys loaded: {}", keys.len());
+    info!("API keys loaded: {}", key_selector.keys.len());
     info!("Prediction environment: {:?}", env);
 
     let mut pool2 = pool.to_owned();
@@ -162,6 +189,18 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         batch_size: 5,
         prompt: |stmts| StatementMeta::prompt(&stmts),
         pool,
+    };
+
+    let mut erunner = EmbeddingsRunner {
+        token_rate_limiter: RateLimiter::new(
+            opts.tokens_per_duration as f64,
+            Duration::from_secs(opts.tokens_seconds_per_duration),
+        ),
+        api_calls_rate_limiter: RateLimiter::new(
+            opts.api_calls_per_duration as f64,
+            Duration::from_secs(opts.api_calls_seconds_per_duration),
+        ),
+        env: &env,
     };
 
     let mut runner = PromptRunner {
@@ -176,13 +215,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         env: &env,
     };
     loop {
-        let raw_key = keys
-            .keys()
-            .collect::<Vec<&String>>()
-            .choose(&mut rand::thread_rng())
-            .expect("Unable to select any API key.")
-            .to_string();
-        let api_key = keys.get(&raw_key).unwrap();
+        let (raw_key, api_key) = key_selector.next().expect("Unable to select key");
 
         let prompt = prompt_gen.next_prompt().await.unwrap_or_else(|err| {
             error!("next_prompt failed: {}", err);
@@ -198,7 +231,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
                 ai_prompt::openai::set_key(raw_key);
                 match runner.run(&prompt).await {
                     Ok(result) => {
-                        if let Err(err) = result.store(api_key, pool).await {
+                        if let Err(err) = result.store(&api_key, pool).await {
                             error!("storing result failed: {err}");
                         };
                     }
