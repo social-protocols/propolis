@@ -5,12 +5,12 @@ use anyhow::anyhow;
 use rand::seq::SliceRandom;
 use tracing::log::error;
 
-use propolis_datas::apikey::{ApiKey, TransientApiKey};
-
 use crate::opts::PredictionOpts;
 use crate::prediction::embedding::EmbeddingsRunner;
 
+use propolis_datas::apikey::{ApiKey, TransientApiKey};
 use propolis_datas::statement::StatementFlag;
+use propolis_utils::StringExt;
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
 use tracing::{
@@ -224,10 +224,11 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
         match prompt {
             Some(prompt) => {
-                let mut trimmed_key = raw_key.clone();
-                let len = trimmed_key.chars().count() - 4;
-                let _ = trimmed_key.drain(0..len);
-                debug!("Using key ({}): sk..{}", api_key.id, trimmed_key);
+                debug!(
+                    "Using key ({}): {}",
+                    api_key.id,
+                    raw_key.as_str().shortify(2, 4, "..")
+                );
                 ai_prompt::openai::set_key(raw_key);
                 match runner.run(&prompt).await {
                     Ok(result) => {

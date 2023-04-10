@@ -1,6 +1,7 @@
 pub trait StringExt {
     /// Tries to drop the first line of a string, otherwise just returns the same string
     fn drop_first_line(self) -> String;
+    fn shortify(self, prefix_len: usize, suffix_len: usize, delim : &str) -> String;
 }
 
 impl StringExt for &str {
@@ -23,6 +24,19 @@ impl StringExt for &str {
             .map(|(_, rest)| rest)
             .unwrap_or(self)
             .into()
+    }
+
+    /// ```rust
+    /// use propolis_utils::StringExt;
+    /// let input = "sk-XYZ-1234";
+    /// assert_eq!("sk..1234", input.shortify(2, 4, ".."));
+    /// ```
+    fn shortify(self, prefix_len: usize, suffix_len: usize, delim : &str) -> String {
+        let len = self.chars().count() - suffix_len;
+        let prefix = self[0..prefix_len].to_string();
+        let mut suffix = self.to_string();
+        let _ = suffix.drain(0..len);
+        format!("{prefix}{delim}{suffix}").into()
     }
 }
 
