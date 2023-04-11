@@ -1,7 +1,27 @@
-use ai_prompt::api::{AiEnv, CheckResult, AsEmbeddingEnv, AsEmbeddable, Embedding};
+use ai_prompt::api::{AsEmbeddable, AsEmbeddingEnv, Embedding};
 use rl_queue::{QuotaState, RateLimiter};
-use std::{borrow::Borrow, time::Instant};
+use sqlx::SqlitePool;
+use std::time::Instant;
 use tracing::{info, warn};
+
+use crate::structs::Statement;
+
+/// Used to select statements from the db for various uses
+pub struct StatementSelector {}
+
+impl StatementSelector {
+    /// Returns the next statements to embed
+    pub async fn next_for_embedding(&self, pool: &SqlitePool) -> anyhow::Result<Vec<Statement>> {
+        Ok(sqlx::query_as!(
+            Statement,
+            "
+SELECT id, text from statements
+WHERE id NOT IN (SELECT id FROM statement_embeddings)"
+        )
+        .fetch_all(pool)
+        .await?)
+    }
+}
 
 /// Runner for calculating embeddings
 pub struct EmbeddingsRunner<'a, E: AsEmbeddingEnv + 'a> {
@@ -14,7 +34,10 @@ pub struct EmbeddingsRunner<'a, E: AsEmbeddingEnv + 'a> {
 
 impl<'a, E: AsEmbeddingEnv> EmbeddingsRunner<'a, E> {
     /// Run the given prompt and return the result
-    pub async fn run<R, I: AsEmbeddable>(&mut self, items: &[I]) -> anyhow::Result<Vec<Embedding>> {
+    pub async fn run<I: AsEmbeddable>(
+        &mut self,
+        items: &[I],
+    ) -> anyhow::Result<(Vec<Embedding>, u32)> {
         self.token_rate_limiter.block_until_ok().await;
         self.api_calls_rate_limiter.block_until_ok().await;
         self.api_calls_rate_limiter.add(1 as f64);
@@ -43,6 +66,6 @@ impl<'a, E: AsEmbeddingEnv> EmbeddingsRunner<'a, E> {
             }
         }
 
-        Ok(response.data)
+        Ok((response.data, ttokens))
     }
 }

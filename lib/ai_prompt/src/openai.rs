@@ -144,6 +144,9 @@ impl AiEnv for OpenAiEnv {
 #[async_trait]
 impl AsEmbeddingEnv for OpenAiEnv {
     async fn embed(&self, stmts: &[&str]) -> anyhow::Result<EmbedResult> {
+        if stmts.len() < 1 {
+            return Err(anyhow!("Passed nothing to embed."))
+        }
         let model = "text-embedding-ada-002";
         let embeddings = Embeddings::create(model, stmts.to_vec(), "").await??;
         let mut data: Vec<Embedding> = vec![];
