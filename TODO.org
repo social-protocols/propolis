@@ -1,6 +1,7 @@
 * Core
 ** TODO Better statement selection
 - Deprioritise already voted upon statements
+** TODO Fix cookie sessions being not long enough
 ** TODO Add support to link to existing account on different device
 ** TODO Delete all personal data
 - which personal data? We don't have any?
@@ -33,44 +34,50 @@ CLOSED: [2023-04-05 Mi 20:16]
     - [X] Predict more than one statement at the same time
     - [X] adjust prediction::run to accept several statements
 *** TODO [0/3] M2
-**** TODO [2/8] Core
-1. [-] [2/4] Low-hanging-fruit...
+**** TODO [1/8] Core
+1. [-] [2/5] Low-hanging-fruit...
    1. [X] rate limiter configuration via environment / cmdline args
    2. [X] use markdown on user input
-   3. [ ] limit statement length
-   4. [ ] Add gpt request response time to table
+   3. [ ] Temperature: 0
+   4. [ ] limit statement length
+   5. [ ] Add gpt request response time to table
 2. [ ] [0/3] Storage Backend...
    1. [ ] Support reading of old versions
    2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
    3. [ ] Add SQLite support for vector embeddings
-3. [ ] [0/5] Compute embeddings for...
-   - [ ] What to embed
-     - [ ] Statements
+3. [-] [2/5] Compute embeddings for...
+   - [X] Integrate sqlite-vector
+   - [ ] Integrate sqlite-vss
+   - [-] What to embed
+     - [X] Statements
      - [ ] Ideologies (should first create table for these)
-   - [ ] Use =Embeddings::create= to send multiple statements at the same time
+     - [ ] Tags: to find similar tags
+     - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
+   - [X] Embed multiple statements at the same time
    - [ ] Only compute embeddings for those statements that are unflagged (i.e. already predicted)
-   - [ ] Tags: to find similar tags
-   - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
 4. [ ] [0/2] Statement prediction queue...
    1. [ ] Queue statements into a prediction queue on viewing or creating them
    2. [ ] Use view count as order by clause when getting them out of the queue
 5. [X] Statement blacklisting
    1. [X] Blacklist / Flag via moderation API
 6. [ ] Send hashed user-id with each request to openai to better find abuse
-7. [X] [3/3] OpenAI Moderation API...
+7. [-] [3/4] OpenAI Moderation API...
    1. [X] Figure out: just statements or entire prompt? ⇒ sending entire prompt
    2. [X] Use moderation api to precheck
    3. [X] Blacklist in case of denied
-      1. [X] New table =flagged_statements=
+      1. [X] New table =statement_flags=
       2. [X] Re-try those statements individually that were of a batch that was flagged
+   4. [ ] Delete from table =statement_flags= when successful
 
-8. [-] [5/6] Multi API key support...
+8. [-] [5/7] Multi API key support...
    1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [X] use random key
    3. [X] new table: =api_keys= for api keys
    4. [X] store used API key =id= with every cached result
    5. [X] Write per-key token statistics into DB
    6. [ ] use API key which had fewest used tokens in last N days
+   7. [ ] Use OPENAI_API_KEY_N instead of KEYS to better support fly.io ui
+      1. [ ] probably don't try to add this to clap, but just look for matching env vars
 **** TODO [1/5] UI
 1. [X] Show tags on subscriptions page
 2. [ ] Make tags clickable & show similar tags
