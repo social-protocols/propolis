@@ -61,9 +61,6 @@ jobs:
         # clippy also includes all warnings from cargo check
         run: cargo clippy --workspace --all-targets --all-features
 
-      - name: cargo build
-        run: cargo build --tests --workspace --all-targets --all-features
-
       - name: cargo test
         run: cargo test --workspace --all-targets --all-features
 
@@ -72,6 +69,7 @@ jobs:
 
       - name: Start webserver in background
         run: |
+          cargo build
           target/debug/propolis &
 
       - uses: actions/setup-node@v3
