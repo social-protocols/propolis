@@ -325,7 +325,7 @@ fn test_statement_meta_from_lines() {
             assert_eq!(tags[0].score, Score::Strong);
         }
         _ => {
-            assert!(false);
+            panic!();
         }
     }
 }

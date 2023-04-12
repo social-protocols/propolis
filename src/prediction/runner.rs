@@ -58,7 +58,7 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
         self.token_rate_limiter.block_until_ok().await;
         self.api_calls_rate_limiter.block_until_ok().await;
 
-        self.api_calls_rate_limiter.add(1 as f64);
+        self.api_calls_rate_limiter.add(1);
 
         info!("Running prompt: {}, V{}", prompt.name, prompt.version);
         if let CheckResult::Flagged(err) = self.env.check_prompt(prompt).await? {
@@ -176,7 +176,7 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
                                     };
                                     debug!("Setting flagstate to: {:?}", flagstate);
                                     newflag.state = flagstate;
-                                    let _ = newflag
+                                    newflag
                                         .update(&pool2)
                                         .await
                                         .expect("Unable to update StatementFlag");

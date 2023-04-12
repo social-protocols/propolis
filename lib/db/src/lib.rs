@@ -15,3 +15,9 @@ impl<K, Item: StoreItem> InMemoryStore<K, Item> {
         }
     }
 }
+
+impl<K, Item: StoreItem> Default for InMemoryStore<K, Item> {
+    fn default() -> Self {
+        Self::new()
+    }
+}

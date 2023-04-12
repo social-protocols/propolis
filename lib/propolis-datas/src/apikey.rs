@@ -125,7 +125,7 @@ mod tests {
             todo!()
         }
         async fn by_hash(&self, hash: &str) -> anyhow::Result<Option<ApiKey>> {
-            Ok(self.values.get(hash.into()).cloned())
+            Ok(self.values.get(hash).cloned())
         }
     }
 
@@ -138,7 +138,7 @@ mod tests {
         let key = ApiKey::create(&mut db, &tkey, note.to_owned()).await?;
         assert_ne!(key.hash, unhashed);
         assert_eq!(key.note, note);
-        assert_eq!(key, ApiKey::by_transient(&mut db, &tkey).await?.unwrap());
+        assert_eq!(key, ApiKey::by_transient(&db, &tkey).await?.unwrap());
         Ok(())
     }
 
@@ -151,7 +151,7 @@ mod tests {
         let key = ApiKey::get_or_create(&mut db, &tkey, note.to_owned()).await?;
         assert_eq!(key.hash, hashed);
         assert_eq!(key.note, note);
-        assert_eq!(key, ApiKey::by_transient(&mut db, &tkey).await?.unwrap());
+        assert_eq!(key, ApiKey::by_transient(&db, &tkey).await?.unwrap());
         Ok(())
     }
 }
