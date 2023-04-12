@@ -41,7 +41,7 @@ develop:
   process-compose -f process-compose-dev.yaml --tui=false up
 
 test:
-  cargo watch -cx test
+  cargo watch -cx 'test --workspace --all-targets --all-features'
 
 fix:
   sqlx migrate run
