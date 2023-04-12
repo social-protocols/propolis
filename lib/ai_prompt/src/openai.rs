@@ -93,18 +93,15 @@ impl AiEnv for OpenAiEnv {
                 ..
             }, ..] => Ok(match flagged {
                 false => CheckResult::Ok,
-                true => CheckResult::Flagged(
-                    serde_json::to_string(&json!([{
-                        "hate": hate,
-                        "hate_threatening": hate_threatening,
-                        "self_harm": self_harm,
-                        "sexual": sexual,
-                        "sexual_minors": sexual_minors,
-                        "violence": violence,
-                        "violence_graphic": violence_graphic,
-                    }]))?
-                    .into(),
-                ),
+                true => CheckResult::Flagged(serde_json::to_string(&json!([{
+                    "hate": hate,
+                    "hate_threatening": hate_threatening,
+                    "self_harm": self_harm,
+                    "sexual": sexual,
+                    "sexual_minors": sexual_minors,
+                    "violence": violence,
+                    "violence_graphic": violence_graphic,
+                }]))?),
             }),
             _ => Err(anyhow!("OpenAI moderation API yielded an empty result")),
         }

@@ -57,23 +57,19 @@ jobs:
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check --merged
 
-      - name: Cargo build
-        run: cargo build
+      - name: cargo clippy
+        # clippy also includes all warnings from cargo check
+        run: cargo clippy --workspace --all-targets --all-features
 
-      - name: Check feature 'embed_migrations'
-        run: cargo check --features embed_migrations
+      - name: cargo test
+        run: cargo test --workspace --all-targets --all-features
 
-      - name: Check feature 'with_predictions'
-        run: cargo check --features with_predictions
-
-      - name: Run tests
-        run: cargo test
-
-      - name: Check formatting
+      - name: cargo fmt --check
         run: cargo fmt --check
 
       - name: Start webserver in background
         run: |
+          cargo build
           target/debug/propolis &
 
       - uses: actions/setup-node@v3

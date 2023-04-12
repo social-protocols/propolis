@@ -32,8 +32,8 @@ pub async fn subscriptions(
         }
         @for (i, statement) in subscriptions.iter().enumerate() {
             div.shadow data-testid={"subscription-statement-"(i)} style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_predictions(&statement, &pool).await?)
-                (small_statement_content(&statement, None, true, &maybe_user, &pool).await?)
+                (small_statement_predictions(statement, &pool).await?)
+                (small_statement_content(statement, None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(statement.id, &pool).await?)
                 (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
             }

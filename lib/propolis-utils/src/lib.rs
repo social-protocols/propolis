@@ -21,7 +21,7 @@ impl StringExt for &str {
     fn drop_first_line(self) -> String {
         self.split_once('\n')
             .map(|(_, rest)| rest)
-            .unwrap_or(&self)
+            .unwrap_or(self)
             .into()
     }
 }
@@ -41,7 +41,7 @@ pub mod md {
     /// assert_eq!(output, md::parse_codeblock(&input).unwrap());
     /// ```
     pub fn parse_codeblock(data: &str) -> anyhow::Result<String> {
-        match markdown::tokenize(&data).as_slice() {
+        match markdown::tokenize(data).as_slice() {
             [Block::CodeBlock(_, code), ..] => Ok(code.into()),
             _ => Err(anyhow!("Unable to extract code block.")),
         }
@@ -94,7 +94,7 @@ pub mod csv {
     ) -> anyhow::Result<String> {
         let target_column_count = match target_column_count {
             Some(target) => target,
-            None => max_column_count(&csv_data, delim.to_owned())?,
+            None => max_column_count(csv_data, delim.to_owned())?,
         };
         let delim_s = delim.to_string();
         Ok(csv_data

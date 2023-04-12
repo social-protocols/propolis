@@ -72,13 +72,13 @@ mod tests {
     fn test_rate_limiter() {
         let mut rl = RateLimiter::new(100.0, Duration::from_secs(1));
 
-        assert_eq!(rl.check(), true);
+        assert!(rl.check());
         assert_eq!(rl.add(50), QuotaState::Remaining(50.0));
         assert_eq!(rl.add(50), QuotaState::Remaining(0.0));
 
         match rl.add(1) {
-            QuotaState::ExceededUntil(_, _) => assert!(true),
-            _ => assert!(false),
+            QuotaState::ExceededUntil(_, _) => {}
+            _ => panic!(),
         }
     }
 }

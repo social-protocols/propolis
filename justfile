@@ -41,13 +41,14 @@ develop:
   process-compose -f process-compose-dev.yaml --tui=false up
 
 test:
-  cargo watch -cx test
+  cargo watch -cx 'test --workspace --all-targets --all-features'
 
 fix:
   sqlx migrate run
   cargo sqlx prepare --merged
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
-  cargo fix --allow-dirty --allow-staged
+  cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
+  cargo clippy --fix --allow-dirty --allow-staged
   cargo fmt
 
 install-fix-hook:
