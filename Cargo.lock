@@ -1403,8 +1403,8 @@ checksum = "b87248edafb776e59e6ee64a79086f65890d3510f2c656c000bf2a7e8a0aea40"
 
 [[package]]
 name = "maud"
-version = "0.24.0"
-source = "git+https://github.com/lambda-fairy/maud#7233cda35eed7bba91c9c55564d65498067c3822"
+version = "0.25.0"
+source = "git+https://github.com/lambda-fairy/maud#ca7b93c7904b2881b6078de39536eb0f0fb9fedd"
 dependencies = [
  "axum-core",
  "http",
@@ -1414,8 +1414,8 @@ dependencies = [
 
 [[package]]
 name = "maud_macros"
-version = "0.24.0"
-source = "git+https://github.com/lambda-fairy/maud#7233cda35eed7bba91c9c55564d65498067c3822"
+version = "0.25.0"
+source = "git+https://github.com/lambda-fairy/maud#ca7b93c7904b2881b6078de39536eb0f0fb9fedd"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
