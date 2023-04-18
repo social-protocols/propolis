@@ -30,6 +30,22 @@ pub struct Statement {
     pub text: String,
 }
 
+#[derive(Serialize, sqlx::FromRow, Clone)]
+pub struct SearchResultStatement {
+    pub id: i64,
+    pub text_highlighted: String,
+    pub text_original: String,
+}
+
+impl SearchResultStatement {
+    pub fn statement_highlighted(&self) -> Statement {
+        Statement {
+            id: self.id,
+            text: self.text_highlighted.clone(),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Deserialize, Copy, Clone, FromPrimitive)]
 pub enum Vote {
     No = -1,

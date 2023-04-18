@@ -48,7 +48,7 @@ pub async fn vote(
             StatusCode::OK,
             [(
                 "HX-Redirect",
-                format!("/new?target={}", vote_form.statement_id),
+                format!("/statement/{}/itdepends", vote_form.statement_id),
             )],
             html! {},
         )),
