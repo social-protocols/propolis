@@ -30,15 +30,15 @@ statements=$(cat <<-END
 {"context": "Gun control", "text": "We need stricter gun control laws to prevent mass shootings and reduce gun violence."}
 {"context": "Gun control", "text": "The Second Amendment guarantees the right to bear arms, and any attempts to restrict that right are unconstitutional."}
 {"context": "Gun control", "text": "The real problem is mental health, not guns. We need to focus on identifying and treating mental illness to prevent gun violence."}
-{"context": "Gun control", "text": "Guns don''t kill people, people kill people. We need to enforce existing laws to keep guns out of the hands of criminals."}
+{"context": "Gun control", "text": "Guns don't kill people, people kill people. We need to enforce existing laws to keep guns out of the hands of criminals."}
 {"context": "Gun control", "text": "Arming teachers and increasing security in schools is the best way to protect our children from gun violence."}
 {"context": "#MeToo Movement", "text": "Victims of sexual harassment and assault need to be believed and supported, and perpetrators need to be held accountable for their actions."}
-{"context": "#MeToo Movement", "text": "False accusations of sexual harassment and assault can ruin people''s lives, and we need to make sure that due process is followed in all cases."}
+{"context": "#MeToo Movement", "text": "False accusations of sexual harassment and assault can ruin people's lives, and we need to make sure that due process is followed in all cases."}
 {"context": "#MeToo Movement", "text": "The #MeToo movement is a witch hunt that has gone too far, and men are being unfairly targeted and punished."}
 {"context": "#MeToo Movement", "text": "Women need to take responsibility for their own actions and not play the victim, and men need to be able to flirt and pursue romantic relationships without fear of being accused of harassment."}
 {"context": "#MeToo Movement", "text": "The #MeToo movement has started an important conversation about power dynamics and gender inequality in our society."}
 {"context": "Climate Change", "text": "Climate change is real and caused by human activity, and we need to take urgent action to reduce carbon emissions and mitigate its effects."}
-{"context": "Climate Change", "text": "The science behind climate change is inconclusive, and we don''t need to make drastic changes to our economy and way of life to address it."}
+{"context": "Climate Change", "text": "The science behind climate change is inconclusive, and we don't need to make drastic changes to our economy and way of life to address it."}
 {"context": "Climate Change", "text": "The Paris climate agreement is a flawed and ineffective treaty that unfairly burdens the US while letting other countries off the hook."}
 {"context": "Climate Change", "text": "Renewable energy sources like wind and solar are the future, and we need to invest in them to reduce our dependence on fossil fuels."}
 {"context": "Climate Change", "text": "Climate change is a global problem that requires a coordinated, international response."}
