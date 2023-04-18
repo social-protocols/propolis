@@ -53,7 +53,7 @@ csv = "1.2.1"
 function_name = "0.3.0"
 futures = "0.3.28"
 http = "0.2.9"
-maud = { git= "https://github.com/lambda-fairy/maud", features = ["axum"] } # https://github.com/lambda-fairy/maud/issues/366
+maud = { version = "0.25.0", features = ["axum"] } # https://github.com/lambda-fairy/maud/issues/366
 mime_guess = "2.0.4"
 num-derive = { workspace = true }
 num-traits = { workspace = true }
