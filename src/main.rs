@@ -38,8 +38,11 @@ use std::net::SocketAddr;
 
 use crate::db::setup_db;
 use crate::opts::ProgramOpts;
-use crate::pages::new_statement::completions;
+use crate::pages::itdepends::itdepends;
+use crate::pages::itdepends::itdepends_completions;
+use crate::pages::itdepends::itdepends_create;
 use crate::pages::new_statement::create_statement;
+use crate::pages::new_statement::new_statement_completions;
 use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
 use crate::pages::user::user_page;
@@ -76,12 +79,15 @@ async fn main() {
         .route("/vote", post(vote))
         .route("/subscribe", post(subscribe))
         .route("/user", get(user_page))
-        .route("/completions", post(completions))
         .route("/statement/:id", get(statement_page))
         .route("/votes/:id", get(votes))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
+        .route("/new/completions", post(new_statement_completions))
+        .route("/statement/:id/itdepends", get(itdepends))
+        .route("/statement/:id/itdepends", post(itdepends_create))
+        .route("/itdepends_completions", post(itdepends_completions))
         .route("/create", post(create_statement))
         .route("/link_followup", post(link_followup))
         .route("/options", get(options))

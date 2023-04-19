@@ -57,6 +57,9 @@ fn render_base(
                 @for file in StaticAsset::iter().filter(|path| path.starts_with("js/")) {
                     script src={"/"(file)} {}
                 }
+                @for file in StaticAsset::iter().filter(|path| path.starts_with("js-defer/")) {
+                    script defer src={"/"(file)} {}
+                }
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }

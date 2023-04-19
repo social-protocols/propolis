@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use crate::{
     highlight::{HIGHLIGHT_BEGIN, HIGHLIGHT_END},
-    structs::{Statement, VoteHistoryItem},
+    structs::{SearchResultStatement, Statement, VoteHistoryItem},
 };
 use crate::{
     opts::DatabaseOpts,
@@ -217,7 +217,7 @@ impl User {
         text: String,
         target_segment: Option<TargetSegment>,
         pool: &SqlitePool,
-    ) -> Result<()> {
+    ) -> Result<i64> {
         // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
         // TODO: no compile time check here, because of foreign-key bug in sqlx: https://github.com/launchbadge/sqlx/issues/2449
@@ -256,7 +256,7 @@ impl User {
             add_followup(target_segment, created_statement_id, pool).await?;
         }
 
-        Ok(())
+        Ok(created_statement_id)
     }
 
     // Retrieve next statement id for [User]
@@ -406,12 +406,12 @@ pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<State
     .await?)
 }
 
-pub async fn autocomplete_statement(text: &str, pool: &SqlitePool) -> Result<Vec<Statement>> {
-    Ok(sqlx::query_as::<_, Statement>(
-        "SELECT id, highlight(statements_fts, 1, ?, ?) as text
-FROM statements_fts
-WHERE text MATCH ?
-LIMIT 25",
+pub async fn search_statement(text: &str, pool: &SqlitePool) -> Result<Vec<SearchResultStatement>> {
+    Ok(sqlx::query_as::<_, SearchResultStatement>(
+        "SELECT id, text as text_original, highlight(statements_fts, 1, ?, ?) as text_highlighted
+        FROM statements_fts
+        WHERE text MATCH ?
+        LIMIT 25",
     )
     .bind(HIGHLIGHT_BEGIN)
     .bind(HIGHLIGHT_END)
@@ -458,4 +458,21 @@ pub async fn get_followups(statement_id: i64, pool: &SqlitePool) -> Result<Vec<i
     )
     .fetch_all(pool)
     .await?)
+}
+
+pub async fn add_alternative(
+    statement_id: i64,
+    alternative_id: i64,
+    pool: &SqlitePool,
+) -> Result<()> {
+    sqlx::query!(
+        "INSERT INTO alternatives (statement_id, alternative_id) VALUES (?, ?)
+         on conflict(statement_id, alternative_id) do nothing",
+        statement_id,
+        alternative_id,
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
 }

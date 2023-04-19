@@ -6,7 +6,7 @@ use crate::pages::statement_ui::{
 };
 use crate::structs::{TargetSegment, User};
 
-use crate::db::autocomplete_statement;
+use crate::db::search_statement;
 
 use axum::{extract::Query, response::Redirect, Extension, Form};
 use http::HeaderMap;
@@ -25,7 +25,7 @@ pub struct NewStatementUrlQuery {
 #[derive(Deserialize)]
 pub struct AddStatementForm {
     statement_text: String,
-    target: Option<i64>,
+    target_id: Option<i64>,
     target_yes: Option<bool>,
     target_no: Option<bool>,
 }
@@ -67,12 +67,12 @@ pub async fn new_statement(
                       me.reportValidity()"
                       hx-validate="true"
                       hx-target="#similar"
-                      hx-post="/completions"
+                      hx-post="/new/completions"
                       hx-trigger="keyup changed delay:500ms"
                       data-testid="create-statement-field"
                       {};
             @if let Some(ref statement) = target_statement {
-                input type="hidden" name="target" value=(statement.id);
+                input type="hidden" name="target_id" value=(statement.id);
                 div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed or voted on this statement."}
                 div {
                     "Target people who voted:"
@@ -112,17 +112,17 @@ pub async fn new_statement(
     ))
 }
 
-pub async fn completions(
+pub async fn new_statement_completions(
     _header_map: HeaderMap,
     maybe_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
     Form(form): Form<AddStatementForm>,
 ) -> Result<Markup, AppError> {
-    let statements = autocomplete_statement(form.statement_text.as_str(), &pool).await?;
+    let statements = search_statement(form.statement_text.as_str(), &pool).await?;
     Ok(html! {
         @for search_result_statement in &statements {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                @if let Some(target) = form.target {
+                @if let Some(target) = form.target_id {
                     form method="post" action="/link_followup" {
                         input type="hidden" name="statement_id" value=(target);
                         input type="hidden" name="target_yes" value=(form.target_yes.unwrap_or(false));
@@ -131,7 +131,7 @@ pub async fn completions(
                         button { "Link" }
                     }
                 }
-                (small_statement_content(search_result_statement, None, true, &maybe_user, &pool).await?)
+                (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(search_result_statement.id, &pool).await?)
                 (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
             }
@@ -145,7 +145,7 @@ pub async fn create_statement(
     Form(form_data): Form<AddStatementForm>,
 ) -> Result<Redirect, AppError> {
     let user = User::get_or_create(&cookies, &pool).await?;
-    let target_segment = match form_data.target {
+    let target_segment = match form_data.target_id {
         Some(target_id) => Some(TargetSegment {
             statement_id: target_id,
             voted_yes: form_data.target_yes.unwrap_or(false),

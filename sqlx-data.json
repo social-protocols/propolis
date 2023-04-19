@@ -34,6 +34,16 @@
     },
     "query": "DELETE FROM users WHERE id=?"
   },
+  "6f942cf713ff1257b8684a0bc9954d37917f89855291f17de4649d3e03cd47e1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 2
+      }
+    },
+    "query": "INSERT INTO alternatives (statement_id, alternative_id) VALUES (?, ?)\n         on conflict(statement_id, alternative_id) do nothing"
+  },
   "759358773931c1ee6b54cd55371dc58486311a952f08d9080c9bc2661aef78a8": {
     "describe": {
       "columns": [],

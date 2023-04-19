@@ -248,3 +248,8 @@ CREATE TABLE statement_flags (
   created integer not null default (strftime('%s', 'now')),
   primary key (statement_id)
 ) strict;
+CREATE TABLE alternatives (
+  statement_id integer not null references statements (id) on delete cascade on update cascade,
+  alternative_id integer not null references statements (id) on delete cascade on update cascade,
+  primary key (statement_id, alternative_id)
+);
