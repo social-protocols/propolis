@@ -68,7 +68,7 @@ pub async fn new_statement(
                       hx-validate="true"
                       hx-target="#similar"
                       hx-post="/new/completions"
-                      hx-trigger="keyup changed delay:500ms, load"
+                      hx-trigger="keyup changed delay:500ms"
                       data-testid="create-statement-field"
                       {};
             @if let Some(ref statement) = target_statement {
