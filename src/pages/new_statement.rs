@@ -51,51 +51,61 @@ pub async fn new_statement(
     };
 
     let content = html! {
-        form method="post" action="/create" {
-            h2 { "Create new statement" }
-            div { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
-            textarea
-                style="width: 100%"
-                rows = "4"
-                name="statement_text"
-                placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
-                minLength="3"
-                hx-validate="true"
-                hx-target="#similar"
-                hx-post="/new/completions"
-                hx-trigger="keyup changed delay:500ms, load"
-                data-testid="create-statement-field"
-                {};
-            @if let Some(ref statement) = target_statement {
-                input type="hidden" name="target_id" value=(statement.id);
-                div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed or voted on this statement."}
-                div {
-                    "Target people who voted:"
-                    label style="padding-left: 20px; padding-right: 20px" for="target_yes" {
-                        input type="checkbox" name="target_yes" id="target_yes"  value="true" checked[url_query.target_yes == Some(true)];
-                        "Yes"
+        div x-data="{ typed_statement: '', alternative_statement: null }" {
+            form method="post" action="/create" {
+                h2 { "Create new statement" }
+                @if let Some(ref statement) = target_statement {
+                    input type="hidden" name="target_id" value=(statement.id);
+                    div {
+                        "Target people who voted:"
+                        label style="padding-left: 20px; padding-right: 20px" for="target_yes" {
+                            input type="checkbox" name="target_yes" id="target_yes"  value="true" checked[url_query.target_yes == Some(true)];
+                            "Yes"
+                        }
+                        label for="target_no" {
+                            input type="checkbox" name="target_no" id="target_no" value="true" checked[url_query.target_no == Some(true)];
+                            "No"
+                        }
                     }
-                    label for="target_no" {
-                        input type="checkbox" name="target_no" id="target_no" value="true" checked[url_query.target_no == Some(true)];
-                        "No"
+                    div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed to or voted on:"}
+                    div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+                        (small_statement_content(statement, None, false, &maybe_user, &pool).await?)
+                        (small_statement_piechart(statement.id, &pool).await?)
                     }
                 }
-                div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                    (small_statement_content(statement, None, false, &maybe_user, &pool).await?)
-                    (small_statement_piechart(statement.id, &pool).await?)
-                    (small_statement_vote_fetch(statement.id, &maybe_user, &pool).await?)
+                div { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
+                textarea
+                    style="width: 100%"
+                    rows = "4"
+                    name="statement_text"
+                    x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
+                    placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
+                    minLength="3"
+                    hx-validate="true"
+                    hx-target="#similar"
+                    hx-post="/new/completions"
+                    hx-trigger="keyup changed delay:500ms, load"
+                    data-testid="create-statement-field"
+                    {};
+                template x-if="alternative_statement === null" {
+                    div x-show="typed_statement.length > 0" {
+                        div {
+                            "Preview:"
+                        }
+                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px; padding: 15px;" x-text="typed_statement" {}
+                    }
+                }
+                div style="display:flex; justify-content: flex-end;" {
+                    button data-testid="create-statement-submit" { "Add Statement" }
                 }
             }
-            div style="display:flex; justify-content: flex-end;" {
-                button data-testid="create-statement-submit" { "Add Statement" }
+            @if target_statement.is_some() {
+                h2 { "Or link to an existing statement:" }
+            } @else {
+                h2 { "Similar statements:" }
             }
+            div id="similar" {}
         }
-        @if target_statement.is_some() {
-            h2 { "Or link to an existing statement:" }
-        } @else {
-            h2 { "Similar statements:" }
-        }
-        div id="similar" {}
     };
     Ok(base(
         cookies,
