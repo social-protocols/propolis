@@ -407,6 +407,10 @@ pub async fn get_statement(statement_id: i64, pool: &SqlitePool) -> Result<State
 }
 
 pub async fn search_statement(text: &str, pool: &SqlitePool) -> Result<Vec<SearchResultStatement>> {
+    if text.is_empty() {
+        return Ok(vec![]);
+    }
+
     Ok(sqlx::query_as::<_, SearchResultStatement>(
         "SELECT id, text as text_original, highlight(statements_fts, 1, ?, ?) as text_highlighted
         FROM statements_fts
