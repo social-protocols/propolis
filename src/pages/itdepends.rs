@@ -63,16 +63,12 @@ pub async fn itdepends(
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
                     placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
-                    _="on htmx:validation:validate
-                          if my.value.length < 3
-                            call me.setCustomValidity('Please enter a value')
-                          else
-                            call me.setCustomValidity('')
-                          me.reportValidity()"
-                          hx-validate="true"
-                          hx-target="#similar"
-                          hx-post="/itdepends_completions"
-                          hx-trigger="keyup changed delay:500ms, load" {};
+                    minlength="3"
+                    hx-validate="true"
+                    hx-target="#similar"
+                    hx-post="/itdepends_completions"
+                    hx-trigger="keyup changed delay:500ms, load"
+                    {};
                 template x-if="alternative_statement === null" {
                     div x-show="typed_statement.length > 0" {
                         div {

@@ -38,10 +38,10 @@ fn html(theme: String, merge_url: &str, qr_code: &str) -> Markup {
                 " on your other device"
             }
         }
-        form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()" {
+        form x-data="" x-ref="themeForm" method="post" action="/options" {
             fieldset {
                 label for="theme" { "theme" }
-                select id="theme" name="theme" _="on change send test to #theme-form" {
+                select id="theme" name="theme" x-on:input="$refs.themeForm.submit()" {
                     option value="light" selected[theme == "light"] { "Light" }
                     option value="dark" selected[theme == "dark"] { "Dark" }
                 }

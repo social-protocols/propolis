@@ -59,18 +59,13 @@ pub async fn new_statement(
                 rows = "4"
                 name="statement_text"
                 placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
-                _="on htmx:validation:validate
-                      if my.value.length < 3
-                        call me.setCustomValidity('Please enter a value')
-                      else
-                        call me.setCustomValidity('')
-                      me.reportValidity()"
-                      hx-validate="true"
-                      hx-target="#similar"
-                      hx-post="/new/completions"
-                      hx-trigger="keyup changed delay:500ms"
-                      data-testid="create-statement-field"
-                      {};
+                minLength="3"
+                hx-validate="true"
+                hx-target="#similar"
+                hx-post="/new/completions"
+                hx-trigger="keyup changed delay:500ms, load"
+                data-testid="create-statement-field"
+                {};
             @if let Some(ref statement) = target_statement {
                 input type="hidden" name="target_id" value=(statement.id);
                 div style="margin-bottom: 5px" {"Your statement will be shown to people who subscribed or voted on this statement."}
