@@ -1,4 +1,4 @@
-use super::base::base;
+use super::base::BaseTemplate;
 use crate::db::{add_alternative, get_statement, search_statement};
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
@@ -26,10 +26,9 @@ pub struct ItDependsForm {
 
 pub async fn itdepends(
     Path(target_statement_id): Path<i64>,
-    cookies: Cookies,
     user: User,
     Extension(pool): Extension<SqlitePool>,
-    headers: HeaderMap,
+    base: BaseTemplate,
 ) -> Result<Markup, AppError> {
     let target_statement = get_statement(target_statement_id, &pool).await?;
     let user_opt = Some(user);
@@ -86,14 +85,7 @@ pub async fn itdepends(
         }
     };
 
-    Ok(base(
-        cookies,
-        Some("It Depends".to_string()),
-        &user_opt,
-        content,
-        &headers,
-        None,
-    ))
+    Ok(base.title("It Depends").content(content).render())
 }
 
 pub async fn itdepends_create(
