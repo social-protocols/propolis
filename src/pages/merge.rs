@@ -34,6 +34,11 @@ pub async fn merge(
 
     let current_secret = user.secret.to_owned();
     let new_secret = secret;
+    if new_secret == current_secret {
+        // TODO: how to use anyhow::ensure! here?
+        return Err(AppError(anyhow::anyhow!("Cannot merge with same secret")));
+    }
+
     let content = html! {
         h1 { "Merge" }
         form hx-post={"/merge/"(new_secret)} {
