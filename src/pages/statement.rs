@@ -65,7 +65,7 @@ pub async fn statement_page(
                 input type="hidden" value=(statement_id) name="statement_id";
                 div style="display: flex; justify-content: space-between; margin-bottom: 50px; margin-top: 10px" {
                     div {
-                        button style="color: white; background-color: forestgreen; border-color: forestgreen" name="vote" value="Yes" { "YES" }
+                        button class="text-white" style="background-color: forestgreen; border-color: forestgreen" name="vote" value="Yes" { "YES" }
                         button style="color: white; background-color: firebrick; border-color: firebrick" name="vote" value="No" { "NO" }
                     }
                     div {
