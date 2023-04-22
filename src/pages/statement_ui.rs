@@ -40,7 +40,7 @@ pub async fn small_statement_content(
             @if show_controls {
                 div style="display: flex; align-items:center; gap: 12px" {
                     // link with button styles
-                    a style="text-decoration: none; font-weight: bold; letter-spacing: 0.1em; font-size: 85%; padding: 0.4em 0em; margin-right: 1em" href=(format!("/new?target={}", statement.id)) {
+                    a style="text-decoration: none; font-weight: bold; letter-spacing: 0.1em; font-size: 85%; padding: 0.4em 0em; margin-right: 1em" href=(format!("/new?target={}&target_all=true", statement.id)) {
                         "↳ Add Follow-Up"
                     }
                     (subscribe_button(statement.id, maybe_user, pool).await?)

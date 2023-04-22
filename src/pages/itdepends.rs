@@ -1,5 +1,5 @@
 use super::base::BaseTemplate;
-use crate::db::{add_alternative, get_statement, search_statement};
+use crate::db::{add_alternative, add_followup, get_statement, search_statement};
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
 };
@@ -80,7 +80,6 @@ pub async fn itdepends(
                     button { "Propose Alternative Statement" }
                 }
             }
-            h2 { "Did you mean" }
             div id="similar" {}
         }
     };
@@ -102,13 +101,11 @@ pub async fn itdepends_create(
 
     let alternative_statement_id = match form_data.alternative_statement_id {
         Some(id) => id,
-        None => {
-            user.add_statement(form_data.typed_statement, Some(target_segment), &pool)
-                .await?
-        }
+        None => user.add_statement(form_data.typed_statement, &pool).await?,
     };
 
     add_alternative(form_data.target_id, alternative_statement_id, &pool).await?;
+    add_followup(target_segment, alternative_statement_id, &pool).await?;
 
     Ok(Redirect::to("/"))
 }
@@ -121,6 +118,9 @@ pub async fn itdepends_completions(
 ) -> Result<Markup, AppError> {
     let statements = search_statement(form.typed_statement.as_str(), &pool).await?;
     Ok(html! {
+        @if !statements.is_empty() {
+            h2 { "Did you mean" }
+        }
         @for search_result_statement in &statements {
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
                 button x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
