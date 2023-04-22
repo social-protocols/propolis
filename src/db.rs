@@ -212,12 +212,7 @@ impl User {
             .fetch_all(pool).await?)
     }
 
-    pub async fn add_statement(
-        &self,
-        text: String,
-        target_segment: Option<TargetSegment>,
-        pool: &SqlitePool,
-    ) -> Result<i64> {
+    pub async fn add_statement(&self, text: String, pool: &SqlitePool) -> Result<i64> {
         // TODO: track specialization for it-depends creations
         // TODO: add statement and author entry in transaction
         // TODO: no compile time check here, because of foreign-key bug in sqlx: https://github.com/launchbadge/sqlx/issues/2449
@@ -250,11 +245,6 @@ impl User {
         )
         .execute(pool)
         .await?;
-
-        if let Some(target_segment) = target_segment {
-            // add created statement as followup to target statement
-            add_followup(target_segment, created_statement_id, pool).await?;
-        }
 
         Ok(created_statement_id)
     }

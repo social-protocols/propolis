@@ -37,7 +37,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                        click: function(event, chartContext, config) {{
                            // workaround from https://github.com/apexcharts/apexcharts.js/issues/2251#issuecomment-904377385
                            const seriesIndex = event.target.parentElement.getAttribute("data:realIndex")
-                           const targetQuery = ['target_yes', 'target_itdepends', 'target_no'];
+                           const targetQuery = ['target_yes', 'target_all', 'target_no'];
                            location.href = `/new?target=${{{statement_id}}}&${{targetQuery[seriesIndex]}}=true`;
                        }}
                      }}
