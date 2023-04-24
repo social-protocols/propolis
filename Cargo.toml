@@ -45,7 +45,7 @@ anyhow = { workspace = true }
 argon2 = "0.5.0"
 async-std = { workspace = true }
 async-trait = { workspace = true }
-axum = "0.6.15"
+axum = "0.6.16"
 base64 = "0.21.0"
 chrono = "0.4.24"
 clap = { version = "4.2.4", features = ["env", "derive"] }
