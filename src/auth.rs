@@ -9,9 +9,12 @@ use http::request::Parts;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use sqlx::SqlitePool;
+use tower_cookies::cookie::time::Duration;
 use tower_cookies::{Cookie, Cookies};
 
 use crate::structs::User;
+
+const COOKIE_MAX_AGE: Duration = Duration::days(10 * 365);
 
 impl User {
     /// If logged in with a secret, will return a [User]
@@ -41,7 +44,10 @@ impl User {
             Some(user) => user,
             None => {
                 let user = User::create(pool).await?;
-                cookies.add(Cookie::new("secret", user.secret.to_owned()));
+                let cookie = Cookie::build("secret", user.secret.to_owned())
+                    .max_age(COOKIE_MAX_AGE)
+                    .finish();
+                cookies.add(cookie);
 
                 user
             }
@@ -67,6 +73,7 @@ pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
         // copy old cookie, but also set path, since it may come from e.g. /merge
         cookie.set_value(secret);
         cookie.set_path("/");
+        cookie.set_max_age(COOKIE_MAX_AGE);
         cookies.add(cookie.into_owned());
     }
 }
