@@ -95,19 +95,22 @@ pub async fn statement_page(
 }
 
 async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, AppError> {
-    let history = match maybe_user {
+    let history_items = match maybe_user {
         Some(user) => user.vote_history(pool).await?,
         None => Vec::new(),
     };
 
     Ok(html! {
-        @for item in history {
+        @if !history_items.is_empty() {
+            h2 { "Recent votes" }
+        }
+        @for item in history_items {
             @let statement = Statement {
                 id: item.statement_id,
                 text: item.statement_text,
             };
             div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                (small_statement_content(&statement, Some(item.vote_timestamp), true, maybe_user, pool).await?)
+                (small_statement_content(&statement, None, true, maybe_user, pool).await?)
                 (small_statement_piechart(item.statement_id, pool).await?)
                 (small_statement_vote(Some(Vote::from(item.vote)?))?)
             }
