@@ -1,12 +1,12 @@
 use super::base::base;
 use crate::{
-    db::{get_followups, get_statement, statement_stats},
+    db::{get_followups, get_statement},
     error::AppError,
     pages::statement_ui::{
         small_statement_content, small_statement_piechart, small_statement_vote,
         small_statement_vote_fetch,
     },
-    structs::{PageMeta, Statement, StatementStats, User, Vote},
+    structs::{PageMeta, Statement, User, Vote},
     util::base_url,
 };
 
@@ -15,25 +15,6 @@ use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
-
-/// Returns an apexchart div with votes of the particular statement
-pub async fn votes(
-    Path(statement_id): Path<i64>,
-    Extension(pool): Extension<SqlitePool>,
-) -> Result<Markup, AppError> {
-    let StatementStats {
-        yes_votes,
-        skip_votes,
-        no_votes,
-        ..
-    } = statement_stats(statement_id, &pool).await?;
-    Ok(html! {
-        div id="chart" {}
-        script type="text/javascript" {
-            (format!("setupChart('#chart', {yes_votes},{skip_votes},{no_votes});"))
-        }
-    })
-}
 
 pub async fn statement_page(
     Path(statement_id): Path<i64>,

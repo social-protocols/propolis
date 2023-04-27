@@ -2,16 +2,13 @@ use crate::error::AppError;
 use crate::structs::User;
 use crate::structs::Vote;
 
-use axum::extract::Path;
 use axum::{response::IntoResponse, Extension, Form};
 use http::StatusCode;
-use maud::html;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
 use super::index::next_statement_id;
-use super::statement::votes;
 
 #[derive(Deserialize)]
 pub struct VoteForm {
@@ -31,18 +28,14 @@ pub async fn vote(
 
     match vote_form.vote {
         Vote::Yes | Vote::No | Vote::Skip => {
-            let id = next_statement_id(Some(user), Extension(pool.to_owned())).await?;
-            let redirect_url = match id {
-                Some(id) => format!("/statement/{id}"),
+            let next_statement_id =
+                next_statement_id(Some(user), Extension(pool.to_owned())).await?;
+            let redirect_url = match next_statement_id {
+                Some(statement_id) => format!("/statement/{statement_id}"),
                 None => "/".to_string(),
             };
 
-            let body = votes(Path(vote_form.statement_id), Extension(pool)).await?;
-            Ok((
-                StatusCode::OK,
-                [("HX-Redirect", redirect_url.to_string())],
-                body,
-            ))
+            Ok((StatusCode::OK, [("HX-Redirect", redirect_url)]))
         }
         Vote::ItDepends => Ok((
             StatusCode::OK,
@@ -50,7 +43,6 @@ pub async fn vote(
                 "HX-Redirect",
                 format!("/statement/{}/itdepends", vote_form.statement_id),
             )],
-            html! {},
         )),
     }
 }

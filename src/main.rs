@@ -42,7 +42,6 @@ use crate::pages::itdepends::itdepends_completions;
 use crate::pages::itdepends::itdepends_create;
 use crate::pages::new_statement::create_statement;
 use crate::pages::new_statement::new_statement_completions;
-use crate::pages::statement::votes;
 use crate::pages::subscribe::subscribe;
 use crate::pages::user::user_page;
 use crate::pages::vote::vote;
@@ -79,7 +78,6 @@ async fn main() {
         .route("/subscribe", post(subscribe))
         .route("/user", get(user_page))
         .route("/statement/:id", get(statement_page))
-        .route("/votes/:id", get(votes))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
