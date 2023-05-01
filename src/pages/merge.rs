@@ -1,10 +1,9 @@
-use super::base::base;
+use super::base::BaseTemplate;
 
 use crate::structs::User;
 use crate::{auth::change_auth_cookie, error::AppError};
 
 use axum::{extract::Path, Extension, Form};
-use http::HeaderMap;
 use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
@@ -26,7 +25,7 @@ pub async fn merge(
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-    headers: HeaderMap,
+    base: BaseTemplate,
 ) -> Result<Markup, AppError> {
     let user = User::get_or_create(&cookies, &pool).await?;
     let num_votes = user.num_votes(&pool).await?;
@@ -58,14 +57,7 @@ pub async fn merge(
         }
     };
 
-    Ok(base(
-        cookies,
-        Some("Merge accounts".to_string()),
-        &Some(user),
-        content,
-        &headers,
-        None,
-    ))
+    Ok(base.title("Merge accounts").content(content).into())
 }
 
 pub async fn merge_post(

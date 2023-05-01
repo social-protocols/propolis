@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use http::HeaderMap;
 use maud::{html, Markup, DOCTYPE};
-use tower_cookies::{Cookie, Cookies};
+use tower_cookies::Cookies;
 
 use crate::{
     structs::{PageMeta, User},
@@ -10,8 +10,7 @@ use crate::{
     StaticAsset,
 };
 
-fn render_base(
-    theme: String,
+fn base(
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
@@ -20,7 +19,7 @@ fn render_base(
 ) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=(theme) {
+        html lang="en" {
             head {
                 // TODO: link preview
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
@@ -63,52 +62,36 @@ fn render_base(
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
-            body {
-                nav {
-                    ul style="display:flex" {
+            body class="max-w-[800px] mx-auto bg-slate-100 dark:bg-slate-800 dark:text-white" {
+                nav class="px-5 py-3" {
+                    ul class="flex gap-6" {
                         li { a href="/" data-testid="nav-home" { "Home" } }
                         li { a href="/new" data-testid="nav-add-statement" { "Add Statement" } }
-                        li  style="margin-right: auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
+                        li  class="mr-auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
                         @if let Some(user) = user {
                             li {
-                                span style="margin-right: 0.5em" { "👤" }
-                                a href="/user" {
+                                a href="/user" class="font-mono" {
+                                    @let user_icon = "👤";
+                                    span class="mr-1" { (user_icon) }
                                     (user.secret.chars().take(4).collect::<String>())
                                 }
                             }
                         }
-                        li { a href="/options" { "⚙" } }
+                        li {
+                            a href="/options" {
+                                @let cog_icon = "⚙";
+                                (cog_icon)
+                            }
+                        }
                     }
                 }
-                div id="content" {
+                div class="p-5" {
                     (content)
                 }
             }
         }
     }
-}
-
-pub fn base(
-    cookies: Cookies,
-    title: Option<String>,
-    user: &Option<User>,
-    content: Markup,
-    headers: &HeaderMap,
-    page_meta: Option<PageMeta>,
-) -> Markup {
-    let theme = cookies
-        .get("theme")
-        .unwrap_or(Cookie::new("theme", "light"));
-
-    render_base(
-        theme.value().to_string(),
-        title,
-        user,
-        content,
-        headers,
-        page_meta,
-    )
 }
 
 /// Presents a warning dialog to the user
@@ -147,10 +130,14 @@ impl BaseTemplate {
         self.page_meta = Some(m);
         self
     }
+    /// Set the page meta data
+    pub fn page_meta_opt(mut self, m: Option<PageMeta>) -> Self {
+        self.page_meta = m;
+        self
+    }
     /// Render BaseTemplate into markup
     pub fn render(self) -> Markup {
         base(
-            self.cookies.to_owned(),
             self.title,
             &self.user,
             self.content,

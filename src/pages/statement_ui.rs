@@ -26,22 +26,21 @@ pub async fn small_statement_content(
     )?;
     let statement_highlighted = highlight_html(&statement_text_html_escaped);
     Ok(html! {
-        div style="display:flex; flex-direction: column; width: 100%; padding: 15px" {
+        div class="flex flex-col w-full p-4" {
             @if let Some(timestamp) = timestamp {
-                div style="opacity: 0.5" {
+                div class="opacity-50" {
                     (human_relative_time(timestamp))
                 }
             }
-            div style="height:100%" {
-                a href=(format!("/statement/{}", statement.id)) style="text-decoration: none"  {
-                    span data-testid="statement-text" style="color: var(--cfg);" { (PreEscaped(statement_highlighted)) }
+            div class="h-full" {
+                a href=(format!("/statement/{}", statement.id)) {
+                    span class="text-lg" data-testid="statement-text" { (PreEscaped(statement_highlighted)) }
                 }
             }
             @if show_controls {
-                div style="display: flex; align-items:center; gap: 12px" {
-                    // link with button styles
-                    a style="text-decoration: none; font-weight: bold; letter-spacing: 0.1em; font-size: 85%; padding: 0.4em 0em; margin-right: 1em" href=(format!("/new?target={}&target_all=true", statement.id)) {
-                        "↳ Add Follow-Up"
+                div class="mt-4 flex items-center gap-4" {
+                    a href=(format!("/new?target={}&target_all=true", statement.id)) {
+                        "add follow-up"
                     }
                     (subscribe_button(statement.id, maybe_user, pool).await?)
                 }
@@ -52,7 +51,7 @@ pub async fn small_statement_content(
 
 pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     Ok(html! {
-        div style="padding: 5px 0px; align-self: center;" {
+        div class="py-2" {
             (yes_no_pie_chart(statement_id, pool).await?)
         }
     })
@@ -60,14 +59,14 @@ pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> R
 
 pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
     let vote_color = match vote {
-        Some(Vote::Yes) => "forestgreen",
-        Some(Vote::No) => "firebrick",
-        Some(Vote::ItDepends) => "slategrey",
-        Some(Vote::Skip) => "default",
-        None => "default",
+        Some(Vote::Yes) => "bg-green-600",
+        Some(Vote::No) => "bg-red-600",
+        Some(Vote::ItDepends) => "bg-slate-500",
+        Some(Vote::Skip) => "",
+        None => "",
     };
     Ok(html! {
-        div style={"font-weight:bold; background-color: "(vote_color)"; color: white; width: 60px; display: flex; align-items:center; justify-content: center; border-top-right-radius: 10px; border-bottom-right-radius: 10px; flex-shrink: 0"} {
+        div class={"font-bold text-white w-16 flex items-center justify-center shrink-0 rounded-r-lg "(vote_color)} {
             @match vote {
                 Some(Vote::Yes) => "YES",
                 Some(Vote::No) => "NO",
@@ -143,11 +142,11 @@ pub async fn subscribe_button(
     Ok(html! {
         @if is_subscribed {
             // same padding as button
-            span style="padding: 0.4em 1em; opacity: 0.5; font-size: 85%" { "subscribed" }
+            span class="opacity-50" { "subscribed" }
         } @else {
             form hx-post="/subscribe" {
                 input type="hidden" name="statement_id" value=(statement_id);
-                button style="border: none; background: none; margin: 0;" { "Subscribe" }
+                button { "subscribe" }
             }
         }
     })

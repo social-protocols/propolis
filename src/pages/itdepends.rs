@@ -35,29 +35,29 @@ pub async fn itdepends(
 
     let content = html! {
         div x-data="{ typed_statement: '', alternative_statement: null }" {
-            div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
+            div class="mb-8 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
                 (small_statement_content(&target_statement, None, false, &user_opt, &pool).await?)
                 (small_statement_piechart(target_statement.id, &pool).await?)
                 (small_statement_vote_fetch(target_statement.id, &user_opt, &pool).await?)
             }
-            h2 { "It Depends" }
-            div { "Provide an alternative statement which clarifies context and/or definitions." }
+            h2 class="text-xl mb-4" { "It Depends" }
+            div class="mb-2" { "Provide an alternative statement which clarifies context and/or definitions." }
             form method="post" action={"/statement/"(target_statement_id)"/itdepends"} {
                 input type="hidden" name="target_id" value=(target_statement.id);
                 // preview of selected existing alternative statement
                 template x-if="alternative_statement !== null" {
                     div {
                         input type="hidden" name="alternative_statement_id" x-model="alternative_statement.id";
-                        div style="display:flex;" {
+                        div class="mb-2 flex" {
                             "Selected existing statement:"
-                            button type="button" style="margin-left:auto;" x-on:click="alternative_statement = null" { "Cancel" };
+                            button type="button" class="ml-auto px-4 py-1" x-on:click="alternative_statement = null" { "Cancel" };
                         }
-                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px; padding: 15px;" x-text="alternative_statement.text" {}
+                        div class="mb-5 p-4 rounded-lg shadow bg-white dark:bg-slate-700 flex" x-text="alternative_statement.text" {}
                     }
                 }
                 textarea
                     x-show="alternative_statement === null"
-                    style="width: 100%"
+                    class="mb-4 dark:bg-slate-700 dark:text-white w-full p-4 border border-1 border-slate-500 dark:border-slate-200 rounded"
                     rows = "4"
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
@@ -68,16 +68,14 @@ pub async fn itdepends(
                     hx-post="/itdepends_completions"
                     hx-trigger="keyup changed delay:500ms, load"
                     {};
-                template x-if="alternative_statement === null" {
-                    div x-show="typed_statement.length > 0" {
-                        div {
-                            "Preview:"
-                        }
-                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px; padding: 15px;" x-text="typed_statement" {}
-                    }
-                }
-                div style="display:flex; justify-content: flex-end;" {
-                    button { "Propose Alternative Statement" }
+                // template x-if="alternative_statement === null" {
+                //     div x-show="typed_statement.length > 0" {
+                //         div class="mb-2" { "Preview:" }
+                //         div class="mb-4 p-4 rounded-lg shadow bg-white dark:bg-slate-700 flex" x-text="typed_statement" {}
+                //     }
+                // }
+                div class="flex justify-end" {
+                    button class="text-white bg-slate-500 px-4 py-1 rounded" { "Propose Alternative Statement" }
                 }
             }
             div id="similar" {}
@@ -119,11 +117,11 @@ pub async fn itdepends_completions(
     let statements = search_statement(form.typed_statement.as_str(), &pool).await?;
     Ok(html! {
         @if !statements.is_empty() {
-            h2 { "Did you mean" }
+            h2 class="text-xl mb-4" { "Did you mean" }
         }
         @for search_result_statement in &statements {
-            div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                button x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
+            div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
+                button class="text-white bg-slate-500 px-4 py-1 rounded" x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
                 (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(search_result_statement.id, &pool).await?)
                 (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)

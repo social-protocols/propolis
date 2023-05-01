@@ -28,7 +28,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                   ],
                   "chart": {{
                     "type": "pie",
-                    "width": 180,
+                    "width": 150,
                      events: {{
                        dataPointMouseEnter: function(event) {{
                            // workaround from https://stackoverflow.com/questions/68503392/apexcharts-cursor-pointer

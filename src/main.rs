@@ -17,7 +17,7 @@ use http::StatusCode;
 use pages::index::index;
 use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
-use pages::options::{options, options_post};
+use pages::options::options;
 use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
 
@@ -87,7 +87,6 @@ async fn main() {
         .route("/itdepends_completions", post(itdepends_completions))
         .route("/create", post(create_statement))
         .route("/options", get(options))
-        .route("/options", post(options_post))
         .route("/subscriptions", get(subscriptions))
         .route("/*file", get(static_handler::static_handler))
         .layer(TraceLayer::new_for_http())

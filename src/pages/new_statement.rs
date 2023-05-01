@@ -1,4 +1,4 @@
-use super::base::base;
+use super::base::BaseTemplate;
 use crate::db::{add_followup, get_statement};
 use crate::error::AppError;
 use crate::pages::statement_ui::{
@@ -33,11 +33,10 @@ pub struct AddStatementForm {
 }
 
 pub async fn new_statement(
-    cookies: Cookies,
     maybe_user: Option<User>,
     url_query: Query<NewStatementUrlQuery>,
     Extension(pool): Extension<SqlitePool>,
-    headers: HeaderMap,
+    base: BaseTemplate,
 ) -> Result<Markup, AppError> {
     let target_statement = match url_query.target {
         Some(target_id) => get_statement(target_id, &pool).await.ok(),
@@ -47,39 +46,21 @@ pub async fn new_statement(
     let content = html! {
         div x-data="{ typed_statement: '', alternative_statement: null }" {
             form method="post" action="/create" {
-                h2 { "Create new statement" }
-                @if let Some(ref statement) = target_statement {
-                    input type="hidden" name="target_id" value=(statement.id);
-                    div {
-                        "Target people who voted:"
-                        label style="padding-left: 20px; padding-right: 20px" for="target_yes" {
-                            input type="checkbox" name="target_yes" id="target_yes"  value="true" checked[url_query.target_yes == Some(true) || url_query.target_all == Some(true)];
-                            "Yes"
-                        }
-                        label for="target_no" {
-                            input type="checkbox" name="target_no" id="target_no" value="true" checked[url_query.target_no == Some(true) || url_query.target_all == Some(true)];
-                            "No"
-                        }
-                    }
-                    div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                        (small_statement_content(statement, None, false, &maybe_user, &pool).await?)
-                        (small_statement_piechart(statement.id, &pool).await?)
-                    }
-                }
-                div { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
+                h2 class="text-xl mb-4" { "Create new statement" }
+                div class="mb-2" { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
                 template x-if="alternative_statement !== null" {
                     div {
                         input type="hidden" name="alternative_statement_id" x-model="alternative_statement.id";
-                        div style="display:flex;" {
+                        div class="mb-2 flex" {
                             "Selected existing statement:"
-                            button type="button" style="margin-left:auto;" x-on:click="alternative_statement = null" { "Cancel" };
+                            button type="button" class="ml-auto px-4 py-1" x-on:click="alternative_statement = null" { "Cancel" };
                         }
-                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px; padding: 15px;" x-text="alternative_statement.text" {}
+                        div class="mb-5 p-4 rounded-lg shadow bg-white dark:bg-slate-700 flex" x-text="alternative_statement.text" {}
                     }
                 }
                 textarea
                     x-show="alternative_statement === null"
-                    style="width: 100%"
+                    class="mb-4 dark:bg-slate-700 dark:text-white w-full p-4 border border-1 border-slate-500 dark:border-slate-200 rounded"
                     rows = "4"
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
@@ -91,29 +72,43 @@ pub async fn new_statement(
                     hx-trigger="keyup changed delay:500ms, load"
                     data-testid="create-statement-field"
                     {};
-                template x-if="alternative_statement === null" {
-                    div x-show="typed_statement.length > 0" {
-                        div {
-                            "Preview:"
+                // template x-if="alternative_statement === null" {
+                //     div x-show="typed_statement.length > 0" {
+                        // div class="mb-2" { "Preview:" }
+                //         div class="mb-4 p-4 rounded-lg shadow bg-white dark:bg-slate-700" x-text="typed_statement" {}
+
+                //         // div class="flex gap-2 mb-12 mt-3" {
+                //         //     button class="border-dashed border-2 border-green-600 px-4 py-1 rounded" name="vote" value="Yes" { "YES" }
+                //         //     button class="border-dashed border-2 border-red-600 px-4 py-1 rounded" name="vote" value="No" { "NO" }
+                //         // }
+                //     }
+                // }
+                @if let Some(ref statement) = target_statement {
+                    input type="hidden" name="target_id" value=(statement.id);
+                    div class="mb-2" {
+                        "Shown to people who voted:"
+                        label class="px-5" for="target_yes" {
+                            input type="checkbox" name="target_yes" id="target_yes"  value="true" checked[url_query.target_yes == Some(true) || url_query.target_all == Some(true)];
+                            span class="ml-1" { "Yes" }
                         }
-                        div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px; padding: 15px;" x-text="typed_statement" {}
+                        label for="target_no" {
+                            input type="checkbox" name="target_no" id="target_no" value="true" checked[url_query.target_no == Some(true) || url_query.target_all == Some(true)];
+                            span class="ml-1" { "No" }
+                        }
+                    }
+                    div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
+                        (small_statement_content(statement, None, false, &maybe_user, &pool).await?)
+                        (small_statement_piechart(statement.id, &pool).await?)
                     }
                 }
-                div style="display:flex; justify-content: flex-end;" {
-                    button data-testid="create-statement-submit" { "Add Statement" }
+                div class="flex justify-end" {
+                    button data-testid="create-statement-submit" class="text-white bg-slate-500 px-4 py-1 rounded" { "Add Statement" }
                 }
             }
             div id="similar" {}
         }
     };
-    Ok(base(
-        cookies,
-        Some("New statement".to_string()),
-        &maybe_user,
-        content,
-        &headers,
-        None,
-    ))
+    Ok(base.title("New statement").content(content).into())
 }
 
 pub async fn new_statement_completions(
@@ -125,11 +120,11 @@ pub async fn new_statement_completions(
     let statements = search_statement(form.typed_statement.as_str(), &pool).await?;
     Ok(html! {
         @if !statements.is_empty() {
-            h2 { "Did you mean" }
+            h2 class="text-xl mb-4" { "Did you mean" }
         }
         @for search_result_statement in &statements {
-            div.shadow style="display:flex; margin-bottom: 20px; border-radius: 10px;" {
-                button x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
+            div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
+                button class="text-white bg-slate-500 px-4 py-1 rounded" x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
                 (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(search_result_statement.id, &pool).await?)
                 (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)

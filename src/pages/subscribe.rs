@@ -21,5 +21,5 @@ pub async fn subscribe(
     let user = User::get_or_create(&cookies, &pool).await?;
     user.subscribe(form_data.statement_id, &pool).await?;
 
-    Ok(html! { span style="padding: 0.4em 1em; opacity: 0.5; font-size: 85%" { "subscribed" } })
+    Ok(html! { span class="opacity-50" { "subscribed" } })
 }
