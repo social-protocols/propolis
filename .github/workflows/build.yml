@@ -90,7 +90,7 @@ jobs:
 
   deploy:
       needs: build
-      if: GITHUB_REF_TYPE == "branch" && GITHUB_REF_NAME == "main"
+      if: ${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
       name: Deploy app
       runs-on: ubuntu-22.04
       env:
