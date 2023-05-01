@@ -8,7 +8,6 @@ use anyhow::Result;
 
 use http::HeaderMap;
 
-
 use qrcode::render::svg;
 use qrcode::QrCode;
 

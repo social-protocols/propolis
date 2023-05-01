@@ -15,7 +15,6 @@ use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 
-
 pub async fn statement_page(
     Path(statement_id): Path<i64>,
     maybe_user: Option<User>,
