@@ -61,6 +61,17 @@ fn base(
                 @for file in StaticAsset::iter().filter(|path| path.starts_with("js-defer/")) {
                     script defer src={"/"(file)} {}
                 }
+                script {
+                    r"
+                    twind.install({
+                        preflight: css({
+                          a: {
+                            '@apply': 'text-blue-500 dark:text-blue-400'
+                          }
+                        }),
+                    })
+                    "
+                }
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
