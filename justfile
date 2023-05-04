@@ -44,6 +44,7 @@ test:
   cargo watch -cx 'test --workspace --all-targets --all-features'
 
 fix:
+  echo "Make sure no other compilers are running at the same time (e.g. just develop)"
   sqlx migrate run
   cargo sqlx prepare --merged
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
