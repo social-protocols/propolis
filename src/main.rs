@@ -14,7 +14,7 @@ mod util;
 use axum::response::Html;
 use clap::Parser;
 use http::StatusCode;
-use pages::index::index;
+use pages::index::{index, search_results};
 use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
 use pages::options::options;
@@ -45,6 +45,7 @@ use crate::pages::new_statement::new_statement_completions;
 use crate::pages::subscribe::subscribe;
 use crate::pages::user::user_page;
 use crate::pages::vote::vote;
+use crate::pages::vote::vote_post;
 
 // embed static files into release binary
 #[derive(RustEmbed)]
@@ -74,7 +75,9 @@ async fn main() {
 
     app = app
         .route("/", get(index))
-        .route("/vote", post(vote))
+        .route("/search", post(search_results))
+        .route("/vote", get(vote))
+        .route("/vote", post(vote_post))
         .route("/subscribe", post(subscribe))
         .route("/user", get(user_page))
         .route("/statement/:id", get(statement_page))

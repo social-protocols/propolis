@@ -68,6 +68,7 @@ fn base(
                 nav class="px-5 py-3" {
                     ul class="flex gap-6" {
                         li { a href="/" data-testid="nav-home" { "Home" } }
+                        li { a href="/vote" data-testid="nav-home" { "Vote" } }
                         li { a href="/new" data-testid="nav-add-statement" { "Add Statement" } }
                         li  class="mr-auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
