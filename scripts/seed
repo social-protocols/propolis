@@ -56,7 +56,7 @@ END
 echo "$statements" | jq -s -r '.[] | .text' |
 while read text; do
     echo "$text"
-    curl --data-urlencode "statement_text=$text" "$URL"/create
+    curl --data-urlencode "typed_statement=$text" "$URL"/create
 done
 
 

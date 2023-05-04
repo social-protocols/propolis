@@ -19,7 +19,9 @@ fn base(
 ) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" {
+        // hx-boost makes the navigation faster by making links and forms use AJAX:
+        // https://htmx.org/attributes/hx-boost/
+        html lang="en" hx-boost="true" {
             head {
                 // TODO: link preview
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
@@ -62,10 +64,11 @@ fn base(
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
-            body class="max-w-[800px] mx-auto bg-slate-100 dark:bg-slate-800 dark:text-white" {
+            body class="bg-slate-100 dark:bg-slate-800 dark:text-white" {
                 nav class="px-5 py-3" {
                     ul class="flex gap-6" {
                         li { a href="/" data-testid="nav-home" { "Home" } }
+                        li { a href="/vote" data-testid="nav-home" { "Vote" } }
                         li { a href="/new" data-testid="nav-add-statement" { "Add Statement" } }
                         li  class="mr-auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id

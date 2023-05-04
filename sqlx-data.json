@@ -206,17 +206,7 @@
     },
     "query": "SELECT statement_id, state, categories, created\nFROM statement_flags\nWHERE statement_id = ?"
   },
-  "b90c377e12874cd809fbcd532aede4f31f838c51605a61e7fc67b7ea85bcd953": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 3
-      }
-    },
-    "query": "INSERT INTO statement_flags (statement_id, state, categories)\n VALUES (?, ?, ?)"
-  },
-  "c1ab324d9d4906db350799402fb741abb2b45bf4a4d310c087f53b79987abd8c": {
+  "b67b4070eddcd230bc9666b73964d9bc921f2e8705e8943978f79b2776b59f88": {
     "describe": {
       "columns": [
         {
@@ -247,10 +237,20 @@
         false
       ],
       "parameters": {
-        "Right": 1
+        "Right": 2
       }
     },
-    "query": "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by v.created desc"
+    "query": "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by v.created desc\n            limit ?\n            "
+  },
+  "b90c377e12874cd809fbcd532aede4f31f838c51605a61e7fc67b7ea85bcd953": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO statement_flags (statement_id, state, categories)\n VALUES (?, ?, ?)"
   },
   "c6a36f90d118160d58cddd64c47aea40fcedd84e97a30a1f1bc62d39bcf52eb8": {
     "describe": {

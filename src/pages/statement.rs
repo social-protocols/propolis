@@ -41,7 +41,7 @@ pub async fn statement_page(
                     (small_statement_vote(user_vote)?)
                 }
             }
-            form form id="form" hx-post="/vote" {
+            form hx-post="/vote" {
                 input type="hidden" value=(statement_id) name="statement_id";
                 div class="flex gap-2 mb-12 mt-3" {
                     button class="text-white bg-green-600 px-4 py-1 rounded" name="vote" value="Yes" { "YES" }
@@ -84,7 +84,7 @@ pub async fn statement_page(
 
 async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, AppError> {
     let history_items = match maybe_user {
-        Some(user) => user.vote_history(pool).await?,
+        Some(user) => user.vote_history(20, pool).await?,
         None => Vec::new(),
     };
 

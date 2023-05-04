@@ -60,11 +60,12 @@ pub async fn new_statement(
                 }
                 textarea
                     x-show="alternative_statement === null"
-                    class="mb-4 dark:bg-slate-700 dark:text-white w-full p-4 border border-1 border-slate-500 dark:border-slate-200 rounded"
+                    class="mb-4 dark:bg-slate-700 dark:text-white w-full p-4 border border-1 border-slate-500 dark:border-slate-200 rounded-lg"
                     rows = "4"
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
                     placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
+                    required
                     minLength="3"
                     hx-validate="true"
                     hx-target="#similar"
@@ -157,5 +158,5 @@ pub async fn create_statement(
         add_followup(target_segment, statement_id, &pool).await?;
     }
 
-    Ok(Redirect::to("/"))
+    Ok(Redirect::to(&format!("/statement/{statement_id}")))
 }

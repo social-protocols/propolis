@@ -43,9 +43,9 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                      }}
                   }},
                   "colors": [
-                    "forestgreen",
-                    "slategrey",
-                    "firebrick"
+                    "\#16a34a",
+                    "\#64748b",
+                    "\#dc2626",
                   ],
                   "dataLabels": {{
                     "enabled": false

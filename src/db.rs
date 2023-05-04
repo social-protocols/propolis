@@ -139,7 +139,7 @@ impl User {
 
         use crate::prediction::prompts::Score;
 
-        let vhist = self.vote_history(pool).await?;
+        let vhist = self.vote_history(1000, pool).await?;
         let mut votes: HashMap<String, i64> = HashMap::new();
         for item in vhist {
             let stmt = Statement {
@@ -200,14 +200,21 @@ impl User {
 
     /// Returns all votes taken by a [User]
     // TODO: just return what's in the vote_history table
-    pub async fn vote_history(&self, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>> {
+    pub async fn vote_history(
+        &self,
+        limit: i32,
+        pool: &SqlitePool,
+    ) -> Result<Vec<VoteHistoryItem>> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
             "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v
             join statements s on s.id = v.statement_id
             where user_id = ? and vote != 0
-            order by v.created desc",
-            self.id
+            order by v.created desc
+            limit ?
+            ",
+            self.id,
+            limit
             )
             .fetch_all(pool).await?)
     }
@@ -329,6 +336,10 @@ pub async fn statement_stats(statement_id: i64, pool: &SqlitePool) -> Result<Sta
         .fetch_one(pool)
         .await.unwrap_or_else(|_| StatementStats::empty()),
     )
+}
+
+pub async fn top_statements(pool: &SqlitePool) -> Result<Vec<Statement>> {
+    Ok(sqlx::query_as::<_,Statement>("select stats.statement_id as id, s.text as text from statement_stats stats join statements s on s.id = stats.statement_id order by polarization desc, polarization asc limit 10").fetch_all(pool).await?)
 }
 
 /// Create db connection & configure it
