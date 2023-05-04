@@ -157,5 +157,5 @@ pub async fn create_statement(
         add_followup(target_segment, statement_id, &pool).await?;
     }
 
-    Ok(Redirect::to("/"))
+    Ok(Redirect::to(&format!("/statement/{statement_id}")))
 }
