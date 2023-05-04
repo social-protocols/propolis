@@ -4,12 +4,17 @@ use crate::structs::User;
 use crate::structs::Vote;
 
 use anyhow::Result;
+
 use axum::response::Redirect;
+use axum::response::Response;
 use axum::{response::IntoResponse, Extension, Form};
 use http::StatusCode;
+use maud::html;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
+
+use super::base::BaseTemplate;
 
 pub async fn next_statement_id(
     existing_user: Option<User>,
@@ -21,23 +26,21 @@ pub async fn next_statement_id(
     })
 }
 
-pub async fn redirect_to_next_statement(
-    existing_user: Option<User>,
-    Extension(pool): Extension<SqlitePool>,
-) -> Result<Redirect, AppError> {
-    let statement_id = next_statement_id(existing_user, Extension(pool)).await?;
-
-    Ok(match statement_id {
-        Some(id) => Redirect::to(format!("/statement/{id}").as_str()),
-        None => Redirect::to("/statement/0"), // TODO
-    })
-}
-
 pub async fn vote(
     existing_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Redirect, AppError> {
-    redirect_to_next_statement(existing_user, Extension(pool)).await
+    base: BaseTemplate,
+) -> Result<Response, AppError> {
+    let statement_id = next_statement_id(existing_user, Extension(pool)).await?;
+
+    Ok(match statement_id {
+        Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
+        None => base
+            .content(html! {
+            "No more statements to vote on."})
+            .render()
+            .into_response(),
+    })
 }
 
 #[derive(Deserialize)]
@@ -62,7 +65,7 @@ pub async fn vote_post(
                 next_statement_id(Some(user), Extension(pool.to_owned())).await?;
             let redirect_url = match next_statement_id {
                 Some(statement_id) => format!("/statement/{statement_id}"),
-                None => "/".to_string(),
+                None => "/vote".to_string(),
             };
 
             Ok((StatusCode::OK, [("HX-Location", redirect_url)]))
