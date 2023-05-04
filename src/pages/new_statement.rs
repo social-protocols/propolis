@@ -65,6 +65,7 @@ pub async fn new_statement(
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
                     placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
+                    required
                     minLength="3"
                     hx-validate="true"
                     hx-target="#similar"
