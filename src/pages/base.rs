@@ -19,7 +19,9 @@ fn base(
 ) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" {
+        // hx-boost makes the navigation faster by making links and forms use AJAX:
+        // https://htmx.org/attributes/hx-boost/
+        html lang="en" hx-boost="true" {
             head {
                 // TODO: link preview
                 meta name="viewport" content="width=device-width, initial-scale=1.0";

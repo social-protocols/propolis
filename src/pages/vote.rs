@@ -35,12 +35,12 @@ pub async fn vote(
                 None => "/".to_string(),
             };
 
-            Ok((StatusCode::OK, [("HX-Redirect", redirect_url)]))
+            Ok((StatusCode::OK, [("HX-Location", redirect_url)]))
         }
         Vote::ItDepends => Ok((
             StatusCode::OK,
             [(
-                "HX-Redirect",
+                "HX-Location",
                 format!("/statement/{}/itdepends", vote_form.statement_id),
             )],
         )),
