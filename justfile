@@ -68,6 +68,6 @@ download-prod-db:
   rm -f data/data.sqlite
   rm -f data/data.sqlite-shm
   rm -f data/data.sqlite-wal
-  flyctl ssh sftp get data/data.sqlite
-  flyctl ssh sftp get data/data.sqlite-shm
-  flyctl ssh sftp get data/data.sqlite-wal
+  flyctl ssh sftp get data/data.sqlite || true
+  flyctl ssh sftp get data/data.sqlite-shm || true
+  flyctl ssh sftp get data/data.sqlite-wal || true
