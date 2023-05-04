@@ -64,7 +64,7 @@ fn base(
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
-            body class="max-w-[800px] mx-auto bg-slate-100 dark:bg-slate-800 dark:text-white" {
+            body class="bg-slate-100 dark:bg-slate-800 dark:text-white" {
                 nav class="px-5 py-3" {
                     ul class="flex gap-6" {
                         li { a href="/" data-testid="nav-home" { "Home" } }
