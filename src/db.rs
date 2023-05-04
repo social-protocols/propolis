@@ -200,7 +200,11 @@ impl User {
 
     /// Returns all votes taken by a [User]
     // TODO: just return what's in the vote_history table
-    pub async fn vote_history(&self, limit: i32, pool: &SqlitePool) -> Result<Vec<VoteHistoryItem>> {
+    pub async fn vote_history(
+        &self,
+        limit: i32,
+        pool: &SqlitePool,
+    ) -> Result<Vec<VoteHistoryItem>> {
         Ok(sqlx::query_as!(
             VoteHistoryItem,
             "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v
