@@ -67,7 +67,7 @@ pub async fn merge_post(
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
 ) -> Result<Markup, AppError> {
-    Ok(match User::from_secret(secret, &pool).await? {
+    Ok(match User::from_secret(secret.as_str(), &pool).await? {
         Some(new_user) => {
             if user.id == new_user.id {
                 return Ok(html! {"Merge aborted: same user"});
@@ -84,7 +84,7 @@ pub async fn merge_post(
                     }
 
                     user.delete(&pool).await?;
-                    change_auth_cookie(new_user.secret, &cookies);
+                    change_auth_cookie(new_user.secret.as_str(), &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
                     html! {"Merge successful"}

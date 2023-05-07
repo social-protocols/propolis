@@ -18,11 +18,11 @@ use super::base::BaseTemplate;
 
 pub async fn next_statement_id(
     existing_user: Option<User>,
-    Extension(pool): Extension<SqlitePool>,
+    pool: &SqlitePool,
 ) -> Result<Option<i64>> {
     Ok(match existing_user {
-        Some(user) => user.next_statement_for_user(&pool).await?,
-        None => random_statement_id(&pool).await?,
+        Some(user) => user.next_statement_for_user(pool).await?,
+        None => random_statement_id(pool).await?,
     })
 }
 
@@ -31,7 +31,7 @@ pub async fn vote(
     Extension(pool): Extension<SqlitePool>,
     base: BaseTemplate,
 ) -> Result<Response, AppError> {
-    let statement_id = next_statement_id(existing_user, Extension(pool)).await?;
+    let statement_id = next_statement_id(existing_user, &pool).await?;
 
     Ok(match statement_id {
         Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
@@ -61,8 +61,7 @@ pub async fn vote_post(
 
     match vote_form.vote {
         Vote::Yes | Vote::No | Vote::Skip => {
-            let next_statement_id =
-                next_statement_id(Some(user), Extension(pool.to_owned())).await?;
+            let next_statement_id = next_statement_id(Some(user), &pool).await?;
             let redirect_url = match next_statement_id {
                 Some(statement_id) => format!("/statement/{statement_id}"),
                 None => "/vote".to_string(),

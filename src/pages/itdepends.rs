@@ -99,7 +99,10 @@ pub async fn itdepends_create(
 
     let alternative_statement_id = match form_data.alternative_statement_id {
         Some(id) => id,
-        None => user.add_statement(form_data.typed_statement, &pool).await?,
+        None => {
+            user.add_statement(form_data.typed_statement.as_str(), &pool)
+                .await?
+        }
     };
 
     add_alternative(form_data.target_id, alternative_statement_id, &pool).await?;

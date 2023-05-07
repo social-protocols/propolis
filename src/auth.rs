@@ -20,13 +20,13 @@ impl User {
     /// If logged in with a secret, will return a [User]
     pub async fn from_cookies(cookies: &Cookies, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(match cookies.get("secret") {
-            Some(cookie) => User::from_secret(cookie.value().to_string(), pool).await?,
+            Some(cookie) => User::from_secret(cookie.value(), pool).await?,
             None => None,
         })
     }
 
     /// returns [User] via secret
-    pub async fn from_secret(secret: String, pool: &SqlitePool) -> Result<Option<Self>> {
+    pub async fn from_secret(secret: &str, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             User,
             "SELECT id, secret from users WHERE secret = ?",
@@ -68,7 +68,7 @@ impl User {
 }
 
 /// Changes the cookie containing the secret to a different value
-pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
+pub fn change_auth_cookie(secret: &str, cookies: &Cookies) {
     if let Some(mut cookie) = cookies.get("secret") {
         // copy old cookie, but also set path, since it may come from e.g. /merge
         cookie.set_value(secret);

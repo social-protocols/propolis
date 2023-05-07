@@ -151,7 +151,10 @@ pub async fn create_statement(
 
     let statement_id = match form_data.alternative_statement_id {
         Some(id) => id,
-        None => user.add_statement(form_data.typed_statement, &pool).await?,
+        None => {
+            user.add_statement(form_data.typed_statement.as_str(), &pool)
+                .await?
+        }
     };
 
     if let Some(target_segment) = target_segment {
