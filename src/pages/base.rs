@@ -61,6 +61,7 @@ fn base(
                 @for file in StaticAsset::iter().filter(|path| path.starts_with("js-defer/")) {
                     script defer src={"/"(file)} {}
                 }
+                // https://github.com/search?q=twind+preflight+apply+lang%3AHTML+&type=code
                 script {
                     r"
                     twind.install({
