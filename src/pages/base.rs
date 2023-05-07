@@ -58,7 +58,7 @@ fn render_base(
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
-            body class="bg-amber-100 dark:bg-[#312400]" {
+            body {
                 nav {
                     ul style="display:flex" {
                         li { a href="/" { "Home" } }
