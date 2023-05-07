@@ -1,14 +1,14 @@
 //! Various structs used all over
 
+use anyhow::anyhow;
+use anyhow::Result;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::error::Error;
-
 /// Representation of a user. Provides various methods to find & update them
-#[derive(Serialize, sqlx::FromRow, Debug)]
+#[derive(Serialize, sqlx::FromRow, Debug, Clone)]
 pub struct User {
     pub id: i64,
     pub secret: String,
@@ -24,10 +24,26 @@ pub struct VoteHistoryItem {
 }
 
 /// Represents a statement
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Serialize, sqlx::FromRow, Clone)]
 pub struct Statement {
     pub id: i64,
     pub text: String,
+}
+
+#[derive(Serialize, sqlx::FromRow, Clone)]
+pub struct SearchResultStatement {
+    pub id: i64,
+    pub text_highlighted: String,
+    pub text_original: String,
+}
+
+impl SearchResultStatement {
+    pub fn statement_highlighted(&self) -> Statement {
+        Statement {
+            id: self.id,
+            text: self.text_highlighted.clone(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Deserialize, Copy, Clone, FromPrimitive)]
@@ -39,8 +55,8 @@ pub enum Vote {
 }
 
 impl Vote {
-    pub fn from(vote: i64) -> Result<Vote, Error> {
-        FromPrimitive::from_i64(vote).ok_or(Error::CustomError("Unknown vote value".to_string()))
+    pub fn from(vote: i64) -> Result<Vote> {
+        FromPrimitive::from_i64(vote).ok_or(anyhow!("Unknown vote value: {}", vote))
     }
 }
 
@@ -79,8 +95,28 @@ pub struct TargetSegment {
     pub voted_no: bool,
 }
 
+#[derive(Clone)]
 pub struct PageMeta {
     pub title: Option<String>,
     pub description: Option<String>,
     pub url: Option<String>,
+}
+
+#[derive(Serialize, sqlx::FromRow, Clone)]
+pub struct StatementPrediction {
+    pub statement_id: i64,
+    pub ai_env: String,
+    pub prompt_name: String,
+    pub prompt_version: i64,
+    pub prompt_result: String,
+    pub completion_tokens: i64,
+    pub prompt_tokens: i64,
+    pub total_tokens: i64,
+    pub created: i64,
+}
+
+impl From<StatementPrediction> for String {
+    fn from(value: StatementPrediction) -> Self {
+        serde_json::to_string_pretty(&value).unwrap_or("<serde_json failure>".to_string())
+    }
 }

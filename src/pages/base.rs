@@ -1,6 +1,8 @@
+use async_trait::async_trait;
+use axum::extract::FromRequestParts;
 use http::HeaderMap;
 use maud::{html, Markup, DOCTYPE};
-use tower_cookies::{Cookie, Cookies};
+use tower_cookies::Cookies;
 
 use crate::{
     structs::{PageMeta, User},
@@ -8,8 +10,7 @@ use crate::{
     StaticAsset,
 };
 
-fn render_base(
-    theme: String,
+fn base(
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
@@ -18,7 +19,9 @@ fn render_base(
 ) -> Markup {
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=(theme) {
+        // hx-boost makes the navigation faster by making links and forms use AJAX:
+        // https://htmx.org/attributes/hx-boost/
+        html lang="en" hx-boost="true" {
             head {
                 // TODO: link preview
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
@@ -44,7 +47,7 @@ fn render_base(
                     @if let Some(url) = page_meta.url {
                         meta property="og:url" content=(url);
                     } @else {
-                        meta property="og:url" content=(base_url(&headers));
+                        meta property="og:url" content=(base_url(headers));
                     }
                 }
 
@@ -55,53 +58,43 @@ fn render_base(
                 @for file in StaticAsset::iter().filter(|path| path.starts_with("js/")) {
                     script src={"/"(file)} {}
                 }
+                @for file in StaticAsset::iter().filter(|path| path.starts_with("js-defer/")) {
+                    script defer src={"/"(file)} {}
+                }
 
                 title { (title.unwrap_or("Propolis".to_string())) }
             }
-            body {
-                nav {
-                    ul style="display:flex" {
-                        li { a href="/" { "Home" } }
-                        li { a href="/new" { "Add Statement" } }
-                        li  style="margin-right: auto" { a href="/subscriptions" { "My Subscriptions" } }
+            body class="bg-slate-100 dark:bg-slate-800 dark:text-white" {
+                nav class="px-5 py-3" {
+                    ul class="flex gap-6" {
+                        li { a href="/" data-testid="nav-home" { "Home" } }
+                        li { a href="/vote" data-testid="nav-home" { "Vote" } }
+                        li { a href="/new" data-testid="nav-add-statement" { "Add Statement" } }
+                        li  class="mr-auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
                         @if let Some(user) = user {
                             li {
-                                span style="margin-right: 0.5em" { "👤" }
-                                (user.secret.chars().take(4).collect::<String>())
+                                a href="/user" class="font-mono" {
+                                    @let user_icon = "👤";
+                                    span class="mr-1" { (user_icon) }
+                                    (user.secret.chars().take(4).collect::<String>())
+                                }
                             }
                         }
-                        li { a href="/options" { "⚙" } }
+                        li {
+                            a href="/options" {
+                                @let cog_icon = "⚙";
+                                (cog_icon)
+                            }
+                        }
                     }
                 }
-                div id="content" {
+                div class="p-5" {
                     (content)
                 }
             }
         }
     }
-}
-
-pub fn base(
-    cookies: Cookies,
-    title: Option<String>,
-    user: &Option<User>,
-    content: Markup,
-    headers: &HeaderMap,
-    page_meta: Option<PageMeta>,
-) -> Markup {
-    let theme = cookies
-        .get("theme")
-        .unwrap_or(Cookie::new("theme", "light"));
-
-    render_base(
-        theme.value().to_string(),
-        title,
-        user,
-        content,
-        &headers,
-        page_meta,
-    )
 }
 
 /// Presents a warning dialog to the user
@@ -112,4 +105,89 @@ pub fn warning_dialog(msg: &str, caption: Option<&str>) -> Markup {
             p { (msg) }
         }
     )
+}
+
+#[derive(Clone)]
+pub struct BaseTemplate {
+    pub user: Option<User>,
+    pub cookies: Cookies,
+    pub headers: HeaderMap,
+    pub title: Option<String>,
+    pub content: Markup,
+    pub page_meta: Option<PageMeta>,
+}
+
+impl BaseTemplate {
+    /// Set the page title
+    pub fn title(mut self, s: &str) -> Self {
+        self.title = Some(s.into());
+        self
+    }
+    /// Set the page content
+    pub fn content(mut self, c: Markup) -> Self {
+        self.content = c;
+        self
+    }
+    /// Set the page meta data
+    pub fn page_meta(mut self, m: PageMeta) -> Self {
+        self.page_meta = Some(m);
+        self
+    }
+    /// Set the page meta data
+    pub fn page_meta_opt(mut self, m: Option<PageMeta>) -> Self {
+        self.page_meta = m;
+        self
+    }
+    /// Render BaseTemplate into markup
+    pub fn render(self) -> Markup {
+        base(
+            self.title,
+            &self.user,
+            self.content,
+            &self.headers,
+            self.page_meta,
+        )
+    }
+}
+
+impl From<BaseTemplate> for Markup {
+    fn from(value: BaseTemplate) -> Self {
+        value.render()
+    }
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for BaseTemplate
+where
+    S: Send + Sync,
+{
+    type Rejection = (http::StatusCode, &'static str);
+
+    async fn from_request_parts(
+        parts: &mut http::request::Parts,
+        _: &S,
+    ) -> Result<Self, Self::Rejection> {
+        use axum::RequestPartsExt;
+        let cookies = parts
+            .extract::<Cookies>()
+            .await
+            .expect("Unable to get cookies");
+        let user = parts
+            .extract::<Option<User>>()
+            .await
+            .expect("Unable to get user");
+        let headers = parts
+            .extract::<HeaderMap>()
+            .await
+            .expect("Unable to get headers");
+
+        Ok(BaseTemplate {
+            user,
+            cookies,
+            headers,
+            title: None,
+            content: html! {},
+            page_meta: None,
+        })
+    }
 }

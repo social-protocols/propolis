@@ -1,47 +1,31 @@
 //! Error handling related code
 
-use axum::response::{IntoResponse, Response};
+use axum::response::IntoResponse;
 use http::StatusCode;
 
-/// Our custom wrapper type for various errors, so we can implement IntoResponse for e.g. sqlx::Error
-#[derive(Debug)]
-pub enum Error {
-    SqlxError(sqlx::Error),
-    IoError(std::io::Error),
-    CustomError(String),
-}
+// Make our own error that wraps `anyhow::Error`.
+pub struct AppError(pub anyhow::Error);
 
-impl From<sqlx::Error> for Error {
-    fn from(err: sqlx::Error) -> Error {
-        Error::SqlxError(err)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::IoError(err)
-    }
-}
-
-impl From<Error> for String {
-    fn from(err: Error) -> String {
-        match err {
-            Error::SqlxError(sqlx_error) => sqlx_error.to_string(),
-            Error::IoError(io_error) => io_error.to_string(),
-            Error::CustomError(msg) => msg,
-        }
-    }
-}
-
-/// Support custom [Error] as an axum Response
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        let error_msg = String::from(self);
-        tracing::error!(error_msg);
+// Tell axum how to convert `AppError` into a response.
+impl IntoResponse for AppError {
+    fn into_response(self) -> axum::response::Response {
+        let msg = self.0.to_string();
+        tracing::error!("{msg}");
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("INTERNAL SERVER ERROR:\n\n{}", error_msg),
+            format!("Something went wrong: {msg}"),
         )
             .into_response()
+    }
+}
+
+// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
+// `Result<_, AppError>`. That way you don't need to do that manually.
+impl<E> From<E> for AppError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
     }
 }

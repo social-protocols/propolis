@@ -25,5 +25,5 @@ pub fn base_url(headers: &HeaderMap) -> String {
         _ => "http",
     };
     let host = headers[HOST].to_str().expect("Unable te get HOST header");
-    format!("{}://{}", proto, host)
+    format!("{proto}://{host}")
 }

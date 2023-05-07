@@ -58,16 +58,48 @@ jobs:
         run: cmp -s <(false) static/css/tailwind.css
 
       - name: Validate sqlx offline mode data
-        run: cargo sqlx prepare --check
+        run: cargo sqlx prepare --check --merged
 
-      - name: Check default build
-        run: cargo check
+      - name: cargo clippy
+        # clippy also includes all warnings from cargo check
+        run: cargo clippy --workspace --all-targets --all-features
 
-      - name: Check feature 'embed_migrations'
-        run: cargo check --features embed_migrations
+      - name: cargo test
+        run: cargo test --workspace --all-targets --all-features
 
-      - name: Run tests
-        run: cargo test
-
-      - name: Check formatting
+      - name: cargo fmt --check
         run: cargo fmt --check
+
+      - name: Start webserver in background
+        run: |
+          cargo build
+          target/debug/propolis &
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install yarn dependencies
+        run: yarn
+      - name: Install Playwright Browsers
+        run: yarn playwright install --with-deps chromium
+      - name: Run Playwright tests
+        run: yarn playwright test
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  deploy:
+      needs: build
+      if: ${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
+      name: Deploy app
+      runs-on: ubuntu-22.04
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      timeout-minutes: 30
+      steps:
+        - uses: actions/checkout@v3
+        - uses: superfly/flyctl-actions/setup-flyctl@master
+        - run: flyctl deploy --local-only

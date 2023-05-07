@@ -1,22 +1,17 @@
-use super::base::{base, warning_dialog};
+use super::base::{warning_dialog, BaseTemplate};
+use crate::error::AppError;
 use crate::structs::User;
-use crate::{error::Error, util::base_url};
+use crate::util::base_url;
 use maud::{html, Markup};
 
-use axum::{response::Redirect, Form};
+use anyhow::Result;
+
 use http::HeaderMap;
-use serde::Deserialize;
-use tower_cookies::{Cookie, Cookies};
 
 use qrcode::render::svg;
 use qrcode::QrCode;
 
 use base64::{engine::general_purpose, Engine as _};
-
-#[derive(Deserialize)]
-pub struct OptionsForm {
-    theme: String,
-}
 
 pub fn qr_code_base64(code: &String) -> String {
     let code = QrCode::new(code.as_bytes()).unwrap();
@@ -24,11 +19,11 @@ pub fn qr_code_base64(code: &String) -> String {
     general_purpose::STANDARD_NO_PAD.encode(code.render::<svg::Color>().build())
 }
 
-fn html(theme: String, merge_url: &str, qr_code: &str) -> Markup {
+fn html(merge_url: &str, qr_code: &str) -> Markup {
     html! {
         fieldset {
             p { "Use this QR Code on another device to switch it to this account:" }
-            img id="qr-code" src=(format!("data:image/svg+xml;base64,{}", qr_code ));
+            img id="qr-code" src=(format!("data:image/svg+xml;base64,{qr_code}"));
             br;
             small {
                 "Or open ";
@@ -36,51 +31,36 @@ fn html(theme: String, merge_url: &str, qr_code: &str) -> Markup {
                 " on your other device"
             }
         }
-        form id="theme-form" method="post" action="/options" _="on test call me.requestSubmit()" {
-            fieldset {
-                label for="theme" { "theme" }
-                select id="theme" name="theme" _="on change send test to #theme-form" {
-                    option value="light" selected[theme == "light"] { "Light" }
-                    option value="dark" selected[theme == "dark"] { "Dark" }
-                }
-            }
-        }
+        // TODO: save theme in localstorage
+        // fieldset {
+        //     label for="theme" { "theme" }
+        //     select id="theme" name="theme" x-on:input="$refs.themeForm.submit()" {
+        //         option value="light" selected[theme == "light"] { "Light" }
+        //         option value="dark" selected[theme == "dark"] { "Dark" }
+        //     }
+        // }
     }
 }
 
 pub async fn options(
     headers: HeaderMap,
     maybe_user: Option<User>,
-    cookies: Cookies,
-) -> Result<Markup, Error> {
-    let title = Some("Options".to_string());
+    base: BaseTemplate,
+) -> Result<Markup, AppError> {
+    let title = "Options";
 
     match maybe_user {
         Some(user) => {
             let merge_url = format!("{}/merge/{}", base_url(&headers), &user.secret);
-            let theme = cookies
-                .get("theme")
-                .map(|c| c.value().to_string())
-                .unwrap_or_else(|| String::from("light"));
-            let content = html(theme, &merge_url, qr_code_base64(&merge_url).as_str());
-            Ok(base(cookies, title, &Some(user), content, &headers, None).into())
+            let content = html(&merge_url, qr_code_base64(&merge_url).as_str());
+            Ok(base.title(title).content(content).into())
         }
-        None => Ok(base(
-            cookies,
-            title,
-            &maybe_user,
-            warning_dialog("Options disabled until you cast your first vote.", None),
-            &headers,
-            None,
-        )),
+        None => Ok(base
+            .title(title)
+            .content(warning_dialog(
+                "Options disabled until you cast your first vote.",
+                None,
+            ))
+            .into()),
     }
-}
-
-pub async fn options_post(
-    cookies: Cookies,
-    Form(options_form): Form<OptionsForm>,
-) -> Result<Redirect, Error> {
-    cookies.add(Cookie::new("theme", options_form.theme));
-
-    Ok(Redirect::to("/options"))
 }

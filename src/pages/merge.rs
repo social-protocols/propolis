@@ -1,10 +1,9 @@
-use super::base::base;
-use crate::auth::change_auth_cookie;
-use crate::error::Error;
+use super::base::BaseTemplate;
+
 use crate::structs::User;
+use crate::{auth::change_auth_cookie, error::AppError};
 
 use axum::{extract::Path, Extension, Form};
-use http::HeaderMap;
 use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
@@ -23,17 +22,22 @@ pub struct MergeForm {
 }
 
 pub async fn merge(
-    user: User,
     Path(secret): Path<String>,
     cookies: Cookies,
     Extension(pool): Extension<SqlitePool>,
-    headers: HeaderMap,
-) -> Result<Markup, Error> {
+    base: BaseTemplate,
+) -> Result<Markup, AppError> {
+    let user = User::get_or_create(&cookies, &pool).await?;
     let num_votes = user.num_votes(&pool).await?;
     let num_statements = user.num_statements(&pool).await?;
 
     let current_secret = user.secret.to_owned();
     let new_secret = secret;
+    if new_secret == current_secret {
+        // TODO: how to use anyhow::ensure! here?
+        return Err(AppError(anyhow::anyhow!("Cannot merge with same secret")));
+    }
+
     let content = html! {
         h1 { "Merge" }
         form hx-post={"/merge/"(new_secret)} {
@@ -53,15 +57,7 @@ pub async fn merge(
         }
     };
 
-    Ok(base(
-        cookies,
-        Some("Merge accounts".to_string()),
-        &Some(user),
-        content,
-        &headers,
-        None,
-    )
-    .into())
+    Ok(base.title("Merge accounts").content(content).into())
 }
 
 pub async fn merge_post(
@@ -70,8 +66,8 @@ pub async fn merge_post(
     Path(secret): Path<String>,
     Extension(pool): Extension<SqlitePool>,
     Form(merge): Form<MergeForm>,
-) -> Result<Markup, Error> {
-    Ok(match User::from_secret(secret, &pool).await? {
+) -> Result<Markup, AppError> {
+    Ok(match User::from_secret(secret.as_str(), &pool).await? {
         Some(new_user) => {
             if user.id == new_user.id {
                 return Ok(html! {"Merge aborted: same user"});
@@ -88,7 +84,7 @@ pub async fn merge_post(
                     }
 
                     user.delete(&pool).await?;
-                    change_auth_cookie(new_user.secret, &cookies);
+                    change_auth_cookie(new_user.secret.as_str(), &cookies);
                     tx.commit().await.expect("Transaction commit failed");
 
                     html! {"Merge successful"}

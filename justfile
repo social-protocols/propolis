@@ -30,7 +30,7 @@ seed:
 
 # Create sqlx-data.json file for sqlx offline mode
 prepare-sqlx-offline-mode:
-	cargo sqlx prepare
+	cargo sqlx prepare --merged
 
 # Run server
 start:
@@ -41,13 +41,15 @@ develop:
   process-compose -f process-compose-dev.yaml --tui=false up
 
 test:
-  cargo watch -cx test
+  cargo watch -cx 'test --workspace --all-targets --all-features'
 
 fix:
+  echo "Make sure no other compilers are running at the same time (e.g. just develop)"
   sqlx migrate run
-  cargo sqlx prepare
+  cargo sqlx prepare --merged
   sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
-  cargo fix --allow-dirty --allow-staged
+  cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
+  cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo fmt
 
 install-fix-hook:
@@ -67,6 +69,6 @@ download-prod-db:
   rm -f data/data.sqlite
   rm -f data/data.sqlite-shm
   rm -f data/data.sqlite-wal
-  flyctl ssh sftp get data/data.sqlite
-  flyctl ssh sftp get data/data.sqlite-shm
-  flyctl ssh sftp get data/data.sqlite-wal
+  flyctl ssh sftp get data/data.sqlite || true
+  flyctl ssh sftp get data/data.sqlite-shm || true
+  flyctl ssh sftp get data/data.sqlite-wal || true

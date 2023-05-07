@@ -1,34 +1,70 @@
+use crate::pages::statement_ui::{
+    small_statement_content, small_statement_piechart, small_statement_vote_fetch,
+};
 use crate::structs::User;
-use crate::{db::random_statement_id, error::Error};
+use crate::{db, error::AppError};
 
-use axum::{response::Redirect, Extension};
+use anyhow::Result;
+use axum::{Extension, Form};
+use maud::{html, Markup};
+use serde::Deserialize;
 use sqlx::SqlitePool;
 
-pub async fn next_statement_id(
-    existing_user: Option<User>,
-    Extension(pool): Extension<SqlitePool>,
-) -> Result<Option<i64>, Error> {
-    Ok(match existing_user {
-        Some(user) => user.next_statement_for_user(&pool).await?,
-        None => random_statement_id(&pool).await?,
-    })
-}
-
-pub async fn redirect_to_next_statement(
-    existing_user: Option<User>,
-    Extension(pool): Extension<SqlitePool>,
-) -> Result<Redirect, Error> {
-    let statement_id = next_statement_id(existing_user, Extension(pool)).await?;
-
-    Ok(match statement_id {
-        Some(id) => Redirect::to(format!("/statement/{}", id).as_str()),
-        None => Redirect::to("/statement/0"), // TODO
-    })
-}
+use super::base::BaseTemplate;
 
 pub async fn index(
-    existing_user: Option<User>,
+    maybe_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
-) -> Result<Redirect, Error> {
-    Ok(redirect_to_next_statement(existing_user, Extension(pool)).await?)
+    base: BaseTemplate,
+) -> Result<Markup, AppError> {
+    let top_statements = db::top_statements(&pool).await?;
+    let content = html! {
+        div class="mb-10 flex justify-center" {
+            input
+                type="text"
+                name="typed_query"
+                placeholder="find statements"
+                class="dark:text-black w-full rounded-full px-7 py-4 border border-1 border-gray-900"
+                minLength="1"
+                hx-validate="true"
+                hx-target="#results"
+                hx-post="/search"
+                hx-trigger="keyup changed delay:100ms, keydown[key=='Enter']"
+                data-testid="create-statement-field"
+                {}
+        }
+        div id="results" {
+            h2 class="mb-4 text-xl" { "Controversial Statements" }
+            @for statement in top_statements.iter() {
+                div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
+                    (small_statement_content(statement, None, true, &maybe_user, &pool).await?)
+                    (small_statement_piechart(statement.id, &pool).await?)
+                }
+            }
+        }
+
+    };
+    Ok(base.title("Propolis").content(content).render())
+}
+
+#[derive(Deserialize)]
+pub struct SearchForm {
+    typed_query: String,
+}
+
+pub async fn search_results(
+    maybe_user: Option<User>,
+    Extension(pool): Extension<SqlitePool>,
+    Form(form): Form<SearchForm>,
+) -> Result<Markup, AppError> {
+    let statements = db::search_statement(form.typed_query.as_str(), &pool).await?;
+    Ok(html! {
+        @for search_result_statement in &statements {
+            div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
+                (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
+                (small_statement_piechart(search_result_statement.id, &pool).await?)
+                (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
+            }
+        }
+    })
 }

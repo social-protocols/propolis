@@ -7,7 +7,8 @@ version: "0.5"
 processes:
   # check can run quickly with short feedback cycles.
   cargo_check:
-    command: cargo watch --quiet --clear --shell 'cargo check --color always 2>&1 && touch .cargo-checked'
+    # clippy also includes all warnings from cargo check
+    command: cargo watch --quiet --clear --shell 'cargo clippy --workspace --all-targets --all-features --color always 2>&1 && touch .cargo-checked'
 
   # once a check was successful, trigger a build that can be started.
   # since the build triggers the run immediately, it can also send a reload signal to browser-sync
@@ -28,7 +29,7 @@ processes:
     #   initial_delay_seconds: 1
     #   period_seconds: 1
     environment:
-      - RUST_LOG=warn
+      - RUST_LOG=info,sqlx::query=warn,propolis=debug
       # - RUST_LOG=sqlx::query=info,tower_http=trace
     command: |
       touch .cargo-built

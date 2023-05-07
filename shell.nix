@@ -8,8 +8,10 @@ in pkgs.mkShell {
   buildInputs = with pkgs; [ 
     cargo
     cargo-watch
+    clippy
     direnv
     just
+    jq
     rustfmt
     rustc
     rust-analyzer # for language server
@@ -17,6 +19,10 @@ in pkgs.mkShell {
     sqlite-interactive
     nodePackages.browser-sync # dev hot reloading
     process-compose # orchestrate non-containerized processes
+
+    # required to build openssl-sys, which openai uses
+    pkg-config
+    openssl
 
     # http benchmarking
     wrk

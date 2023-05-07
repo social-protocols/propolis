@@ -1,5 +1,6 @@
 //! Authentication & user management
 
+use anyhow::Result;
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::StatusCode;
@@ -8,22 +9,24 @@ use http::request::Parts;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use sqlx::SqlitePool;
+use tower_cookies::cookie::time::Duration;
 use tower_cookies::{Cookie, Cookies};
 
-use crate::error::Error;
 use crate::structs::User;
+
+const COOKIE_MAX_AGE: Duration = Duration::days(10 * 365);
 
 impl User {
     /// If logged in with a secret, will return a [User]
-    pub async fn from_cookies(cookies: &Cookies, pool: &SqlitePool) -> Result<Option<Self>, Error> {
+    pub async fn from_cookies(cookies: &Cookies, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(match cookies.get("secret") {
-            Some(cookie) => User::from_secret(cookie.value().to_string(), pool).await?,
+            Some(cookie) => User::from_secret(cookie.value(), pool).await?,
             None => None,
         })
     }
 
     /// returns [User] via secret
-    pub async fn from_secret(secret: String, pool: &SqlitePool) -> Result<Option<Self>, Error> {
+    pub async fn from_secret(secret: &str, pool: &SqlitePool) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             User,
             "SELECT id, secret from users WHERE secret = ?",
@@ -34,14 +37,17 @@ impl User {
     }
 
     /// returns logged in [User] or creates a new one and returns that
-    pub async fn get_or_create(cookies: &Cookies, pool: &SqlitePool) -> Result<User, Error> {
+    pub async fn get_or_create(cookies: &Cookies, pool: &SqlitePool) -> Result<User> {
         let existing_user: Option<User> = User::from_cookies(cookies, pool).await?;
 
         Ok(match existing_user {
             Some(user) => user,
             None => {
                 let user = User::create(pool).await?;
-                cookies.add(Cookie::new("secret", user.secret.to_owned()));
+                let cookie = Cookie::build("secret", user.secret.to_owned())
+                    .max_age(COOKIE_MAX_AGE)
+                    .finish();
+                cookies.add(cookie);
 
                 user
             }
@@ -49,7 +55,7 @@ impl User {
     }
 
     /// Creates a new [User] inside the database and return it
-    async fn create(pool: &SqlitePool) -> Result<User, Error> {
+    pub async fn create(pool: &SqlitePool) -> Result<User> {
         let secret = generate_secret();
         let user =
             sqlx::query_as::<_, User>("INSERT INTO users (secret) VALUES (?) RETURNING id, secret")
@@ -62,16 +68,13 @@ impl User {
 }
 
 /// Changes the cookie containing the secret to a different value
-pub fn change_auth_cookie(secret: String, cookies: &Cookies) {
-    match cookies.get("secret") {
-        Some(mut cookie) => {
-            // copy old cookie, but also set path, since it may come from e.g. /merge
-            cookie.set_value(secret);
-            cookie.set_path("/");
-            cookies.add(cookie.into_owned());
-        }
-
-        None => {}
+pub fn change_auth_cookie(secret: &str, cookies: &Cookies) {
+    if let Some(mut cookie) = cookies.get("secret") {
+        // copy old cookie, but also set path, since it may come from e.g. /merge
+        cookie.set_value(secret);
+        cookie.set_path("/");
+        cookie.set_max_age(COOKIE_MAX_AGE);
+        cookies.add(cookie.into_owned());
     }
 }
 

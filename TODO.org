@@ -7,6 +7,95 @@
   - but what about the votes that I have taken. How can I delete them? If we do
     not provide a simple button, we might not conform to european standards and
     get into trouble. A simple deletion of the cookie might suffice though.
+** TODO Statement category prediction
+*** DONE [10/10] M1
+CLOSED: [2023-04-05 Mi 20:16]
+- [X] Simple OpenAI integration
+- [X] Create API to write versioned GPT prompts
+- [X] Create endpoint to get GPT-data for a statement
+- [X] DB caching
+  - [X] Create DB migration with new table for GPT-data
+  - [X] Cache tokens used
+- [X] make prediction toggleable via feature flag
+- [X] Get rid of all =.unwrap()/.expect()= locations
+- [X] Write a combined predictor
+- [X] Add political spectrum/ideology categorization
+  - [X] Determine ideology: environmentalist, capitalist, etc.
+  - [X] multi statement predictor
+    - [X] do not store CSV header row in table
+    - [X] restore data as a struct
+  - [X] Parse result into a rust struct of known ideologies to work with them
+- [X] Show total tokens & costs on endpoint
+- [X] Create async process for filling DB with GPT-data
+  - [X] Run loop to process statements in background
+  - [X] Add token based rate-limiter for predictions
+  - [X] multi statement prediction...
+    - [X] Predict more than one statement at the same time
+    - [X] adjust prediction::run to accept several statements
+*** TODO [0/3] M2
+**** TODO [0/7] Core
+1. [-] [1/4] Low-hanging-fruit...
+   1. [X] rate limiter configuration via environment / cmdline args
+   2. [ ] use triple quotes on user input
+   3. [ ] limit statement length
+   4. [ ] Add gpt request response time to table
+2. [ ] [0/3] Storage Backend...
+   1. [ ] Support reading of old versions
+   2. [ ] Have reading from cache & writing to cache as Trait of prompt result type
+   3. [ ] Add SQLite support for vector embeddings
+3. [ ] [0/4] Compute embeddings for...
+   - [ ] Anything: support embeddings for any kind of String?
+   - [ ] Statements
+   - [ ] Tags: to find similar tags
+   - [ ] Ideologies: to find similar ideologies ⇒ is there enough variance to warrant this though?
+4. [ ] [0/2] Statement prediction queue...
+   1. [ ] Queue statements into a prediction queue on viewing or creating them
+   2. [ ] Use view count as order by clause when getting them out of the queue
+5. [ ] Statement blacklisting
+   1. [ ] Add failure counter and blacklist statement when failed too often
+6. [-] [2/3] OpenAI Moderation API...
+   1. [X] Figure out: just statements or entire prompt? ⇒ sending entire prompt
+   2. [X] Use moderation api to precheck
+   3. [-] Blacklist in case of denied
+      1. [X] New table =flagged_statements=
+      2. [ ] Re-try those statements individually that were of a batch that was flagged
+7. [-] [5/6] Multi API key support...
+   1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
+   2. [X] use random key
+   3. [X] new table: =api_keys= for api keys
+   4. [X] store used API key =id= with every cached result
+   5. [X] Write per-key token statistics into DB
+   6. [ ] use API key which had fewest used tokens in last N days
+**** TODO [1/5] UI
+1. [X] Show tags on subscriptions page
+2. [ ] Make tags clickable & show similar tags
+   - Requires embeddings first
+3. [ ] own table for ideologies?
+4. [ ] User page
+   1. [ ] Show ideologies voted for with counter on user overview page
+   2. [ ] Statistics
+      1. [ ] Radar chart on most common ideologies
+      2. [ ] ideologies on a one dimensional scale: e.g. liberalist vs socialist
+5. [ ] Comparison page against a different user with respect to ideologies / bfp traits
+**** TODO [2/4] Refactorings
+- [X] [2/2] Utils crate
+  - [X] Create a =propolis-util= crate to store utility fns
+  - [X] Move: CSV data preprocessing fn (see statement_meta handler)
+- [X] =base= should be retrievable via an axum extension / injection
+- [ ] [0/3] Restructure code
+  - [ ] valuetypes into =propolis-datas= crate
+  - [ ] sqlite specific code into own =sqlite.rs= file based on traits
+  - [ ] prediction specific code into =propolis-predictions=
+- [ ] =promptineer= crate with generic prompt/openai structs & traits
+* Experiments
+** DONE Try out mold
+CLOSED: [2023-04-08 Sa 06:23]
+Put this into =shellHook=
+#+begin_src sh
+export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=${pkgs.clang_15}/bin/clang
+export RUSTFLAGS="-C link-arg=-fuse-ld=${pkgs.mold}/bin/mold"
+#+end_src
+No significant speed gains during compilation however.
 * UI
 ** DONE Center stuff
 CLOSED: [2023-02-21 Di 19:55]
