@@ -1,3 +1,4 @@
+mod api;
 mod auth;
 mod db;
 mod error;
@@ -22,6 +23,7 @@ use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
 
 use rust_embed::RustEmbed;
+
 use tower_http::compression::CompressionLayer;
 
 use axum::{
@@ -56,6 +58,7 @@ struct StaticAsset;
 async fn main() {
     let opts = ProgramOpts::parse();
     let mut sqlite_pool = setup_db(&opts.database).await;
+    let sqlite_pool_api = sqlite_pool.clone(); // TODO: is there a way to just reuse the same pool?
 
     // Setup tracing
     tracing_subscriber::registry()
@@ -98,10 +101,17 @@ async fn main() {
         .layer(CompressionLayer::new())
         .fallback_service(get(not_found));
 
+    let apiv0 = Router::new()
+        .route("/user/create", post(api::create_user))
+        .route("/next_statement", get(api::next_statement))
+        .route("/statement/:id/vote", post(api::statement_vote))
+        .layer(Extension(sqlite_pool_api));
+
     let prediction_runner = prediction::runner::run(opts.prediction, &mut sqlite_pool);
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("listening on {}", addr);
-    let axum_server = axum::Server::bind(&addr).serve(app.into_make_service());
+    let axum_server =
+        axum::Server::bind(&addr).serve(app.nest("/api/v0", apiv0).into_make_service());
 
     let (_, axum_result) = futures::future::join(prediction_runner, axum_server).await;
     axum_result.unwrap();
