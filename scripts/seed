@@ -1,55 +1,71 @@
 #!/usr/bin/env bash
 set -e
 
+# Prompt: 
+# 1. What were the 10 most controversially worldwide discussed topics of 2022?
+# 2. For each of these topics, give 5 simple yes-no questions which ask a opinion. Each question should have only one core point and include the context. Give JSON of the following schema: ```json {"text": "Is climate change caused by humans?"}```
 
 statements=$(cat <<-END
-{"context": "Immigration", "text": "We need to enforce our immigration laws and secure our borders to protect our country."}
-{"context": "Immigration", "text": "Separating families at the border is cruel and inhumane, and we need to stop this immediately."}
-{"context": "Immigration", "text": "Immigrants contribute to our economy and enrich our communities, and we need to welcome them with open arms."}
-{"context": "Immigration", "text": "The process for legal immigration is too complicated and needs to be reformed."}
-{"context": "Immigration", "text": "We need to find a solution for the Dreamers, who were brought to the US as children and have grown up here."}
-{"context": "Immigration", "text": "We need to secure our borders and enforce strict immigration laws to protect our citizens."}
-{"context": "Immigration", "text": "Refugees are fleeing war and persecution, and we have a moral obligation to help them."}
-{"context": "Immigration", "text": "Immigrants are taking jobs away from American workers and contributing to crime rates."}
-{"context": "Immigration", "text": "The immigration system is broken and needs a complete overhaul."}
-{"context": "US China trade war", "text": "The US-China trade war is necessary to protect American businesses and jobs."}
-{"context": "US China trade war", "text": "The trade war is causing harm to both the US and China and needs to end."}
-{"context": "US China trade war", "text": "The US is losing its economic dominance and needs to take aggressive action against China."}
-{"context": "US China trade war", "text": "The global economy is at risk of recession due to the trade war and uncertainty it creates."}
-{"context": "US China trade war", "text": "Free trade and open markets are essential to global economic growth and stability."}
-{"context": "Brexit", "text": "Brexit is necessary for the UK to regain control of its economy and borders."}
-{"context": "Brexit", "text": "The UK will suffer greatly from leaving the EU and should reconsider its decision."}
-{"context": "Brexit", "text": "Brexit will lead to the eventual breakup of the EU and the collapse of the European economy."}
-{"context": "Brexit", "text": "The EU needs to reform its policies to prevent other countries from leaving like the UK."}
-{"context": "Brexit", "text": "Brexit will lead to more economic opportunities for the UK and strengthen its global position."}
-{"context": "Hong kong protests", "text": "The protests in Hong Kong are fighting for democracy and freedom from Chinese influence."}
-{"context": "Hong kong protests", "text": "China is violating human rights and suppressing the rights of Hong Kong citizens."}
-{"context": "Hong kong protests", "text": "The protesters are causing chaos and damaging the economy of Hong Kong."}
-{"context": "Hong kong protests", "text": "China has the right to protect its sovereignty and maintain control over Hong Kong."}
-{"context": "Hong kong protests", "text": "The protests in Hong Kong are a part of a larger global movement for democracy and human rights."}
-{"context": "Gun control", "text": "We need stricter gun control laws to prevent mass shootings and reduce gun violence."}
-{"context": "Gun control", "text": "The Second Amendment guarantees the right to bear arms, and any attempts to restrict that right are unconstitutional."}
-{"context": "Gun control", "text": "The real problem is mental health, not guns. We need to focus on identifying and treating mental illness to prevent gun violence."}
-{"context": "Gun control", "text": "Guns don't kill people, people kill people. We need to enforce existing laws to keep guns out of the hands of criminals."}
-{"context": "Gun control", "text": "Arming teachers and increasing security in schools is the best way to protect our children from gun violence."}
-{"context": "#MeToo Movement", "text": "Victims of sexual harassment and assault need to be believed and supported, and perpetrators need to be held accountable for their actions."}
-{"context": "#MeToo Movement", "text": "False accusations of sexual harassment and assault can ruin people's lives, and we need to make sure that due process is followed in all cases."}
-{"context": "#MeToo Movement", "text": "The #MeToo movement is a witch hunt that has gone too far, and men are being unfairly targeted and punished."}
-{"context": "#MeToo Movement", "text": "Women need to take responsibility for their own actions and not play the victim, and men need to be able to flirt and pursue romantic relationships without fear of being accused of harassment."}
-{"context": "#MeToo Movement", "text": "The #MeToo movement has started an important conversation about power dynamics and gender inequality in our society."}
-{"context": "Climate Change", "text": "Climate change is real and caused by human activity, and we need to take urgent action to reduce carbon emissions and mitigate its effects."}
-{"context": "Climate Change", "text": "The science behind climate change is inconclusive, and we don't need to make drastic changes to our economy and way of life to address it."}
-{"context": "Climate Change", "text": "The Paris climate agreement is a flawed and ineffective treaty that unfairly burdens the US while letting other countries off the hook."}
-{"context": "Climate Change", "text": "Renewable energy sources like wind and solar are the future, and we need to invest in them to reduce our dependence on fossil fuels."}
-{"context": "Climate Change", "text": "Climate change is a global problem that requires a coordinated, international response."}
-{"context": "Climate Change", "text": "The devastating effects of climate change are happening right now and we need to take immediate action."}
-{"context": "Climate Change", "text": "We need to reduce our carbon footprint and transition to renewable energy sources to save the planet."}
-{"context": "Climate Change", "text": "Climate change is a hoax created by the government to impose more regulations on businesses."}
-{"context": "Climate Change", "text": "Environmental policies are hurting the economy and job growth."}
-{"context": "Climate Change", "text": "Individual actions, like recycling and reducing plastic use, are not enough to combat climate change."}
-{"context": "Social Media", "text": "Social media platforms like Facebook and Twitter have too much power and influence over our lives, and we need to regulate them more closely."}
-{"context": "Social Media", "text": "The problem with fake news and disinformation on social media is not the platforms themselves, but the users who spread it."}
-{"context": "Social Media", "text": "Social media has democratized information and given a voice to marginalized communities, and we need to protect this freedom of expression."}
+
+{"text": "Should governments impose strict lockdowns to control the spread of COVID-19?"}
+{"text": "Do you believe the COVID-19 pandemic was handled effectively by global leaders?"}
+{"text": "Should schools be closed during COVID-19 outbreaks?"}
+{"text": "Should wearing masks in public spaces be mandatory during the pandemic?"}
+{"text": "Is it fair to prioritize certain groups for vaccination based on age or profession?"}
+
+{"text": "Do you believe COVID-19 vaccines are safe and effective?"}
+{"text": "Should COVID-19 vaccinations be mandatory for healthcare workers?"}
+{"text": "Is it ethical to require a vaccine passport for international travel?"}
+{"text": "Should governments provide incentives to encourage vaccination?"}
+{"text": "Do you support the idea of vaccine mandates for attending large events or gatherings?"}
+
+{"text": "Is climate change caused by human activities?"}
+{"text": "Should governments invest more in renewable energy sources to combat climate change?"}
+{"text": "Do you believe individual actions can make a significant impact on climate change?"}
+{"text": "Should countries with higher emissions take more responsibility for climate change mitigation?"}
+{"text": "Is it necessary for governments to impose carbon taxes on businesses to reduce emissions?"}
+
+{"text": "Do you believe systemic racism exists in society?"}
+{"text": "Should police departments be defunded and resources redirected to social programs?"}
+{"text": "Is affirmative action necessary to address historical inequalities?"}
+{"text": "Do you think the Black Lives Matter movement has had a positive impact on society?"}
+{"text": "Should monuments and statues honoring controversial historical figures be removed?"}
+
+{"text": "Is social media responsible for the spread of misinformation and conspiracy theories?"}
+{"text": "Should governments regulate social media platforms to combat misinformation?"}
+{"text": "Do you believe mainstream media is biased and contributes to political polarization?"}
+{"text": "Is it the responsibility of individuals to fact-check information before sharing it on social media?"}
+{"text": "Should people who spread misinformation face legal consequences?"}
+
+{"text": "Do you believe cryptocurrencies are a legitimate form of currency?"}
+{"text": "Should governments regulate cryptocurrencies more strictly?"}
+{"text": "Is the rise of meme stocks like GameStop a sign of market manipulation?"}
+{"text": "Do you think cryptocurrencies contribute to environmental damage due to energy consumption?"}
+{"text": "Should central banks create their own digital currencies to compete with cryptocurrencies?"}
+
+{"text": "Do you believe Big Tech companies have too much power and influence?"}
+{"text": "Should governments break up Big Tech companies to promote competition?"}
+{"text": "Is it the responsibility of tech companies to protect user data and privacy?"}
+{"text": "Do you think social media platforms should have the right to ban users for violating their terms of service?"}
+{"text": "Should governments regulate online content to prevent the spread of harmful information?"}
+
+{"text": "Do you believe China's growing influence is a threat to global stability?"}
+{"text": "Should countries boycott the 2022 Beijing Winter Olympics due to China's human rights record?"}
+{"text": "Is it necessary for Western countries to form alliances to counter China's influence?"}
+{"text": "Do you think China should be held accountable for its initial handling of the COVID-19 outbreak?"}
+{"text": "Should countries impose sanctions on China for its treatment of Uyghurs in Xinjiang?"}
+
+{"text": "Do you support the use of economic sanctions against the Myanmar military regime?"}
+{"text": "Should the international community intervene militarily to restore democracy in Myanmar?"}
+{"text": "Do you believe the Association of Southeast Asian Nations (ASEAN) should play a bigger role in resolving the Myanmar crisis?"}
+{"text": "Is it the responsibility of the United Nations to take action against the Myanmar coup?"}
+{"text": "Should countries offer asylum to Myanmar citizens fleeing the military regime?"}
+
+{"text": "Do you support a two-state solution to the Israeli-Palestinian conflict?"}
+{"text": "Is the use of military force by Israel against Hamas justified?"}
+{"text": "Should countries recognize Palestine as an independent state?"}
+{"text": "Do you believe the international community is doing enough to address the Israeli-Palestinian conflict?"}
+{"text": "Is it the responsibility of the United States to act as a mediator in the Israeli-Palestinian conflict?"}
 END
 )
 
