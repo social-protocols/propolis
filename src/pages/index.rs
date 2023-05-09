@@ -23,7 +23,7 @@ pub async fn index(
             input
                 type="text"
                 name="typed_query"
-                placeholder="find statements"
+                placeholder="🔍 Find Questions"
                 class="dark:text-black w-full rounded-full px-7 py-4 border border-1 border-gray-900"
                 minLength="1"
                 hx-validate="true"
@@ -34,7 +34,7 @@ pub async fn index(
                 {}
         }
         div id="results" {
-            h2 class="mb-4 text-xl" { "Controversial Statements" }
+            h2 class="mb-4 text-xl" { "Controversial Questions" }
             @for statement in top_statements.iter() {
                 div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
                     (small_statement_content(statement, None, true, &maybe_user, &pool).await?)

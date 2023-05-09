@@ -42,7 +42,7 @@ pub async fn next_statement(
     let statement_id = user
         .next_statement_for_user(&pool)
         .await?
-        .ok_or(anyhow!("No more statements"))?;
+        .ok_or(anyhow!("No more questions"))?;
     let statement = get_statement(statement_id, &pool).await?;
     Ok(Json(ApiStatement {
         id: statement.id,

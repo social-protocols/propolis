@@ -46,13 +46,17 @@ pub async fn new_statement(
     let content = html! {
         div x-data="{ typed_statement: '', alternative_statement: null }" {
             form method="post" action="/create" {
-                h2 class="text-xl mb-4" { "Create new statement" }
-                div class="mb-2" { "Ask if people agree with your statement. Make sure to add the full context, so that this statement can be understood alone." }
+                h2 class="text-xl mb-4" { "Ask Question" }
+                div { "A good question..." }
+                ul class="mb-2 list-disc list-inside" {
+                    li { "can only be answered with YES or NO" }
+                    li { "can be understood without additional context" }
+                }
                 template x-if="alternative_statement !== null" {
                     div {
                         input type="hidden" name="alternative_statement_id" x-model="alternative_statement.id";
                         div class="mb-2 flex" {
-                            "Selected existing statement:"
+                            "Selected existing question:"
                             button type="button" class="ml-auto px-4 py-1" x-on:click="alternative_statement = null" { "Cancel" };
                         }
                         div class="mb-5 p-4 rounded-lg shadow bg-white dark:bg-slate-700 flex" x-text="alternative_statement.text" {}
@@ -64,7 +68,7 @@ pub async fn new_statement(
                     rows = "4"
                     name="typed_statement"
                     x-model="typed_statement" // TODO: x-model.fill https://github.com/lambda-fairy/maud/issues/240
-                    placeholder="Careful, this is a new statement to be understood independently. It's not a reply."
+                    placeholder="Is climate change caused by human activities?"
                     required
                     minLength="3"
                     hx-validate="true"
@@ -86,7 +90,7 @@ pub async fn new_statement(
                 // }
                 @if let Some(ref statement) = target_statement {
                     input type="hidden" name="target_id" value=(statement.id);
-                    div class="mb-2" {
+                    div class="mb-4" {
                         "Shown to people who voted:"
                         label class="px-5" for="target_yes" {
                             input type="checkbox" name="target_yes" id="target_yes"  value="true" checked[url_query.target_yes == Some(true) || url_query.target_all == Some(true)];
@@ -103,13 +107,13 @@ pub async fn new_statement(
                     }
                 }
                 div class="flex justify-end" {
-                    button data-testid="create-statement-submit" class="text-white bg-slate-500 px-4 py-1 rounded" { "Add Statement" }
+                    button data-testid="create-statement-submit" class="text-white bg-slate-500 px-4 py-1 rounded" { "Submit" }
                 }
             }
             div id="similar" {}
         }
     };
-    Ok(base.title("New statement").content(content).into())
+    Ok(base.title("Ask Question").content(content).into())
 }
 
 pub async fn new_statement_completions(

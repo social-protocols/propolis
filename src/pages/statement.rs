@@ -29,9 +29,6 @@ pub async fn statement_page(
     };
     let content = html! {
         @if let Some(statement) = &statement {
-            div class="pb-2" {
-                "Do you agree with this statement?"
-            }
             div data-testid="current-statement" class="rounded-lg shadow bg-white dark:bg-slate-700 flex " {
                 div data-testid="statement-text" class="w-full text-xl p-6" {
                     (statement.text)
@@ -69,7 +66,7 @@ pub async fn statement_page(
                 None => (history(&maybe_user, &pool).await?)
             }
         } @else {
-            div { "Statement not found." }
+            div { "Question not found." }
         }
     };
 

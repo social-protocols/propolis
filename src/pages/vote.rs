@@ -37,7 +37,7 @@ pub async fn vote(
         Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
         None => base
             .content(html! {
-            "No more statements to vote on."})
+            "No more questions to vote on."})
             .render()
             .into_response(),
     })
