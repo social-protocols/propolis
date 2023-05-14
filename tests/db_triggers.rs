@@ -578,3 +578,50 @@ async fn followup_updated_no_voters_to_queue(pool: SqlitePool) -> sqlx::Result<(
 
     Ok(())
 }
+
+// Full Text Search
+#[sqlx::test]
+async fn maintain_statement_full_text_search_index(pool: SqlitePool) -> sqlx::Result<()> {
+    // empty
+    let results = sqlx::query("select id, text from statements_fts where text match 'flat'")
+        .fetch_all(&pool)
+        .await?;
+    assert_eq!(results.len(), 0);
+
+    // insert
+    sqlx::query!("insert into statements(id, text) values (2, 'The world is flat.')")
+        .execute(&pool)
+        .await?;
+
+    let results = sqlx::query("select id, text from statements_fts where text match 'flat'")
+        .fetch_all(&pool)
+        .await?;
+    assert_eq!(results.len(), 1);
+
+    // update
+    sqlx::query!("update statements set text = 'The world is round.' where id = 2")
+        .execute(&pool)
+        .await?;
+
+    let count = sqlx::query_scalar!("select count(*) from statements_fts where text match 'flat'")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(count, 0);
+
+    let count = sqlx::query_scalar!("select count(*) from statements_fts where text match 'round'")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(count, 1);
+
+    // delete
+    sqlx::query!("delete from statements where id = 2")
+        .execute(&pool)
+        .await?;
+
+    let count = sqlx::query_scalar!("select count(*) from statements_fts where text match 'round'")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(count, 0);
+
+    Ok(())
+}

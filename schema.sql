@@ -82,11 +82,6 @@ BEGIN
   -- update search index
   INSERT INTO statements_fts (id, text) VALUES (new.id, new.text);
 END;
-CREATE TRIGGER statements_ad AFTER DELETE ON statements
-BEGIN
-  -- update search index
-  INSERT INTO statements_fts (statements_fts, id, text) VALUES ('delete', old.id, old.text);
-END;
 CREATE TRIGGER vote_history_ai AFTER INSERT ON vote_history
 BEGIN
     -- update stats
@@ -253,3 +248,12 @@ CREATE TABLE alternatives (
   alternative_id integer not null references statements (id) on delete cascade on update cascade,
   primary key (statement_id, alternative_id)
 );
+CREATE TRIGGER statements_ad AFTER DELETE ON statements BEGIN
+  -- update search index
+  DELETE FROM statements_fts WHERE id = old.id;
+END;
+CREATE TRIGGER statements_au AFTER UPDATE ON statements BEGIN
+  -- update search index
+  DELETE FROM statements_fts WHERE id = old.id;
+  insert into statements_fts(id, text) values (new.id, new.text);
+END;
