@@ -1,8 +1,7 @@
 extern crate cmake;
 use cmake::Config;
 
-fn main()
-{
+fn main() {
     let dst = Config::new("sqlite-vector")
         .build_target("sqlite-vector")
         .build();

@@ -26,11 +26,13 @@ impl Embedding {
         prompt_tokens: i64,
         api_key_id: i64,
     ) -> anyhow::Result<Embedding> {
-        store.store(&Embedding {
-            statement_id,
-            data,
-            prompt_tokens,
-            api_key_id,
-        }).await
+        store
+            .store(&Embedding {
+                statement_id,
+                data,
+                prompt_tokens,
+                api_key_id,
+            })
+            .await
     }
 }

@@ -226,7 +226,7 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         });
 
         let embed_stmts = match selector.next_for_embedding(pool).await {
-            Ok(stmts) if stmts.len() > 0 => Some(stmts),
+            Ok(stmts) if !stmts.is_empty() => Some(stmts),
             Ok(_) => None,
             Err(err) => {
                 error!("Unable to select next statements for embedding: {:?}", err);
@@ -236,7 +236,7 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
         // short-circuit loop in case no data
         if let (None, None) = (&prompt, &embed_stmts) {
-            continue
+            continue;
         }
 
         // select key

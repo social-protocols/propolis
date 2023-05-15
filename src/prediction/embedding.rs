@@ -40,7 +40,7 @@ impl<'a, E: AsEmbeddingEnv> EmbeddingsRunner<'a, E> {
     ) -> anyhow::Result<(Vec<Embedding>, u32)> {
         self.token_rate_limiter.block_until_ok().await;
         self.api_calls_rate_limiter.block_until_ok().await;
-        self.api_calls_rate_limiter.add(1 as f64);
+        self.api_calls_rate_limiter.add(1_f64);
 
         let response = self
             .env

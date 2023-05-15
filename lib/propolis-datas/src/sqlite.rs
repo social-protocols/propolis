@@ -133,7 +133,8 @@ WHERE statement_id = ?",
         .await?;
         Ok(row.map(|row| Embedding {
             statement_id: row.try_get(0).expect("No id"),
-            data: serde_json::from_str(row.try_get(1).expect("No data")).expect("Unable to parse data as json"),
+            data: serde_json::from_str(row.try_get(1).expect("No data"))
+                .expect("Unable to parse data as json"),
             prompt_tokens: row.try_get(2).expect("No prompt_tokens"),
             api_key_id: row.try_get(3).expect("No api key"),
         }))
