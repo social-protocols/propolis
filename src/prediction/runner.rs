@@ -290,26 +290,23 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
                 }
             };
 
-            match embeddings {
-                Some((embeddings, total_tokens)) => {
-                    for (i, embedding) in embeddings.iter().enumerate() {
-                        match Embedding::create(
-                            &mut pool2,
-                            embed_stmts[i].id,
-                            embedding.values.clone(),
-                            total_tokens.into(),
-                            api_key.id,
-                        )
-                        .await
-                        {
-                            Ok(_) => {}
-                            Err(err) => {
-                                error!("storing of embedding failed: {:?}", err);
-                            }
+            if let Some((embeddings, total_tokens)) = embeddings {
+                for (i, embedding) in embeddings.iter().enumerate() {
+                    match Embedding::create(
+                        &mut pool2,
+                        embed_stmts[i].id,
+                        embedding.values.clone(),
+                        total_tokens.into(),
+                        api_key.id,
+                    )
+                    .await
+                    {
+                        Ok(_) => {}
+                        Err(err) => {
+                            error!("storing of embedding failed: {:?}", err);
                         }
                     }
                 }
-                None => {}
             }
         }
     }
