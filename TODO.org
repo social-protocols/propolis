@@ -69,15 +69,15 @@ CLOSED: [2023-04-05 Mi 20:16]
       2. [X] Re-try those statements individually that were of a batch that was flagged
    4. [ ] Delete from table =statement_flags= when successful
 
-8. [-] [5/7] Multi API key support...
+8. [-] [6/7] Multi API key support...
    1. [X] support multiple API keys via =OPENAI_API_KEYS= via =:= delimiter
    2. [X] use random key
    3. [X] new table: =api_keys= for api keys
    4. [X] store used API key =id= with every cached result
    5. [X] Write per-key token statistics into DB
    6. [ ] use API key which had fewest used tokens in last N days
-   7. [ ] Use OPENAI_API_KEY_N instead of KEYS to better support fly.io ui
-      1. [ ] probably don't try to add this to clap, but just look for matching env vars
+   7. [X] Use OPENAI_API_KEY_N instead of KEYS to better support fly.io ui
+      1. [X] probably don't try to add this to clap, but just look for matching env vars
 **** TODO [1/5] UI
 1. [X] Show tags on subscriptions page
 2. [ ] Make tags clickable & show similar tags
