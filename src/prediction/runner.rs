@@ -140,14 +140,28 @@ pub async fn update_failing_statement_flags(
 
 /// Used to select next key to use for requests
 pub struct ApiKeySelector {
+    /// Mapping of raw key to ApiKey instance
     pub keys: HashMap<String, ApiKey>,
 }
 
 impl ApiKeySelector {
+    /// Collect additional environment keys of form OPENAI_API_KEY_n
+    /// Tries n ∈ {0, ..} until the first env var that can't be found
+    fn collect_numbered_openai_env_keys() -> Vec<String> {
+        let mut result: Vec<String> = vec![];
+        let mut n = 0;
+        while let Ok(raw_key) = std::env::var(format!("OPENAI_API_KEY_{n}")) {
+            result.push(raw_key);
+            n += 1;
+        }
+        result
+    }
+
     /// Create an instance, creating keys in the DB (for stats only) if necessary
     pub async fn create(opts: &PredictionOpts, pool: &mut SqlitePool) -> anyhow::Result<Self> {
         let mut keys: HashMap<String, ApiKey> = HashMap::new();
         let mut raw_keys: Vec<String> = opts.openai_api_keys.to_owned();
+        raw_keys.append(Self::collect_numbered_openai_env_keys().as_mut());
         if let Some(rk) = &opts.openai_api_key {
             raw_keys.push(rk.into());
         }
