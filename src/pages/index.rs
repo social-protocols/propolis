@@ -23,8 +23,8 @@ pub async fn index(
             input
                 type="text"
                 name="typed_query"
-                placeholder="🔍 Find Questions"
-                class="dark:text-black w-full rounded-full px-7 py-4 border border-1 border-gray-900"
+                placeholder="Find Questions"
+                class="dark:text-black w-full rounded-full px-7 py-4 border border-1 border-gray-400"
                 minLength="1"
                 hx-validate="true"
                 hx-target="#results"
