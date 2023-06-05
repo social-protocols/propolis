@@ -49,7 +49,7 @@ axum = { version = "0.6.18", features = ["headers", "macros"] }
 base64 = "0.21.2"
 chrono = "0.4.26"
 clap = { version = "4.3.0", features = ["env", "derive"] }
-csv = "1.2.1"
+csv = "1.2.2"
 function_name = "0.3.0"
 futures = "0.3.28"
 http = "0.2.9"
