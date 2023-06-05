@@ -17,7 +17,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-# default = ["with_predictions"]
+default = ["with_predictions"]
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
@@ -59,6 +59,7 @@ maud = { version = "0.25.0", features = ["axum"] } # https://github.com/lambda-f
 mime_guess = "2.0.4"
 num-derive = { workspace = true }
 num-traits = { workspace = true }
+openssl-sys = { version = "0.9.87", features = ["vendored"] }
 qrcode = "0.12.0"
 rand = "0.8.5"
 rust-embed = "6.6.1"
