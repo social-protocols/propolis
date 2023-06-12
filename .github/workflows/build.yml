@@ -34,6 +34,9 @@ jobs:
           # https://docs.mergify.com/actions/queue/
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
