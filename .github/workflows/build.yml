@@ -74,6 +74,7 @@ jobs:
         run: |
           set -e
           cargo build
+          tree -C target/debug/build/sqlite-vector-wrapper-*
           target/debug/propolis > /tmp/background_output 2>&1 &
           sleep 1
           kill -0 $! || (cat /tmp/background_output && exit 1) # check if background process is still running
