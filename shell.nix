@@ -6,6 +6,7 @@ let
   # pkgs = import (fetchTarball("channel:nixpkgs-unstable")) {};
 in pkgs.mkShell {
   buildInputs = with pkgs; [ 
+    git
     cargo
     cargo-watch
     clippy
@@ -23,6 +24,7 @@ in pkgs.mkShell {
     # required to build openssl-sys, which openai uses
     pkg-config
     openssl
+    cmake
 
     # http benchmarking
     wrk
