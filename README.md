@@ -1,21 +1,12 @@
 # <img src="logo.svg" width="24" /> Propolis
+
+*(Early stage project)*
+
 Enable useful discussions among thousands of people.
 
+The idea is to create a discussion interface that allows to re-use the strategies people know from real-world one-to-one discussions. Different mechanics, like *askink a yes-no question*, *clarifying definitions or context* are provided.
+
 Try it: <https://propolis.fly.dev>
-
-## User Flow
-
-```mermaid
-flowchart TD
-    link[User arrives via Statement Link] --> statement
-    link --> create
-    statement[View Statement] --> vote
-    statement --> depends
-    vote[Vote Yes/No]
-    vote --> statement
-    depends[It Depends] --> create
-    create[Add New Statement]
-```
 
 ## Development
 
