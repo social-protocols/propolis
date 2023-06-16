@@ -1,3 +1,0 @@
-[submodule "lib/sqlite-vector-wrapper/sqlite-vector"]
-	path = lib/sqlite-vector-wrapper/sqlite-vector
-	url = https://github.com/asg017/sqlite-vector.git
