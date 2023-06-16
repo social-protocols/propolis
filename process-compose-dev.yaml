@@ -28,6 +28,9 @@ processes:
     #     port: 8000
     #   initial_delay_seconds: 1
     #   period_seconds: 1
+    depends_on:
+      sqlite_vector:
+        condition: process_completed_successfully
     environment:
       - RUST_LOG=info,sqlx::query=warn,propolis=debug
       # - RUST_LOG=sqlx::query=info,tower_http=trace
@@ -46,4 +49,7 @@ processes:
           sleep 1
       done
       browser-sync start --proxy "127.0.0.1:8000" --port 3000 --no-open
+
+  sqlite_vector:
+    command: make -C sqlite-vector
 
