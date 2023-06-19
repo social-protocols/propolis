@@ -1,6 +1,8 @@
-FROM rust:1.70-alpine3.18 as builder
+FROM rust:1.70 as builder
 
-RUN apk add git cmake make g++ musl-dev openssl-dev sqlite-dev
+# RUN apk add git cmake make g++ musl-dev openssl-dev sqlite-dev
+RUN apt update
+RUN apt install git cmake make g++ libssl-dev libsqlite3-dev
 
 WORKDIR /propolis
 COPY ./src ./src
@@ -15,7 +17,9 @@ RUN make -C sqlite-vector
 RUN cargo fetch --locked
 RUN SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
 
-FROM alpine:3.18
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y tini libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/cargo/bin/propolis /usr/local/bin/propolis
-COPY --from=builder /propolis/sqlite-vector/vector0.so /usr/local/bin/sqlite-vector/vector0.so
+COPY --from=builder /propolis/sqlite-vector/vector0.so /sqlite-vector/vector0.so
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["propolis"]
