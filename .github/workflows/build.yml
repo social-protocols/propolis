@@ -17,6 +17,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
+env:
+  BUILDKIT_PROGRESS: plain # suppress docker progress bars
+  DOCKER_BUILDKIT: "1" # default docker builder from version 23.0
+
 jobs:
   build:
     name: "Build"
