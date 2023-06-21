@@ -14,8 +14,12 @@ COPY ./sqlite-vector ./sqlite-vector
 RUN ls -alh .
 
 RUN make -C sqlite-vector
-RUN cargo fetch --locked
-RUN SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
+RUN --mount=type=cache,target=./.cargo \
+    --mount=type=cache,sharing=private,target=./target \
+    cargo fetch --locked
+RUN --mount=type=cache,target=./.cargo \
+    --mount=type=cache,sharing=private,target=./target \
+    SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
 
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install --yes tini libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
