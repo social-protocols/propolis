@@ -102,6 +102,20 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      - name: Docker pull
+        run: |
+          # pull all docker images listed in Dockerfile.
+          # Pull the latest image to build, and avoid caching pull-only images.
+          # (docker pull is faster than caching in most cases.)
+          grep -E "FROM\s+\S+" Dockerfile | awk '{print $2}' | xargs -L1 docker pull
+
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: jpribyl/action-docker-layer-caching@v0.1.1
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
       - name: Docker build
         run: docker build .
 
