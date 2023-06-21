@@ -26,8 +26,7 @@ RUN --mount=type=cache,target=/usr/local/rustup \
     SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
 
 FROM debian:bullseye-slim
-RUN apt-get update && apt-get install --yes tini libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install --yes ca-certificates libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/cargo/bin/propolis /usr/local/bin/propolis
 COPY --from=builder /propolis/sqlite-vector/vector0.so /sqlite-vector/vector0.so
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["propolis"]
