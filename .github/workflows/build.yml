@@ -33,9 +33,7 @@ jobs:
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
           # https://docs.mergify.com/actions/queue/
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
+          submodules: recursive
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
