@@ -57,7 +57,7 @@ pub mod md {
     pub fn parse_codeblock(data: &str) -> anyhow::Result<String> {
         match markdown::tokenize(data).as_slice() {
             [Block::CodeBlock(_, code), ..] => Ok(code.into()),
-            _ => Err(anyhow!("Unable to extract code block.")),
+            _ => Err(anyhow!("Unable to extract code block: {}", data)),
         }
     }
 }

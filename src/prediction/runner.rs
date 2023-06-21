@@ -44,7 +44,7 @@ pub struct PromptRunner<'a, E: AiEnv + 'a> {
 
 #[derive(Debug)]
 pub enum PromptRunnerError {
-    CheckFailed,
+    CheckFailed, // OpenAI Prompt moderation check
     Anyhow(anyhow::Error),
 }
 
@@ -196,7 +196,10 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         .expect("Unable to setup key selection.");
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
-    info!("API keys loaded: {}", key_selector.keys.len());
+    info!("OPENAI API keys loaded: {}", key_selector.keys.len());
+    if key_selector.keys.is_empty() {
+        panic!("No API keys loaded.");
+    }
     info!("Prediction environment: {:?}", env);
 
     let mut pool2 = pool.to_owned();
@@ -264,22 +267,21 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
         if let Some(prompt) = prompt {
             // run prompt
+            // println!("Running prompt: {prompt:?}");
             match runner.run(&prompt).await {
                 Ok(result) => {
                     if let Err(err) = result.store(&api_key, pool).await {
                         error!("storing result failed: {err}");
                     };
                 }
-                Err(PromptRunnerError::CheckFailed) => {
+                Err(err) => {
+                    error!("running prompt failed: {:?}", err);
                     match update_failing_statement_flags(&prompt.stmts, &mut pool2).await {
                         Ok(_) => {}
                         Err(err) => {
                             error!("Unable to update statement flags: {}", err)
                         }
                     }
-                }
-                Err(err) => {
-                    error!("running prompt failed: {:?}", err);
                 }
             };
         }

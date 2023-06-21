@@ -1,24 +1,28 @@
 FROM rust:1.70 as builder
 
 # RUN apk add git cmake make g++ musl-dev openssl-dev sqlite-dev
-RUN apt update
-RUN apt install --yes git cmake make g++ libssl-dev libsqlite3-dev
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update && apt-get install --yes git cmake make g++ libssl-dev libsqlite3-dev
 
 WORKDIR /propolis
+COPY ./sqlite-vector ./sqlite-vector
+RUN make -C sqlite-vector
+
 COPY ./src ./src
 COPY ./lib ./lib
 COPY ./migrations ./migrations
 COPY ./static ./static
 COPY sqlx-data.json rust-toolchain.toml Cargo.toml Cargo.lock ./
-COPY ./sqlite-vector ./sqlite-vector
 RUN ls -alh .
 
-RUN make -C sqlite-vector
-RUN --mount=type=cache,target=./.cargo \
-    --mount=type=cache,sharing=private,target=./target \
+# https://docs.docker.com/build/cache/#use-the-dedicated-run-cache
+RUN --mount=type=cache,target=/usr/local/rustup \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,sharing=shared,target=./target \
     cargo fetch --locked
-RUN --mount=type=cache,target=./.cargo \
-    --mount=type=cache,sharing=private,target=./target \
+RUN --mount=type=cache,target=/usr/local/rustup \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,sharing=shared,target=./target \
     SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
 
 FROM debian:bullseye-slim

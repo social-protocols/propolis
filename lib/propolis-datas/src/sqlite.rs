@@ -48,8 +48,9 @@ impl StatementFlagStore for sqlx::SqlitePool {
         let categories = serde_json::to_string(&item.categories)?;
 
         sqlx::query!(
-            "INSERT INTO statement_flags (statement_id, state, categories)
- VALUES (?, ?, ?)",
+            "INSERT INTO statement_flags
+            (statement_id, state, categories)
+            VALUES (?, ?, ?)",
             item.statement_id,
             state,
             categories,
@@ -71,8 +72,8 @@ impl StatementFlagStore for sqlx::SqlitePool {
         let row = sqlx::query_as!(
             Row,
             "SELECT statement_id, state, categories, created
-FROM statement_flags
-WHERE statement_id = ?",
+            FROM statement_flags
+            WHERE statement_id = ?",
             id
         )
         .fetch_optional(self)
@@ -89,8 +90,8 @@ WHERE statement_id = ?",
         let categories = serde_json::to_string(&item.categories)?;
         sqlx::query!(
             "UPDATE statement_flags
-SET state = ?, categories = ?
-WHERE statement_id = ?",
+            SET state = ?, categories = ?
+            WHERE statement_id = ?",
             state,
             categories,
             item.statement_id,
@@ -111,7 +112,7 @@ impl EmbeddingStore for sqlx::SqlitePool {
         debug!("==========");
         sqlx::query(
             "INSERT INTO statement_embeddings (statement_id, data, prompt_tokens, api_key_id)
- VALUES (?, vector_to_blob(vector_from_json(?)), ?, ?)",
+             VALUES (?, vector_to_blob(vector_from_json(?)), ?, ?)",
         )
         .bind(item.statement_id)
         .bind(data_json)
@@ -125,8 +126,8 @@ impl EmbeddingStore for sqlx::SqlitePool {
     async fn by_statement_id(&self, id: i64) -> anyhow::Result<Option<Embedding>> {
         let row = sqlx::query(
             "SELECT statement_id, vector_to_json(vector_from_blob(data)), prompt_tokens, api_key_id
-FROM statement_embeddings
-WHERE statement_id = ?",
+            FROM statement_embeddings
+            WHERE statement_id = ?",
         )
         .bind(id)
         .fetch_optional(self)

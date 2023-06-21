@@ -22,6 +22,7 @@ impl<T> MultiStatementResultTypes for T where
 /// A prompt specific to handling multiple statements at the same time
 // FIXME: How can I specify where to store this? e.g. if I want to store embeddings?
 //        Probably we want to use a different Prompt type with a different endpoint as well
+#[derive(Debug)]
 pub struct MultiStatementPrompt<R: MultiStatementResultTypes> {
     /// Name of the prompt to disambiguate it from others
     pub name: String,

@@ -77,14 +77,14 @@ pub trait AiEnv {
     ) -> anyhow::Result<Prompt::PromptResult>;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AiRole {
     System,
     User,
     Assistant,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AiMessage {
     pub role: AiRole,
     pub content: String,

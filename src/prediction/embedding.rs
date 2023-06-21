@@ -15,8 +15,9 @@ impl StatementSelector {
         Ok(sqlx::query_as!(
             Statement,
             "
-SELECT id, text from statements
-WHERE id NOT IN (SELECT id FROM statement_embeddings)"
+            SELECT id, text from statements
+            WHERE id NOT IN (SELECT id FROM statement_embeddings)
+            LIMIT 100"
         )
         .fetch_all(pool)
         .await?)

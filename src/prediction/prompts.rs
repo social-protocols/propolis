@@ -125,7 +125,7 @@ impl TryFrom<&str> for Score {
 }
 
 /// A value with an optional score
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
 pub struct ScoredValue {
     pub value: String,
     pub score: Score,
@@ -156,7 +156,7 @@ impl TryFrom<&str> for ScoredValue {
 }
 
 /// Contains various meta information about a statement
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Debug)]
 pub enum StatementMeta {
     Politics {
         tags: Vec<ScoredValue>,
@@ -170,7 +170,7 @@ pub enum StatementMeta {
 }
 
 /// Container for several StatementMeta instances
-#[derive(Serialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Clone, PartialEq, Eq, Debug)]
 pub struct StatementMetaContainer {
     pub value: Vec<StatementMeta>,
 }
@@ -258,11 +258,11 @@ impl StatementMeta {
     pub fn prompt(stmts: &[Statement]) -> MultiStatementPrompt<StatementMetaContainer> {
         let mut stmts_s = String::from("");
         for s in stmts {
-            stmts_s += format!("{}|{}", s.id, s.text).as_str();
+            stmts_s += format!("{}|{}\n", s.id, s.text).as_str();
         }
         MultiStatementPrompt {
             name: "statement_meta".into(),
-            version: 9,
+            version: 10,
             handler: |markdown_response| {
                 let csv_data = parse_codeblock(&markdown_response)?;
                 let s_without_header = csv_data.trim().drop_first_line();
@@ -274,11 +274,12 @@ impl StatementMeta {
             primer: vec![
                 AiMessage::system(
                     "
-You will be given multiple statements as a CSV table and your task is to
-determine whether the statement falls into the category of politics or personal statements.
+You will be given multiple questions as a CSV table and your task is to
+determine whether the question falls into the category of politics or personal questions.
 In the case of it being a political category, give which political ideologies
 (e.g., liberalism, conservatism, socialism) each quote aligns with the most.
 In the case of it being a personal category, give the big five personality traits instead.
+You must only answer with data. No explanations. No questions.
 
 In addition, also output up to three topic tags. The output should be a csv table with empty values as \"-\".
 All cells should be followed by a strength score (w=weak, s=strong) after a \":\" delimiter.
@@ -287,9 +288,9 @@ If you are not sure, use \"-\"",
                 AiMessage::user(
                     "
 ```csv
-num|statement
-1|The global economy is at risk of recession due to the trade war and uncertainty it creates.
-2|In clubs kann man hervorragend neue Freunde kennenlernen
+num|question
+1|Is the global economy at risk of recession due to the trade war and uncertainty it creates?
+2|Kann man in clubs hervorragend neue Freunde kennenlernen?
 ```",
                 ),
                 AiMessage::assistant(

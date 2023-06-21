@@ -24,6 +24,148 @@
     },
     "query": "SELECT id, text from statements where id = ?"
   },
+  "03df608f8f20cb207536fc5576d6d8846d4967012fdcb8521e9c350780877b8e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into users(id, secret) values (4, 'efg')"
+  },
+  "05311b61323b7b4d6937cf6bd33a9eeae301e86fa351719252beabc7ca511e97": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "update followups set target_no = 1 where statement_id = 2 and followup_id = 3"
+  },
+  "15059be247d8629cfd756ca4d753ed60c47098d9e550f8f9b2cb0cc6f0d79f60": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (17, 2, -1)"
+  },
+  "19bb748e9256c8b719753c535ffbe2d618af83511cc9f5ff4087e0d34260cfe6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count(*)",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select count(*) from statements_fts where text match 'flat'"
+  },
+  "2074f258586eed6e621ca4be358dd90dd45908c4d9c2ba72cc9ebb913a1d442d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into users(id, secret) values (17, 'abc')"
+  },
+  "235614e3240a1b9a608f2d4f21255b2cc45f867a61a8609a73ac12388143453d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count(*)",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select count(*) from queue where user_id = 17 and statement_id = 4"
+  },
+  "27ef79907a9caf68871fe645abf4c1930c922fc4ac5f0318a15f38be1695aba6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "yes_votes",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "no_votes",
+          "ordinal": 1,
+          "type_info": "Int64"
+        },
+        {
+          "name": "itdepends_votes",
+          "ordinal": 2,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select yes_votes, no_votes, itdepends_votes from statement_stats where statement_id = 2"
+  },
+  "28e7560c372f7d6b2148b3932b410a9e8e0a1aa5e809ba51be7b52417b3174d2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "statement_id",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "state",
+          "ordinal": 1,
+          "type_info": "Int64"
+        },
+        {
+          "name": "categories",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "created",
+          "ordinal": 3,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 1
+      }
+    },
+    "query": "SELECT statement_id, state, categories, created\n            FROM statement_flags\n            WHERE statement_id = ?"
+  },
   "2c36f28b43d87b8c0cbc87289ab2ab158593567f55f117e54af99eae3b6b3a78": {
     "describe": {
       "columns": [
@@ -90,6 +232,24 @@
     },
     "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  created as \"created!\"\nfrom statement_predictions\nwhere statement_id = ? order by created desc"
   },
+  "34b57e6a23b08cdaa1774a63408b078662cf8be4fc6a91ca3e60e19233bfd0f3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count(*)",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select count(*) from queue where user_id = 17 and statement_id = 3"
+  },
   "3be371f8ea7e76aedde761879362551e3291d6699854900ce25868b8d1e1c5fa": {
     "describe": {
       "columns": [],
@@ -99,6 +259,102 @@
       }
     },
     "query": "DELETE FROM users WHERE id=?"
+  },
+  "43e79bc5f3e2d628052a930b4f4acc7afc8d850c2e68d53e9f0be0535960ee01": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "delete from statements where id = 2"
+  },
+  "4594ee44a244fff8816e99e4fa1179bdde52d6ff0a87e68b5b7cd55c849424ca": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (4, 2, -1)"
+  },
+  "4debc7a1a52ca2c153bceac423f0e1c63ea96467e27d41f133958ad41fa85dd9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "subscriptions",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select subscriptions from statement_stats where statement_id = 2"
+  },
+  "4e8bd5b43e82577f9e214e09c7de135ec924aa4eed8456c39d18c84851ed2f15": {
+    "describe": {
+      "columns": [
+        {
+          "name": "vote",
+          "ordinal": 0,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select vote from votes where user_id = 3 and statement_id = 2"
+  },
+  "515436be3d1ea94b83d15b439aa6d677ab46f51ffa4423480da514793810a6fd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (17, 2, 2)"
+  },
+  "595d91c1a56ea07bb6d16cce529d71bd79e58a27872dfbbf61180f0dfaa2c810": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "update statements set text = 'The world is round.' where id = 2"
+  },
+  "653dd0bd5ad43dbde5b3de959e94d8049add79d23bb83766a4d9f86720c26e5b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (3, 2, -1)"
+  },
+  "69889e77c760c70897b3075292943caec8b318ef08a93dd1beaa37773060bf90": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into subscriptions(user_id, statement_id) values (3, 2)"
   },
   "6c965651617ff5355303d5372fa876eb70077ea26500dcc1de58cc846ba90391": {
     "describe": {
@@ -119,6 +375,40 @@
       }
     },
     "query": "INSERT INTO alternatives (statement_id, alternative_id) VALUES (?, ?)\n         on conflict(statement_id, alternative_id) do nothing"
+  },
+  "71fc3b0e0d746086369810f3aa5adf49fc00d9d207f0b7daee1f85dfcdb02ecc": {
+    "describe": {
+      "columns": [
+        {
+          "name": "yes_votes",
+          "ordinal": 0,
+          "type_info": "Int64"
+        },
+        {
+          "name": "no_votes",
+          "ordinal": 1,
+          "type_info": "Int64"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select yes_votes, no_votes from statement_stats where statement_id = 2"
+  },
+  "7562dcadedb4dde3d7a7621d1ec7e7639922ef38b69ee9ddbc4b4275c0370c38": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (3, 2, 1)"
   },
   "759358773931c1ee6b54cd55371dc58486311a952f08d9080c9bc2661aef78a8": {
     "describe": {
@@ -165,6 +455,36 @@
       }
     },
     "query": "SELECT COUNT(*) as count FROM authors where user_id = ?"
+  },
+  "8564b6eedf64323570fb5883f0214eb8b921928d21e957185486c4c8259d42f1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "delete from subscriptions where user_id = 3 and statement_id = 2"
+  },
+  "8cf8ee52bf3119022acd8488bcfd8519075ecce6402f43b2b7bd1febe0c04f29": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 3, 0, 1)"
+  },
+  "923d008ece6bffabfb1ca9816d008b48516fed530963b1af382298e550e02335": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into statements(id, text) values (3, 'The universe is flat.')"
   },
   "9d628a139bcb5376e9d685b3052c9d78940db9ce6cfb47060fd6f40866449903": {
     "describe": {
@@ -226,7 +546,7 @@
     },
     "query": "SELECT id, secret from users WHERE secret = ?"
   },
-  "a9404d4a35e12b1349ea46a8d04a8317c8094bbac0638e16fc1ac95bf75c0123": {
+  "a469f14343e978999c406bfc62326962282082a2512974fd57dac08d65c3fb87": {
     "describe": {
       "columns": [
         {
@@ -248,17 +568,17 @@
         "Right": 0
       }
     },
-    "query": "\nSELECT id, text from statements\nWHERE id NOT IN (SELECT id FROM statement_embeddings)"
+    "query": "\n            SELECT id, text from statements\n            WHERE id NOT IN (SELECT id FROM statement_embeddings)\n            LIMIT 100"
   },
-  "ac450320886b845c101a5ba71e959ce5dc7458f9a2c1c7b861b62b1d2c1f04e7": {
+  "aa654914a94dfe1fc20d0d8c56fb37b126f8c279e316f72ee1dc7fc0f31534fa": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
-        "Right": 3
+        "Right": 0
       }
     },
-    "query": "UPDATE statement_flags\nSET state = ?, categories = ?\nWHERE statement_id = ?"
+    "query": "insert into subscriptions(user_id, statement_id) values (17, 2)"
   },
   "b0bfa8b55bcebabbd2abf5e60388a91fa92da050e135faa126d45e44a573c478": {
     "describe": {
@@ -270,41 +590,15 @@
     },
     "query": "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing"
   },
-  "b1add3f0aade57a5b3aaf7540b0324d19871ad54358ca1ece304f06b42cfcb9e": {
+  "b3c4ee79151299edd314d6cf740816e8c2c587bc5492be3f5a9add6bed90cd36": {
     "describe": {
-      "columns": [
-        {
-          "name": "statement_id",
-          "ordinal": 0,
-          "type_info": "Int64"
-        },
-        {
-          "name": "state",
-          "ordinal": 1,
-          "type_info": "Int64"
-        },
-        {
-          "name": "categories",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "created",
-          "ordinal": 3,
-          "type_info": "Int64"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
-        "Right": 1
+        "Right": 0
       }
     },
-    "query": "SELECT statement_id, state, categories, created\nFROM statement_flags\nWHERE statement_id = ?"
+    "query": "insert into statements(id, text) values (2, 'The world is flat.')"
   },
   "b67b4070eddcd230bc9666b73964d9bc921f2e8705e8943978f79b2776b59f88": {
     "describe": {
@@ -342,7 +636,35 @@
     },
     "query": "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by v.created desc\n            limit ?\n            "
   },
-  "b90c377e12874cd809fbcd532aede4f31f838c51605a61e7fc67b7ea85bcd953": {
+  "bcfb3ad1ee5c5b7ba8f67889dcec29c0f653378800cb1e8f9bf5b439e5d27ad8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count(*)",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select count(*) from statements_fts where text match 'round'"
+  },
+  "bdcf6e1128ce93e948ea1554e37b74a585ae76debc7bbb19c347f16de36888c4": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "update followups set target_yes = 1 where statement_id = 2 and followup_id = 3"
+  },
+  "be8828054bf9813472c1af0255675b2a382d760b9dbf597febbbc41a80258088": {
     "describe": {
       "columns": [],
       "nullable": [],
@@ -350,7 +672,17 @@
         "Right": 3
       }
     },
-    "query": "INSERT INTO statement_flags (statement_id, state, categories)\n VALUES (?, ?, ?)"
+    "query": "UPDATE statement_flags\n            SET state = ?, categories = ?\n            WHERE statement_id = ?"
+  },
+  "c3db6913d5adbc2e4b8c6d09e3fc3da8c0e3190413faea67fea2c0268212944e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 3, 1, 0)"
   },
   "c6a36f90d118160d58cddd64c47aea40fcedd84e97a30a1f1bc62d39bcf52eb8": {
     "describe": {
@@ -382,6 +714,16 @@
     },
     "query": "SELECT id, hash, note FROM api_keys WHERE id = ?"
   },
+  "cc90ce8e6d81b0bcfff1fd173beb535a1ec5bf45953c7a633a93872b6d5958eb": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (5, 2, 2)"
+  },
   "ce5f99074f61321db7041fd1f0c0ff83c91748bfcdaec69d1b47de7394a51061": {
     "describe": {
       "columns": [
@@ -409,6 +751,16 @@
       }
     },
     "query": "INSERT INTO queue (user_id, statement_id) VALUES (?, ?)"
+  },
+  "cf1b62588e363346a7c9fb5d60c1a0014f442accfce38a686c13de40c7de3fa9": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into statements(id, text) values (4, 'The world is round.')"
   },
   "d38f1ea03d56233b70403c20b9c68c2fd1d7d87a6e1f04ab690e813c480ed1d6": {
     "describe": {
@@ -444,6 +796,44 @@
     },
     "query": "SELECT id,text FROM statements WHERE\nid NOT IN\n  (SELECT statement_id\n   FROM statement_predictions\n   WHERE\n     prompt_name = ? AND\n     prompt_version = ?\n) AND\n-- id must not be flagged\nid IN\n(SELECT statement_id\n   FROM statement_flags\n   WHERE\n     state = ?\n)\nLIMIT 1"
   },
+  "df18361baa1052bf044d8c36a90a92e59013071a0cbb1d8490a354634a1b4c19": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into queue(user_id, statement_id) values (3, 2)"
+  },
+  "e0fa26aa6248bea3568d0897de7fb4121e52491d3d9d6f0608b44d05a37e00ea": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count(*)",
+          "ordinal": 0,
+          "type_info": "Int"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "select count(*) from queue where user_id = 3 and statement_id = 2"
+  },
+  "e1ba54842b9963e2b669bcf8d0a8e55a3b8ee948d07e890fcc158726e28c27b8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into users(id, secret) values (5, 'xyz')"
+  },
   "e99fbce93ea1971be57e4557b829636145e1c0fa993544de9916e251d51ea3a3": {
     "describe": {
       "columns": [
@@ -474,6 +864,26 @@
     },
     "query": "SELECT id, hash, note FROM api_keys WHERE hash = ?"
   },
+  "ea18cead0c4fa57f26715d253a1f6e787228af32e24e7f8a24f65ff3e7d7a0ce": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 4, 0, 1)"
+  },
+  "f0f6696d4afa82556ccc3781b010639aa9ffcc27fd10d36b87f84b16082ca6dd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into users(id, secret) values (3, 'abc')"
+  },
   "f19e2063a3761014f86e68d49ff642ee85852da18e2922981ebe665875fabe2c": {
     "describe": {
       "columns": [],
@@ -483,6 +893,26 @@
       }
     },
     "query": "INSERT INTO api_keys (hash, note) VALUES (?, ?)"
+  },
+  "f65c5da12663fba59cb661dbfa5571aa1517e8dbebadeaa257c8af9aef4f6e7a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "insert into vote_history(user_id, statement_id, vote) values (17, 2, 1)"
+  },
+  "f66d60f52e375d371576b152a3e61e41323a9afd91719cfb972662d00c36e1b8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 3
+      }
+    },
+    "query": "INSERT INTO statement_flags\n            (statement_id, state, categories)\n            VALUES (?, ?, ?)"
   },
   "fa547048a2ff6f7db4a3b154acfe0a3d9632a2b0b286a3a99f63548179b6e8b2": {
     "describe": {
