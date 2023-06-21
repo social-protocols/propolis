@@ -140,9 +140,16 @@ pub fn apex_chart(options: &str) -> Markup {
     html! {
         div id=(chart_id) {}
         script {
-            (PreEscaped(format!("var options = {options};")))
-                (PreEscaped(format!("var chart = new ApexCharts(document.querySelector(\"#{chart_id}\"), options);")))
-            (PreEscaped("chart.render();"))
+            // creating a local variable scope to avoid polluting the global scope
+            // see https://en.wikipedia.org/wiki/Immediately_invoked_function_expression
+            (PreEscaped(format!(r##"
+            (() => {{
+                var options = {options};
+                var elem = document.querySelector("#{chart_id}")
+                elem.innerHTML = ""; // avoid rendering twice
+                new ApexCharts(elem, options).render();
+            }})()
+            "##)))
         }
     }
 }
