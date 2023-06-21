@@ -76,14 +76,18 @@ jobs:
       - name: cargo fmt --check
         run: cargo --locked fmt --check
 
+      - name: make sqlite-vector
+        run: make -C sqlite-vector
+
+      - name: cargo build
+        run: cargo --locked build
+
       - name: Start webserver in background
         run: |
           set -e
-          make -C sqlite-vector
-          cargo --locked build
           export OPENAI_API_KEY=foooooooooooo # fake, but enough to pass tests!
           target/debug/propolis > /tmp/background_output 2>&1 &
-          sleep 1
+          sleep 3
           kill -0 $! || (cat /tmp/background_output && exit 1) # check if background process is still running
 
       - uses: actions/setup-node@v3
