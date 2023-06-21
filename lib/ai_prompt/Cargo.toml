@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
-openai = { version = "= 1.0.0-alpha.9" }
+openai = { version = "= 1.0.0-alpha.11" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
