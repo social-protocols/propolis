@@ -107,7 +107,11 @@ async fn main() {
         .route("/statement/:id/vote", post(api::statement_vote))
         .layer(Extension(sqlite_pool_api));
 
-    let prediction_runner = prediction::runner::run(&opts.prediction, &mut sqlite_pool);
+    let prediction_runner = {
+        // depending on the feature flags, the pool needs a mutable reference or not
+        #[allow(clippy::unnecessary_mut_passed)]
+        prediction::runner::run(&opts.prediction, &mut sqlite_pool)
+    };
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
     info!("listening on {}", addr);
     let axum_server =

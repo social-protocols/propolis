@@ -58,7 +58,11 @@ jobs:
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check --merged
 
-      - name: cargo clippy
+      - name: cargo clippy (no features)
+        # clippy also includes all warnings from cargo check
+        run: cargo --locked clippy --workspace --all-targets --no-default-features
+
+      - name: cargo clippy (all features)
         # clippy also includes all warnings from cargo check
         run: cargo --locked clippy --workspace --all-targets --all-features
 
