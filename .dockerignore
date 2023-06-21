@@ -1,1 +1,14 @@
-.gitignore
+sqlite-vector/sqlite-vector
+sqlite-vector/vector0.so
+
+/target
+/data/*
+.cargo-checked
+.cargo-built
+.envrc.private
+
+node_modules/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+

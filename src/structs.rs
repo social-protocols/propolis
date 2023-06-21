@@ -24,7 +24,7 @@ pub struct VoteHistoryItem {
 }
 
 /// Represents a statement
-#[derive(Serialize, sqlx::FromRow, Clone)]
+#[derive(Serialize, sqlx::FromRow, Clone, Debug)]
 pub struct Statement {
     pub id: i64,
     pub text: String,

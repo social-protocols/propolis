@@ -19,3 +19,11 @@ updates:
     labels:
       - "actions"
       - "dependencies"
+
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "git-submodule"
+      - "dependencies"

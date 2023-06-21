@@ -4,14 +4,19 @@ use clap::Parser;
 #[derive(Parser, Clone, Debug)]
 pub struct PredictionOpts {
     /// API key used for requests to openai
+    /// Can also be passed via OPENAI_API_KEY_n
     #[arg(long, env)]
     pub openai_api_key: Option<String>,
+
     /// API keys used for requests to openai delimited via ":"
+    /// Can also be passed via OPENAI_API_KEY_n
     #[arg(long, env, value_parser, num_args=1.., value_delimiter=':')]
     pub openai_api_keys: Vec<String>,
+
     /// Used (openai) tokens allowed per duration before rate limiting takes action
     #[arg(long, env, default_value_t = 1000)]
     pub tokens_per_duration: u64,
+
     /// Duration length in seconds for rate limiting used (openai) tokens
     #[arg(long, env, default_value_t = 60)]
     pub tokens_seconds_per_duration: u64,
@@ -19,6 +24,7 @@ pub struct PredictionOpts {
     /// API calls allowed per duration
     #[arg(long, env, default_value_t = 1)]
     pub api_calls_per_duration: u64,
+
     /// Duration length in seconds for rate limiting API calls
     #[arg(long, env, default_value_t = 1)]
     pub api_calls_seconds_per_duration: u64,

@@ -33,6 +33,7 @@ jobs:
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
           # https://docs.mergify.com/actions/queue/
           ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -57,20 +58,29 @@ jobs:
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check --merged
 
-      - name: cargo clippy
+      - name: cargo clippy (no features)
         # clippy also includes all warnings from cargo check
-        run: cargo clippy --workspace --all-targets --all-features
+        run: cargo --locked clippy --workspace --all-targets --no-default-features
+
+      - name: cargo clippy (all features)
+        # clippy also includes all warnings from cargo check
+        run: cargo --locked clippy --workspace --all-targets --all-features
 
       - name: cargo test
-        run: cargo test --workspace --all-targets --all-features
+        run: cargo --locked test --workspace --all-targets --all-features
 
       - name: cargo fmt --check
-        run: cargo fmt --check
+        run: cargo --locked fmt --check
 
       - name: Start webserver in background
         run: |
-          cargo build
-          target/debug/propolis &
+          set -e
+          make -C sqlite-vector
+          cargo --locked build
+          export OPENAI_API_KEY=foooooooooooo # fake, but enough to pass tests!
+          target/debug/propolis > /tmp/background_output 2>&1 &
+          sleep 1
+          kill -0 $! || (cat /tmp/background_output && exit 1) # check if background process is still running
 
       - uses: actions/setup-node@v3
         with:
@@ -87,6 +97,9 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      - name: Docker build
+        run: docker build .
 
   deploy:
       needs: build

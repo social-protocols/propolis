@@ -2,11 +2,12 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use openai::{
     chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole},
+    embeddings::Embeddings,
     moderations::{Categories, ModerationBuilder, ModerationResult},
 };
 use serde_json::json;
 
-use crate::api::CheckResult;
+use crate::api::{AsEmbeddingEnv, CheckResult, EmbedResult, Embedding};
 
 use super::api::{AiEnv, AiEnvInfo, AiPrompt, AiRole, PromptResponse};
 
@@ -136,6 +137,27 @@ impl AiEnv for OpenAiEnv {
             completion_tokens: c.into(),
             prompt_tokens: p.into(),
             total_tokens: t.into(),
+        })
+    }
+}
+
+#[async_trait]
+impl AsEmbeddingEnv for OpenAiEnv {
+    async fn embed(&self, stmts: &[&str]) -> anyhow::Result<EmbedResult> {
+        if stmts.is_empty() {
+            return Err(anyhow!("Passed nothing to embed."));
+        }
+        let model = "text-embedding-ada-002";
+        let embeddings = Embeddings::create(model, stmts.to_vec(), "").await??;
+        let mut data: Vec<Embedding> = vec![];
+        for e in embeddings.data {
+            data.push(Embedding { values: e.vec });
+        }
+
+        Ok(EmbedResult {
+            data,
+            prompt_tokens: embeddings.usage.prompt_tokens,
+            total_tokens: embeddings.usage.total_tokens,
         })
     }
 }

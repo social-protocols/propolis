@@ -1,5 +1,32 @@
+use std::borrow::Borrow;
+
 use async_trait::async_trait;
 use serde::Serialize;
+
+/// Something that can be embedded
+pub trait AsEmbeddable: Clone + Borrow<str> {}
+impl<T> AsEmbeddable for T where T: Clone + Borrow<str> {}
+
+/// API for embedding stuff
+#[async_trait::async_trait]
+pub trait AsEmbeddingEnv {
+    /// Embed the specified strings
+    async fn embed(&self, stmts: &[&str]) -> anyhow::Result<EmbedResult>;
+}
+
+pub struct EmbedResult {
+    pub data: Vec<Embedding>,
+    /// Amount of tokens used for the input prompt
+    pub prompt_tokens: u32,
+    /// Total amount of tokens used
+    pub total_tokens: u32,
+}
+
+/// Contains an embedding result
+#[derive(Clone)]
+pub struct Embedding {
+    pub values: Vec<f64>,
+}
 
 /// Contains the information to identify an ai environment
 #[derive(Serialize, Clone, PartialEq, Eq, Debug)]
@@ -50,14 +77,14 @@ pub trait AiEnv {
     ) -> anyhow::Result<Prompt::PromptResult>;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AiRole {
     System,
     User,
     Assistant,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AiMessage {
     pub role: AiRole,
     pub content: String,

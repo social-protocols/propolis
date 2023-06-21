@@ -6,6 +6,7 @@ let
   # pkgs = import (fetchTarball("channel:nixpkgs-unstable")) {};
 in pkgs.mkShell {
   buildInputs = with pkgs; [ 
+    git
     cargo
     cargo-watch
     clippy
@@ -23,6 +24,7 @@ in pkgs.mkShell {
     # required to build openssl-sys, which openai uses
     pkg-config
     openssl
+    cmake
 
     # http benchmarking
     wrk
@@ -31,6 +33,9 @@ in pkgs.mkShell {
     # deployemnt
     flyctl
     docker
+
+    # building sqlite-vector
+    sqlite
   ];
 
   RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
@@ -42,5 +47,7 @@ echo DATABASE_URL: $DATABASE_URL
 if [ ! $DATABASE_URL = "" ] && [ ! -e data ]; then
    just create-db
 fi
+
+git submodule update --init --recursive
 '';
 }

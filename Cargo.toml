@@ -5,7 +5,7 @@ members = [
     "lib/rl_queue",
     "lib/db",
     "lib/propolis-datas",
-    "lib/propolis-utils"
+    "lib/propolis-utils",
 ]
 
 [package]
@@ -16,7 +16,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-# default = ["with_predictions"]
+default = ["with_predictions"]
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
@@ -27,7 +27,7 @@ async-trait = "0.1.68"
 db = { path = "lib/db" }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.97"
-sqlx = { version = "0.6.3", features = ["sqlite", "macros", "runtime-tokio-rustls", "offline"] }
+sqlx = { version = "0.6.3", features = ["sqlite", "macros", "runtime-tokio-native-tls", "offline"] }
 tracing = "0.1.37"
 tokio = { version = "1.28.2", features = ["full"] }
 num-derive = "0.3.3"

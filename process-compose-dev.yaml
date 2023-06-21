@@ -5,14 +5,24 @@ version: "0.5"
 # log_location: ./pc.log
 
 processes:
-  # check can run quickly with short feedback cycles.
+
+  build_sqlite_vector:
+    command: make -C sqlite-vector
+
   cargo_check:
+    # check can run quickly with short feedback cycles.
+    depends_on:
+      build_sqlite_vector:
+        condition: process_completed_successfully
     # clippy also includes all warnings from cargo check
     command: cargo watch --quiet --clear --shell 'cargo clippy --workspace --all-targets --all-features --color always 2>&1 && touch .cargo-checked'
 
   # once a check was successful, trigger a build that can be started.
   # since the build triggers the run immediately, it can also send a reload signal to browser-sync
   cargo_build:
+    depends_on:
+      build_sqlite_vector:
+        condition: process_completed_successfully
     command: |
       touch .cargo-checked
       cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-checked --shell 'cargo rustc --color always 2>&1 -- -Awarnings && touch .cargo-built; sleep 0.5; browser-sync reload --port 3000'
@@ -20,6 +30,9 @@ processes:
   # run app immediately.
   # once a build is successful, restart the service
   cargo_run:
+    depends_on:
+      build_sqlite_vector:
+        condition: process_completed_successfully
     # readiness_probe:
     #   http_get:
     #     host: 127.0.0.1
@@ -33,10 +46,13 @@ processes:
       # - RUST_LOG=sqlx::query=info,tower_http=trace
     command: |
       touch .cargo-built
-      cargo watch --quiet --postpone --no-vcs-ignores --watch .cargo-built --shell 'target/debug/propolis'
+      cargo watch --quiet --no-vcs-ignores --watch .cargo-built --shell 'test -f target/debug/propolis && target/debug/propolis'
 
   # once the web-server is running, proxy it through browser-sync
   browser_sync:
+    depends_on:
+      build_sqlite_vector:
+        condition: process_completed_successfully
     # depends_on:
     #   cargo_run:
     #     condition: process_healthy

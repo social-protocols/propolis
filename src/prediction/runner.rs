@@ -1,12 +1,25 @@
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+use anyhow::anyhow;
+use propolis_datas::embedding::Embedding;
+use rand::seq::SliceRandom;
+use tracing::log::error;
+
+use crate::opts::PredictionOpts;
+use crate::prediction::embedding::{EmbeddingsRunner, StatementSelector};
+
+use propolis_datas::apikey::{ApiKey, TransientApiKey};
 use propolis_datas::statement::StatementFlag;
+use propolis_utils::StringExt;
 use rl_queue::{QuotaState, RateLimiter};
 use sqlx::SqlitePool;
 use tracing::{
     debug,
     log::{info, warn},
 };
+
+use crate::structs::Statement;
 
 use super::{
     multi_statement_classifier::{
@@ -31,7 +44,7 @@ pub struct PromptRunner<'a, E: AiEnv + 'a> {
 
 #[derive(Debug)]
 pub enum PromptRunnerError {
-    CheckFailed,
+    CheckFailed, // OpenAI Prompt moderation check
     Anyhow(anyhow::Error),
 }
 
@@ -86,36 +99,107 @@ impl<'a, E: AiEnv> PromptRunner<'a, E> {
     }
 }
 
+/// Updates the flags on the particular statement, given that they failed the moderation check
+///
+/// In particular, this will initially flag multiple statements with StatementFlagState::MaybeFlagged
+/// and singly predicted statements with StatementFlagState::Flagged.
+/// Statements that are flagged via MaybeFlagged, will later be predicted individually.
+pub async fn update_failing_statement_flags(
+    stmts: &[Statement],
+    pool: &mut SqlitePool,
+) -> anyhow::Result<()> {
+    use propolis_datas::statement::{FlagCategoryContainer, StatementFlagState};
+
+    debug!("Updating statement_flags for failed statements");
+    let num_stmts = stmts.len();
+    for stmt in stmts {
+        match StatementFlag::by_statement_id(pool, stmt.id).await.unwrap() {
+            Some(flag) => {
+                let mut newflag = flag.clone();
+                let flagstate = match num_stmts {
+                    1 => StatementFlagState::Flagged,
+                    _ => StatementFlagState::MaybeFlagged,
+                };
+                debug!("Setting flagstate to: {:?}", flagstate);
+                newflag.state = flagstate;
+                newflag.update(pool).await?;
+            }
+            None => {
+                let flagstate = match num_stmts {
+                    1 => StatementFlagState::Flagged,
+                    _ => StatementFlagState::MaybeFlagged,
+                };
+                debug!("Setting flagstate to: {:?}", flagstate);
+                StatementFlag::create(pool, stmt.id, flagstate, FlagCategoryContainer::Empty)
+                    .await?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Used to select next key to use for requests
+pub struct ApiKeySelector {
+    /// Mapping of raw key to ApiKey instance
+    pub keys: HashMap<String, ApiKey>,
+}
+
+impl ApiKeySelector {
+    /// Collect additional environment keys of form OPENAI_API_KEY_n
+    /// Tries n ∈ {0, ..} until the first env var that can't be found
+    fn collect_numbered_openai_env_keys() -> Vec<String> {
+        let mut result: Vec<String> = vec![];
+        let mut n = 0;
+        while let Ok(raw_key) = std::env::var(format!("OPENAI_API_KEY_{n}")) {
+            result.push(raw_key);
+            n += 1;
+        }
+        result
+    }
+
+    /// Create an instance, creating keys in the DB (for stats only) if necessary
+    pub async fn create(opts: &PredictionOpts, pool: &mut SqlitePool) -> anyhow::Result<Self> {
+        let mut keys: HashMap<String, ApiKey> = HashMap::new();
+        let mut raw_keys: Vec<String> = opts.openai_api_keys.to_owned();
+        raw_keys.append(Self::collect_numbered_openai_env_keys().as_mut());
+        if let Some(rk) = &opts.openai_api_key {
+            raw_keys.push(rk.into());
+        }
+        for raw_key in raw_keys {
+            let rkey = TransientApiKey::Raw(raw_key.to_owned());
+            let key = ApiKey::get_or_create(pool, &rkey, None::<String>).await?;
+            keys.insert(raw_key, key);
+        }
+        Ok(Self { keys })
+    }
+
+    /// Yield next key to use
+    pub fn next(&self) -> anyhow::Result<(String, ApiKey)> {
+        let raw_key = self
+            .keys
+            .keys()
+            .collect::<Vec<&String>>()
+            .choose(&mut rand::thread_rng())
+            .ok_or(anyhow!("Unable to select any API key."))?
+            .to_string();
+        let api_key = self.keys.get(&raw_key).unwrap();
+        Ok((raw_key, api_key.to_owned()))
+    }
+}
+
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
-#[cfg(feature = "with_predictions")]
-pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
-    use std::collections::HashMap;
-
-    use rand::seq::SliceRandom;
-    use tracing::log::error;
-
-    use propolis_datas::{
-        apikey::{ApiKey, TransientApiKey},
-        statement::{FlagCategoryContainer, StatementFlagState},
-    };
-
-    let mut keys: HashMap<String, ApiKey> = HashMap::new();
-    let mut raw_keys: Vec<String> = opts.openai_api_keys;
-    if let Some(rk) = opts.openai_api_key {
-        raw_keys.push(rk);
-    }
-    for raw_key in raw_keys {
-        let rkey = TransientApiKey::Raw(raw_key.to_owned());
-        let key = ApiKey::get_or_create(pool, &rkey, None::<String>)
-            .await
-            .expect("Unable to get_or_create key.");
-        keys.insert(raw_key, key);
-    }
+pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
+    let key_selector = ApiKeySelector::create(opts, pool)
+        .await
+        .expect("Unable to setup key selection.");
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
 
-    info!("API keys loaded: {}", keys.len());
+    info!("OPENAI API keys loaded: {}", key_selector.keys.len());
+    if key_selector.keys.is_empty() {
+        panic!("No API keys loaded.");
+    }
     info!("Prediction environment: {:?}", env);
 
     let mut pool2 = pool.to_owned();
@@ -124,6 +208,19 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         prompt: |stmts| StatementMeta::prompt(&stmts),
         pool,
     };
+
+    let mut erunner = EmbeddingsRunner {
+        token_rate_limiter: RateLimiter::new(
+            opts.tokens_per_duration as f64,
+            Duration::from_secs(opts.tokens_seconds_per_duration),
+        ),
+        api_calls_rate_limiter: RateLimiter::new(
+            opts.api_calls_per_duration as f64,
+            Duration::from_secs(opts.api_calls_seconds_per_duration),
+        ),
+        env: &env,
+    };
+    let selector = StatementSelector {};
 
     let mut runner = PromptRunner {
         token_rate_limiter: RateLimiter::new(
@@ -137,75 +234,95 @@ pub async fn run(opts: crate::opts::PredictionOpts, pool: &mut SqlitePool) {
         env: &env,
     };
     loop {
-        let raw_key = keys
-            .keys()
-            .collect::<Vec<&String>>()
-            .choose(&mut rand::thread_rng())
-            .expect("Unable to select any API key.")
-            .to_string();
-        let api_key = keys.get(&raw_key).unwrap();
+        async_std::task::sleep(Duration::from_secs(1)).await;
 
+        // select data
         let prompt = prompt_gen.next_prompt().await.unwrap_or_else(|err| {
             error!("next_prompt failed: {}", err);
             None
         });
 
-        match prompt {
-            Some(prompt) => {
-                let mut trimmed_key = raw_key.clone();
-                let len = trimmed_key.chars().count() - 4;
-                let _ = trimmed_key.drain(0..len);
-                debug!("Using key ({}): sk..{}", api_key.id, trimmed_key);
-                ai_prompt::openai::set_key(raw_key);
-                match runner.run(&prompt).await {
-                    Ok(result) => {
-                        if let Err(err) = result.store(api_key, pool).await {
-                            error!("storing result failed: {err}");
-                        };
-                    }
-                    Err(PromptRunnerError::CheckFailed) => {
-                        debug!("Updating statement_flags for failed statements");
-                        let num_stmts = &prompt.stmts.len();
-                        for stmt in prompt.stmts {
-                            match StatementFlag::by_statement_id(pool, stmt.id).await.unwrap() {
-                                Some(flag) => {
-                                    let mut newflag = flag.clone();
-                                    let flagstate = match num_stmts {
-                                        1 => StatementFlagState::Flagged,
-                                        _ => StatementFlagState::MaybeFlagged,
-                                    };
-                                    debug!("Setting flagstate to: {:?}", flagstate);
-                                    newflag.state = flagstate;
-                                    newflag
-                                        .update(&pool2)
-                                        .await
-                                        .expect("Unable to update StatementFlag");
-                                }
-                                None => {
-                                    let flagstate = match num_stmts {
-                                        1 => StatementFlagState::Flagged,
-                                        _ => StatementFlagState::MaybeFlagged,
-                                    };
-                                    debug!("Setting flagstate to: {:?}", flagstate);
-                                    let _ = StatementFlag::create(
-                                        &mut pool2,
-                                        stmt.id,
-                                        flagstate,
-                                        FlagCategoryContainer::Empty,
-                                    )
-                                    .await
-                                    .expect("Unable to create StatementFlag");
-                                }
-                            }
+        let embed_stmts = match selector.next_for_embedding(pool).await {
+            Ok(stmts) if !stmts.is_empty() => Some(stmts),
+            Ok(_) => None,
+            Err(err) => {
+                error!("Unable to select next statements for embedding: {:?}", err);
+                None
+            }
+        };
+
+        // short-circuit loop in case no data
+        if let (None, None) = (&prompt, &embed_stmts) {
+            continue;
+        }
+
+        // select key
+        let (raw_key, api_key) = key_selector.next().expect("Unable to select key");
+        debug!(
+            "Using key ({}): {}",
+            api_key.id,
+            raw_key.as_str().shortify(2, 4, "..")
+        );
+        ai_prompt::openai::set_key(raw_key);
+
+        if let Some(prompt) = prompt {
+            // run prompt
+            // println!("Running prompt: {prompt:?}");
+            match runner.run(&prompt).await {
+                Ok(result) => {
+                    if let Err(err) = result.store(&api_key, pool).await {
+                        error!("storing result failed: {err}");
+                    };
+                }
+                Err(err) => {
+                    error!("running prompt failed: {:?}", err);
+                    match update_failing_statement_flags(&prompt.stmts, &mut pool2).await {
+                        Ok(_) => {}
+                        Err(err) => {
+                            error!("Unable to update statement flags: {}", err)
                         }
                     }
-                    Err(err) => {
-                        error!("running prompt failed: {:?}", err);
+                }
+            };
+        }
+
+        if let Some(embed_stmts) = embed_stmts {
+            // run embeddings
+            let len = embed_stmts.len();
+            info!("Embedding {len} statements");
+            let embeddings = match erunner
+                .run(
+                    &embed_stmts
+                        .iter()
+                        .map(|stmt| stmt.text.as_str())
+                        .collect::<Vec<&str>>(),
+                )
+                .await
+            {
+                Ok(e) => Some(e),
+                Err(err) => {
+                    error!("running for embeddings failed: {:?}", err);
+                    None
+                }
+            };
+
+            if let Some((embeddings, total_tokens)) = embeddings {
+                for (i, embedding) in embeddings.iter().enumerate() {
+                    match Embedding::create(
+                        &mut pool2,
+                        embed_stmts[i].id,
+                        embedding.values.clone(),
+                        total_tokens.into(),
+                        api_key.id,
+                    )
+                    .await
+                    {
+                        Ok(_) => {}
+                        Err(err) => {
+                            error!("storing of embedding failed: {:?}", err);
+                        }
                     }
-                };
-            }
-            None => {
-                async_std::task::sleep(Duration::from_secs(1)).await;
+                }
             }
         }
     }
