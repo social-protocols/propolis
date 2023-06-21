@@ -15,3 +15,5 @@ CREATE TRIGGER api_key_stats AFTER INSERT ON statement_predictions
        SET total_tokens = total_tokens + new.total_tokens
      WHERE id = new.api_key_id;
   END;
+
+
