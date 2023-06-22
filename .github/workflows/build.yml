@@ -106,6 +106,27 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+  build-docker:
+    name: "Build Docker"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # https://github.com/actions/checkout/issues/626
+          # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
+          # https://docs.mergify.com/actions/queue/
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: recursive
+
+      - name: Cache docker images
+        id: cache-docker-images
+        uses: actions/cache@v3
+        with:
+          path: /var/lib/docker/overlay2
+          key: ${{ runner.os }}-docker-images
+
       - name: Docker pull
         run: |
           # pull all docker images listed in Dockerfile.
@@ -116,11 +137,11 @@ jobs:
       # In this step, this action saves a list of existing images,
       # the cache is created without them in the post run.
       # It also restores the cache if it exists.
-      - uses: jpribyl/action-docker-layer-caching@v0.1.1
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
-        with:
-          key: docker-layer-cache-{hash}
+      # - uses: jpribyl/action-docker-layer-caching@v0.1.1
+      #   # Ignore the failure of a step and avoid terminating the job.
+      #   continue-on-error: true
+      #   with:
+      #     key: docker-layer-cache-{hash}
 
       - name: Docker build
         run: docker build .
