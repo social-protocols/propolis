@@ -23,7 +23,7 @@ env:
 
 jobs:
   build:
-    name: "Build"
+    name: "Build and Test"
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     env:
@@ -76,11 +76,11 @@ jobs:
       - name: cargo fmt --check
         run: cargo --locked fmt --check
 
-      - name: make sqlite-vector
-        run: make -C sqlite-vector
-
       - name: cargo build
         run: cargo --locked build
+
+      - name: make sqlite-vector
+        run: make -C sqlite-vector
 
       - name: Start webserver in background
         run: |
@@ -124,7 +124,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1 
 
-      - name: Cache register
+      - name: Set up Docker Cache
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
@@ -156,7 +156,7 @@ jobs:
           id: buildx
           uses: docker/setup-buildx-action@v1 
 
-        - name: Cache register
+        - name: Set up Docker Cache
           uses: actions/cache@v2
           with:
             path: /tmp/.buildx-cache
