@@ -37,13 +37,13 @@ COPY sqlx-data.json ./
 COPY ./lib ./lib
 COPY ./migrations ./migrations
 COPY ./static ./static
-RUN SQLX_OFFLINE=true cargo install --locked --path . --features embed_migrations,with_predictions
+RUN SQLX_OFFLINE=true cargo build --locked --release --features embed_migrations
 
 
 
 # copy the binary and sqlite-vector extension to a minimal image
 FROM debian:bullseye-slim
 RUN apt-get update && apt-get install --yes ca-certificates libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/cargo/bin/propolis /usr/local/bin/app
+COPY --from=builder /app/target/release/propolis /usr/local/bin/app
 COPY --from=builder /app/sqlite-vector/vector0.so /sqlite-vector/vector0.so
 CMD ["app"]
