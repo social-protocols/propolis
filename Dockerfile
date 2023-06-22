@@ -3,10 +3,10 @@
 # https://github.com/LukeMathWalker/cargo-chef#without-the-pre-built-image
 
 
-# only install cargo-chef, to be reused in other stages
+# install cargo-chef and toolchain, to be reused in other stages
 FROM rust:1.70 as chef
-# install cargo-chef and trigger a download of the rustup toolchain
-RUN cargo install cargo-chef && cargo chef --version
+RUN cargo install cargo-chef
+RUN rustup install stable # should match the channel in rust-toolchain.toml
 WORKDIR app
 
 
