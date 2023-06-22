@@ -120,11 +120,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
-      - name: Set up Docker Buildx
+      - name: Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1 
 
-      - name: Set up Docker Cache
+      - name: Docker Cache
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
@@ -152,11 +152,11 @@ jobs:
       steps:
         - uses: actions/checkout@v3
 
-        - name: Set up Docker Buildx
+        - name: Docker Buildx
           id: buildx
           uses: docker/setup-buildx-action@v1 
 
-        - name: Set up Docker Cache
+        - name: Docker Cache
           uses: actions/cache@v2
           with:
             path: /tmp/.buildx-cache
