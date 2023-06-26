@@ -7,7 +7,7 @@ processes = []
 
 [env]
 DATABASE_URL = "sqlite:///data/data.sqlite"
-RUST_LOG="propolis=error,sqlx::query=error,tower_http=error"
+RUST_LOG="propolis=info,sqlx::query=error,tower_http=error"
 
 [mounts]
 source="propolis_data"
