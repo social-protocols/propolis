@@ -21,7 +21,7 @@ pub async fn index(
     let content = html! {
         div class="mb-10 flex justify-center" {
             input
-                type="text"
+                type="search"
                 name="typed_query"
                 placeholder="Find Questions"
                 class="dark:text-black w-full rounded-full px-7 py-4 border border-1 border-gray-400"
