@@ -66,7 +66,7 @@ pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
         None => "",
     };
     Ok(html! {
-        div class={"font-bold text-white w-16 flex items-center justify-center shrink-0 rounded-r-lg "(vote_color)} {
+        div class={"font-bold text-white w-16 py-2 flex items-center justify-center shrink-0 rounded-r-lg "(vote_color)} {
             @match vote {
                 Some(Vote::Yes) => "YES",
                 Some(Vote::No) => "NO",
