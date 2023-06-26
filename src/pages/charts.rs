@@ -19,7 +19,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
     } else {
         Ok(apex_chart(
             format!(
-                r#" 
+                r##" 
                 {{
                   "labels": [
                     "Yes",
@@ -40,21 +40,44 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                            const targetQuery = ['target_yes', 'target_all', 'target_no'];
                            location.href = `/new?target=${{{statement_id}}}&${{targetQuery[seriesIndex]}}=true`;
                        }}
-                     }}
+                     }},
+                     "animations": {{ "enabled": false }},
                   }},
                   "colors": [
-                    "\#16a34a",
-                    "\#64748b",
-                    "\#dc2626",
+                    "#16a34a",
+                    "#64748b",
+                    "#dc2626",
                   ],
+                  "tooltip": {{ "enabled": false }},
                   "dataLabels": {{
-                    "enabled": false
+                    "enabled": true,
+                    "formatter": function(value, {{ seriesIndex, dataPointIndex, w }}) {{
+                      let percentage = Math.round(value);
+                      return `${{w.config.labels[seriesIndex]}}:  ${{w.config.series[seriesIndex]}} (${{percentage}}%)`
+                    }},
+                    "style": {{
+                      "colors": [
+                        "#16a34a",
+                        "#64748b",
+                        "#dc2626",
+                      ],
+                    }},
+                    "background": {{
+                      "enabled": true,
+                      "opacity": 1,
+                      "dropShadow": {{
+                        "enabled": false
+                      }}
+                    }},
+                    "dropShadow": {{
+                      "enabled": false
+                    }}
                   }},
                   "legend": {{
                     "show": false
                   }},
                   "series": {}
-                }}"#,
+                }}"##,
                 json!([yes_votes, itdepends_votes, no_votes]),
             )
             .as_str(),
