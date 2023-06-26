@@ -129,7 +129,10 @@ pub async fn new_statement_completions(
         }
         @for search_result_statement in &statements {
             div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                button class="text-white bg-slate-500 px-4 py-1 rounded" x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"} { "Use" }
+                button
+                    class="text-white bg-slate-500 px-4 py-1 rounded"
+                    x-on:click={"alternative_statement = {'id': "(search_result_statement.id)", 'text': '"(search_result_statement.text_original.replace('\'', "\\'"))"'}"}
+                    { "Use" }
                 (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
                 (small_statement_piechart(search_result_statement.id, &pool).await?)
                 (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
