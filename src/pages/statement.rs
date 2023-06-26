@@ -41,10 +41,11 @@ pub async fn statement_page(
             form hx-post="/vote" {
                 input type="hidden" value=(statement_id) name="statement_id";
                 div class="flex gap-2 mb-12 mt-3" {
-                    button class="text-white bg-green-600 px-4 py-1 rounded" name="vote" value="Yes" { "YES" }
-                    button class="text-white bg-red-600 px-4 py-1 rounded" name="vote" value="No" { "NO" }
-                    button class="px-4 py-1" name="vote" value="Skip" { "skip / I don't know" }
+                    button class="text-white bg-green-500 hover:bg-green-600 px-3 py-2 font-semibold text-sm rounded-md shadow focus:outline-none" name="vote" value="Yes" { "YES" }
+                    button class="text-white bg-red-500 hover:bg-red-600 px-3 py-2 font-semibold text-sm rounded-md shadow focus:outline-none" name="vote" value="No" { "NO" }
+                    button class="text-white bg-sky-500 hover:bg-sky-600 px-3 py-2 font-semibold text-sm rounded-md shadow focus:outline-none" name="vote" value="Unclear" { "UNCLEAR" }
                     // button class="text-white bg-slate-500 px-4 py-1 rounded ml-auto" name="vote" value="ItDepends" { "IT DEPENDS" }
+                    button class="px-4 py-1" name="vote" value="Skip" { "skip / I don't know" }
                 }
             }
             @match user_vote {

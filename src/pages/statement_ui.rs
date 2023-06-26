@@ -59,8 +59,9 @@ pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> R
 
 pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
     let vote_color = match vote {
-        Some(Vote::Yes) => "bg-green-600",
-        Some(Vote::No) => "bg-red-600",
+        Some(Vote::Yes) => "bg-green-500",
+        Some(Vote::Unclear) => "bg-sky-500",
+        Some(Vote::No) => "bg-red-500",
         Some(Vote::ItDepends) => "bg-slate-500",
         Some(Vote::Skip) => "",
         None => "",
@@ -71,6 +72,7 @@ pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
                 Some(Vote::Yes) => "YES",
                 Some(Vote::No) => "NO",
                 Some(Vote::ItDepends) => span style="writing-mode: tb-rl" { "IT DEPENDS" },
+                Some(Vote::Unclear) => span style="writing-mode: tb-rl" { "UNCLEAR" },
                 Some(Vote::Skip) => "SKIP",
                 None => "",
             }

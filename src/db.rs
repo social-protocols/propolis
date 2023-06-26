@@ -161,7 +161,7 @@ impl User {
                         Vote::No => -1,
                         Vote::Skip => 0,
                         Vote::Yes => 1,
-                        Vote::ItDepends => 0,
+                        Vote::ItDepends | Vote::Unclear => 0,
                     };
                     votes
                         .entry(i.value)

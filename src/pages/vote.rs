@@ -76,5 +76,15 @@ pub async fn vote_post(
                 format!("/statement/{}/itdepends", vote_form.statement_id),
             )],
         )),
+        Vote::Unclear => {
+            println!("Unclear vote");
+            Ok((
+                StatusCode::OK,
+                [(
+                    "HX-Location",
+                    format!("/statement/{}/unclear", vote_form.statement_id),
+                )],
+            ))
+        }
     }
 }

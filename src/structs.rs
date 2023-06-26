@@ -30,6 +30,11 @@ pub struct Statement {
     pub text: String,
 }
 
+pub enum AddStatement {
+    Typed(String),
+    Referenced(i64),
+}
+
 #[derive(Serialize, sqlx::FromRow, Clone)]
 pub struct SearchResultStatement {
     pub id: i64,
@@ -51,7 +56,8 @@ pub enum Vote {
     No = -1,
     Skip = 0,
     Yes = 1,
-    ItDepends = 2,
+    ItDepends = 2, // obsolete
+    Unclear = 3,
 }
 
 impl Vote {
