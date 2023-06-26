@@ -99,6 +99,11 @@ CLOSED: [2023-04-05 Mi 20:16]
   - [ ] sqlite specific code into own =sqlite.rs= file based on traits
   - [ ] prediction specific code into =propolis-predictions=
 - [ ] =promptineer= crate with generic prompt/openai structs & traits
+* Bugs
+** Crash when openai overloaded
+#+begin_src
+2023-06-26T15:05:50.319 app[4d891090a177d8] cdg [info] thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: OpenAiError { message: "That model is currently overloaded with other requests. You can retry your request, or contact us through our help center at help.openai.com if the error persists. (Please include the request ID cbc250bec87c7caf900030bce86dfe14 in your message.)", error_type: "server_error", param: None, code: None }', /app/lib/ai_prompt/src/openai.rs:127:14
+#+end_src
 * Experiments
 ** DONE Try out mold
 CLOSED: [2023-04-08 Sa 06:23]
