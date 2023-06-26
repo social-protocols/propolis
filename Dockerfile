@@ -4,7 +4,7 @@
 
 
 # install cargo-chef and toolchain, to be reused in other stages
-FROM rust:1.70 as chef
+FROM rust:1.70-bookworm as chef
 RUN cargo install cargo-chef
 RUN rustup install stable # should match the channel in rust-toolchain.toml
 WORKDIR app
@@ -43,7 +43,7 @@ RUN SQLX_OFFLINE=true cargo build --locked --release --features embed_migrations
 
 # copy the binary and sqlite-vector extension to a minimal image
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install --yes ca-certificates libssl-dev openssl sqlite3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install --yes ca-certificates openssl sqlite3 && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/propolis /usr/local/bin/app
 COPY --from=builder /app/sqlite-vector/vector0.so /sqlite-vector/vector0.so
 CMD ["app"]
