@@ -49,7 +49,7 @@ jobs:
         run: cargo install sqlx-cli
 
       - name: load envrc
-        uses: HatsuneMiku3939/direnv-action@99d45b70ef95201986f2094cec9b625f1e28347b # pin@v1
+        uses: HatsuneMiku3939/direnv-action@c8e21f81441f7d259ec1e2a1eb5256ad1a1e6bd4 # pin@v1
 
       - name: Migrate database
         run: |
