@@ -46,7 +46,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install tools
-        run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite,native-tls
+        run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
         uses: HatsuneMiku3939/direnv-action@c8e21f81441f7d259ec1e2a1eb5256ad1a1e6bd4 # pin@v1
