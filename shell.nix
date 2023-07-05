@@ -20,6 +20,7 @@ in pkgs.mkShell {
     sqlite-interactive
     nodePackages.browser-sync # dev hot reloading
     process-compose # orchestrate non-containerized processes
+    entr # file watching
 
     # required to build openssl-sys, which openai uses
     pkg-config

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail
+set -Eeuo pipefail
+# cd to script location
+cd "$(dirname "${BASH_SOURCE[0]}")"
+cd ..
+
+
+# The locale specified by the environment affects sort order.
+export LC_ALL="en_US.UTF-8"
+
+# The overall effect of this command sequence is to sort SQL CREATE commands while preserving the original formatting and line breaks within each command.
+sqlite3 --init /dev/null data/data.sqlite '.schema' \
+ | sed ':a;N;$!ba;s/\n/<<NEWLINE>>/g' \
+ | sed 's/;<<NEWLINE>>CREATE/;\nCREATE/g' \
+ | sort \
+ | sed 's/<<NEWLINE>>/\n/g'

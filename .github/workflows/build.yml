@@ -57,7 +57,10 @@ jobs:
           sqlx migrate run
 
       - name: Validate current schema
-        run: cmp -s <(sqlite3 -init /dev/null data/data.sqlite '.schema') schema.sql
+        run: |
+          scripts/sorted_schema > /tmp/current_schema.sql
+          git diff --no-index --ws-error-highlight=all --color=always /tmp/current_schema.sql schema.sql
+          cmp -s /tmp/current_schema.sql schema.sql
 
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check --merged

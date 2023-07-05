@@ -1,27 +1,16 @@
-CREATE TABLE _sqlx_migrations (
-    version BIGINT PRIMARY KEY,
-    description TEXT NOT NULL,
-    installed_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    success BOOLEAN NOT NULL,
-    checksum BLOB NOT NULL,
-    execution_time BIGINT NOT NULL
+CREATE INDEX queue_statement_id on queue (user_id, created, statement_id);
+CREATE INDEX vote_history_statement_id on vote_history (user_id, created, statement_id);
+CREATE TABLE alternatives (
+  statement_id integer not null references statements (id) on delete cascade on update cascade,
+  alternative_id integer not null references statements (id) on delete cascade on update cascade,
+  primary key (statement_id, alternative_id)
 );
-CREATE TABLE statements (
-  id integer not null primary key, -- rowid
-  text text not null,
-  created integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
-) strict;
-CREATE VIRTUAL TABLE statements_fts USING fts5(id UNINDEXED, text)
-/* statements_fts(id,text) */;
-CREATE TABLE IF NOT EXISTS 'statements_fts_data'(id INTEGER PRIMARY KEY, block BLOB);
-CREATE TABLE IF NOT EXISTS 'statements_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS 'statements_fts_content'(id INTEGER PRIMARY KEY, c0, c1);
-CREATE TABLE IF NOT EXISTS 'statements_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
-CREATE TABLE IF NOT EXISTS 'statements_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID;
-CREATE TABLE users (
-  id integer not null primary key, -- rowid
-  secret text not null unique,
-  created integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+CREATE TABLE api_keys (
+  id integer not null primary key,
+  hash text not null,
+  note text,
+  total_tokens integer not null default 0,
+  created integer not null default (strftime('%s', 'now'))
 ) strict;
 CREATE TABLE authors (
   -- if two statements are the same and were merged, there are multiple authors for one statement
@@ -30,27 +19,69 @@ CREATE TABLE authors (
   created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   primary key (user_id, statement_id)
 ) strict, without rowid;
+CREATE TABLE followups (
+  statement_id integer not null references statements(id) on delete cascade on update cascade,
+  followup_id integer not null references statements(id) on delete cascade on update cascade,
+  target_yes integer not null default 0,
+  target_no integer not null default 0,
+  primary key (statement_id, followup_id)
+) strict, without rowid;
+CREATE TABLE IF NOT EXISTS 'statements_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS 'statements_fts_content'(id INTEGER PRIMARY KEY, c0, c1);
+CREATE TABLE IF NOT EXISTS 'statements_fts_data'(id INTEGER PRIMARY KEY, block BLOB);
+CREATE TABLE IF NOT EXISTS 'statements_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
+CREATE TABLE IF NOT EXISTS 'statements_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID;
 CREATE TABLE queue (
   user_id integer not null references users(id) on delete cascade on update cascade,
   statement_id integer not null references statements(id) on delete cascade on update cascade,
   created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   primary key (user_id, statement_id) on conflict ignore
 ) strict, without rowid;
-CREATE INDEX queue_statement_id on queue (user_id, created, statement_id);
-CREATE TABLE vote_history (
-  user_id integer not null references users(id) on delete cascade on update cascade,
+CREATE TABLE _sqlx_migrations (
+    version BIGINT PRIMARY KEY,
+    description TEXT NOT NULL,
+    installed_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    success BOOLEAN NOT NULL,
+    checksum BLOB NOT NULL,
+    execution_time BIGINT NOT NULL
+);
+CREATE TABLE statement_embeddings (
   statement_id integer not null references statements(id) on delete cascade on update cascade,
-  created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
-  vote integer not null -- or separate table with skipped statements?
+  data blob,
+  prompt_tokens integer not null,
+  total_tokens integer GENERATED ALWAYS AS (prompt_tokens) VIRTUAL,
+  api_key_id integer not null references api_keys (id),
+  created integer not null default (strftime('%s', 'now')),
+  primary key (statement_id)
 ) strict;
-CREATE INDEX vote_history_statement_id on vote_history (user_id, created, statement_id);
-CREATE TABLE votes (
-  -- the current vote of a user for a statement, because opinions can change
+CREATE TABLE statement_flags (
   statement_id integer not null references statements(id) on delete cascade on update cascade,
-  user_id integer not null references users(id) on delete cascade on update cascade,
-  vote integer not null, -- or separate table with skipped statements?
-  primary key (statement_id, user_id)
-) strict, without rowid;
+  -- fully flagged or maybe flagged
+  state integer not null,
+  -- contains serialized json
+  categories text not null,
+  -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+  created integer not null default (strftime('%s', 'now')),
+  primary key (statement_id)
+) strict;
+CREATE TABLE statement_predictions (
+  statement_id integer not null references statements (id) on delete cascade on update cascade,
+  ai_env text not null,
+  prompt_name text not null,
+  prompt_version integer not null,
+  prompt_result text not null,
+  completion_tokens integer not null,
+  prompt_tokens integer not null,
+  total_tokens integer GENERATED ALWAYS AS (completion_tokens + prompt_tokens) VIRTUAL,
+  -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+  created integer not null default (strftime('%s', 'now')), api_key_id integer not null references api_keys (id),
+  primary key (statement_id, prompt_name, prompt_version)
+) strict;
+CREATE TABLE statements (
+  id integer not null primary key, -- rowid
+  text text not null,
+  created integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+) strict;
 CREATE TABLE statement_stats(
   statement_id int not null primary key references statements(id) on delete cascade on update cascade,
   yes_votes int not null default 0,
@@ -64,113 +95,37 @@ CREATE TABLE statement_stats(
   polarization generated always as (1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)) virtual,
   votes_per_subscription generated always as (cast(total_votes - skip_votes as real) / (subscriptions)) virtual
 );
-CREATE TABLE followups (
-  statement_id integer not null references statements(id) on delete cascade on update cascade,
-  followup_id integer not null references statements(id) on delete cascade on update cascade,
-  target_yes integer not null default 0,
-  target_no integer not null default 0,
-  primary key (statement_id, followup_id)
-) strict, without rowid;
 CREATE TABLE subscriptions (
   user_id integer not null references users(id) on delete cascade on update cascade,
   statement_id integer not null references statements(id) on delete cascade on update cascade,
   created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   primary key (user_id, statement_id) on conflict ignore
 ) strict, without rowid;
-CREATE TRIGGER statements_ai AFTER INSERT ON statements
-BEGIN
-  -- update search index
-  INSERT INTO statements_fts (id, text) VALUES (new.id, new.text);
-END;
-CREATE TRIGGER vote_history_ai AFTER INSERT ON vote_history
-BEGIN
+CREATE TABLE users (
+  id integer not null primary key, -- rowid
+  secret text not null unique,
+  created integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+) strict;
+CREATE TABLE vote_history (
+  user_id integer not null references users(id) on delete cascade on update cascade,
+  statement_id integer not null references statements(id) on delete cascade on update cascade,
+  created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
+  vote integer not null -- or separate table with skipped statements?
+) strict;
+CREATE TABLE votes (
+  -- the current vote of a user for a statement, because opinions can change
+  statement_id integer not null references statements(id) on delete cascade on update cascade,
+  user_id integer not null references users(id) on delete cascade on update cascade,
+  vote integer not null, -- or separate table with skipped statements?
+  primary key (statement_id, user_id)
+) strict, without rowid;
+CREATE TRIGGER api_key_stats AFTER INSERT ON statement_predictions
+  BEGIN
     -- update stats
-    INSERT INTO votes (statement_id, user_id, vote)
-      VALUES (new.statement_id, new.user_id, new.vote)
-      on conflict (statement_id, user_id) do update set vote = excluded.vote;
-    -- remove from queue
-    DELETE FROM queue WHERE user_id = new.user_id AND statement_id = new.statement_id;
-END;
-CREATE TRIGGER vote_history_ai_yes AFTER INSERT ON vote_history
-  WHEN new.vote = 1 OR new.vote = -1 -- yes or no
-BEGIN
-  -- if the vote was yes or no, add respective follow-ups to queue
-  INSERT INTO queue (user_id, statement_id)
-    SELECT new.user_id, followup_id
-      FROM followups
-      WHERE statement_id = new.statement_id
-      AND (
-         (new.vote =  1 AND target_yes = 1)
-        OR (new.vote = -1 AND target_no  = 1)
-      );
-END;
-CREATE TRIGGER vote_history_ai_itdepends AFTER INSERT ON vote_history
-  WHEN new.vote = 2 -- it depends
-BEGIN
-  -- if the vote was "it depends", add all follow-ups to queue
-  INSERT INTO queue (user_id, statement_id)
-    SELECT new.user_id, followup_id
-    FROM followups
-    WHERE statement_id = new.statement_id;
-END;
-CREATE TRIGGER votes_ai AFTER INSERT ON votes
-BEGIN
-  -- update stats
-  INSERT INTO statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
-  VALUES (
-    new.statement_id,
-    (new.vote = 1),
-    (new.vote = -1),
-    (new.vote = 0),
-    (new.vote = 2)
-  )
-  on CONFLICT (statement_id)
-  do UPDATE SET
-    yes_votes = statement_stats.yes_votes + (new.vote = 1),
-    no_votes = statement_stats.no_votes + (new.vote = -1),
-    skip_votes = statement_stats.skip_votes + (new.vote = 0),
-    itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2);
-END;
-CREATE TRIGGER votes_au AFTER UPDATE ON votes
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET yes_votes = statement_stats.yes_votes + (new.vote = 1) - (old.vote = 1),
-     no_votes = statement_stats.no_votes + (new.vote = -1) - (old.vote = -1),
-     skip_votes = statement_stats.skip_votes + (new.vote = 0) - (old.vote = 0),
-     itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2) - (old.vote = 2)
-   WHERE statement_id = old.statement_id;
-END;
-CREATE TRIGGER votes_ad AFTER DELETE ON votes
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET yes_votes = statement_stats.yes_votes - (old.vote = 1),
-     no_votes = statement_stats.no_votes - (old.vote = -1),
-     skip_votes = statement_stats.skip_votes - (old.vote = 0),
-     itdepends_votes = statement_stats.itdepends_votes - (old.vote = 2)
-   WHERE statement_id = old.statement_id;
-END;
-CREATE TRIGGER subscriptions_ai AFTER INSERT ON subscriptions
-BEGIN
-  --  update stats
-  INSERT INTO statement_stats (statement_id, subscriptions)
-    VALUES (new.statement_id, 1)
-    on CONFLICT (statement_id)
-    do UPDATE SET subscriptions = statement_stats.subscriptions + 1;
-  -- add follow-ups to queue
-  INSERT INTO queue (user_id, statement_id)
-    SELECT new.user_id, followup_id
-    FROM followups
-    WHERE statement_id = new.statement_id;
-END;
-CREATE TRIGGER subscriptions_ad AFTER DELETE ON subscriptions
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET subscriptions = statement_stats.subscriptions - 1
-   WHERE statement_id = old.statement_id;
-END;
+    UPDATE api_keys
+       SET total_tokens = total_tokens + new.total_tokens
+     WHERE id = new.api_key_id;
+  END;
 CREATE TRIGGER followups_ai AFTER INSERT ON followups
 BEGIN
   -- for yes/no voters
@@ -206,57 +161,6 @@ BEGIN
        OR ( vote = -1 AND new.target_no  = 1)
     );
 END;
-CREATE TABLE statement_predictions (
-  statement_id integer not null references statements (id) on delete cascade on update cascade,
-  ai_env text not null,
-  prompt_name text not null,
-  prompt_version integer not null,
-  prompt_result text not null,
-  completion_tokens integer not null,
-  prompt_tokens integer not null,
-  total_tokens integer GENERATED ALWAYS AS (completion_tokens + prompt_tokens) VIRTUAL,
-  -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
-  created integer not null default (strftime('%s', 'now')), api_key_id integer not null references api_keys (id),
-  primary key (statement_id, prompt_name, prompt_version)
-) strict;
-CREATE TABLE api_keys (
-  id integer not null primary key,
-  hash text not null,
-  note text,
-  total_tokens integer not null default 0,
-  created integer not null default (strftime('%s', 'now'))
-) strict;
-CREATE TRIGGER api_key_stats AFTER INSERT ON statement_predictions
-  BEGIN
-    -- update stats
-    UPDATE api_keys
-       SET total_tokens = total_tokens + new.total_tokens
-     WHERE id = new.api_key_id;
-  END;
-CREATE TABLE statement_flags (
-  statement_id integer not null references statements(id) on delete cascade on update cascade,
-  -- fully flagged or maybe flagged
-  state integer not null,
-  -- contains serialized json
-  categories text not null,
-  -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
-  created integer not null default (strftime('%s', 'now')),
-  primary key (statement_id)
-) strict;
-CREATE TABLE alternatives (
-  statement_id integer not null references statements (id) on delete cascade on update cascade,
-  alternative_id integer not null references statements (id) on delete cascade on update cascade,
-  primary key (statement_id, alternative_id)
-);
-CREATE TABLE statement_embeddings (
-  statement_id integer not null references statements(id) on delete cascade on update cascade,
-  data blob,
-  prompt_tokens integer not null,
-  total_tokens integer GENERATED ALWAYS AS (prompt_tokens) VIRTUAL,
-  api_key_id integer not null references api_keys (id),
-  created integer not null default (strftime('%s', 'now')),
-  primary key (statement_id)
-) strict;
 CREATE TRIGGER statement_embeddings_stats AFTER INSERT ON statement_embeddings
   BEGIN
     -- update stats
@@ -268,8 +172,104 @@ CREATE TRIGGER statements_ad AFTER DELETE ON statements BEGIN
   -- update search index
   DELETE FROM statements_fts WHERE id = old.id;
 END;
+CREATE TRIGGER statements_ai AFTER INSERT ON statements
+BEGIN
+  -- update search index
+  INSERT INTO statements_fts (id, text) VALUES (new.id, new.text);
+END;
 CREATE TRIGGER statements_au AFTER UPDATE ON statements BEGIN
   -- update search index
   DELETE FROM statements_fts WHERE id = old.id;
   insert into statements_fts(id, text) values (new.id, new.text);
 END;
+CREATE TRIGGER subscriptions_ad AFTER DELETE ON subscriptions
+BEGIN
+  -- update stats
+  UPDATE statement_stats
+   SET subscriptions = statement_stats.subscriptions - 1
+   WHERE statement_id = old.statement_id;
+END;
+CREATE TRIGGER subscriptions_ai AFTER INSERT ON subscriptions
+BEGIN
+  --  update stats
+  INSERT INTO statement_stats (statement_id, subscriptions)
+    VALUES (new.statement_id, 1)
+    on CONFLICT (statement_id)
+    do UPDATE SET subscriptions = statement_stats.subscriptions + 1;
+  -- add follow-ups to queue
+  INSERT INTO queue (user_id, statement_id)
+    SELECT new.user_id, followup_id
+    FROM followups
+    WHERE statement_id = new.statement_id;
+END;
+CREATE TRIGGER vote_history_ai AFTER INSERT ON vote_history
+BEGIN
+    -- update stats
+    INSERT INTO votes (statement_id, user_id, vote)
+      VALUES (new.statement_id, new.user_id, new.vote)
+      on conflict (statement_id, user_id) do update set vote = excluded.vote;
+    -- remove from queue
+    DELETE FROM queue WHERE user_id = new.user_id AND statement_id = new.statement_id;
+END;
+CREATE TRIGGER vote_history_ai_itdepends AFTER INSERT ON vote_history
+  WHEN new.vote = 2 -- it depends
+BEGIN
+  -- if the vote was "it depends", add all follow-ups to queue
+  INSERT INTO queue (user_id, statement_id)
+    SELECT new.user_id, followup_id
+    FROM followups
+    WHERE statement_id = new.statement_id;
+END;
+CREATE TRIGGER vote_history_ai_yes AFTER INSERT ON vote_history
+  WHEN new.vote = 1 OR new.vote = -1 -- yes or no
+BEGIN
+  -- if the vote was yes or no, add respective follow-ups to queue
+  INSERT INTO queue (user_id, statement_id)
+    SELECT new.user_id, followup_id
+      FROM followups
+      WHERE statement_id = new.statement_id
+      AND (
+         (new.vote =  1 AND target_yes = 1)
+        OR (new.vote = -1 AND target_no  = 1)
+      );
+END;
+CREATE TRIGGER votes_ad AFTER DELETE ON votes
+BEGIN
+  -- update stats
+  UPDATE statement_stats
+   SET yes_votes = statement_stats.yes_votes - (old.vote = 1),
+     no_votes = statement_stats.no_votes - (old.vote = -1),
+     skip_votes = statement_stats.skip_votes - (old.vote = 0),
+     itdepends_votes = statement_stats.itdepends_votes - (old.vote = 2)
+   WHERE statement_id = old.statement_id;
+END;
+CREATE TRIGGER votes_ai AFTER INSERT ON votes
+BEGIN
+  -- update stats
+  INSERT INTO statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
+  VALUES (
+    new.statement_id,
+    (new.vote = 1),
+    (new.vote = -1),
+    (new.vote = 0),
+    (new.vote = 2)
+  )
+  on CONFLICT (statement_id)
+  do UPDATE SET
+    yes_votes = statement_stats.yes_votes + (new.vote = 1),
+    no_votes = statement_stats.no_votes + (new.vote = -1),
+    skip_votes = statement_stats.skip_votes + (new.vote = 0),
+    itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2);
+END;
+CREATE TRIGGER votes_au AFTER UPDATE ON votes
+BEGIN
+  -- update stats
+  UPDATE statement_stats
+   SET yes_votes = statement_stats.yes_votes + (new.vote = 1) - (old.vote = 1),
+     no_votes = statement_stats.no_votes + (new.vote = -1) - (old.vote = -1),
+     skip_votes = statement_stats.skip_votes + (new.vote = 0) - (old.vote = 0),
+     itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2) - (old.vote = 2)
+   WHERE statement_id = old.statement_id;
+END;
+CREATE VIRTUAL TABLE statements_fts USING fts5(id UNINDEXED, text)
+/* statements_fts(id,text) */;
