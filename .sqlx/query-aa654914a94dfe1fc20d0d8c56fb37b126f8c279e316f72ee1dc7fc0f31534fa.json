@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into subscriptions(user_id, statement_id) values (17, 2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "aa654914a94dfe1fc20d0d8c56fb37b126f8c279e316f72ee1dc7fc0f31534fa"
+}

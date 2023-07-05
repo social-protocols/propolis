@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "select yes_votes, no_votes, itdepends_votes from statement_stats where statement_id = 2",
+  "describe": {
+    "columns": [
+      {
+        "name": "yes_votes",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "no_votes",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "itdepends_votes",
+        "ordinal": 2,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "27ef79907a9caf68871fe645abf4c1930c922fc4ac5f0318a15f38be1695aba6"
+}

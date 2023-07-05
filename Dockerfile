@@ -33,7 +33,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 # Build the full project
 COPY rust-toolchain.toml Cargo.toml Cargo.lock ./
 COPY ./src ./src
-COPY sqlx-data.json ./
+COPY ./.sqlx ./
 COPY ./lib ./lib
 COPY ./migrations ./migrations
 COPY ./static ./static

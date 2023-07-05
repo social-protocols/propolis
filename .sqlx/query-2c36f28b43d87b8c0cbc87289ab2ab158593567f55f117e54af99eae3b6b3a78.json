@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "select\n-- see: https://github.com/launchbadge/sqlx/issues/1126 on why this is necessary when using ORDER BY\n  statement_id as \"statement_id!\",\n  ai_env as \"ai_env!\",\n  prompt_name as \"prompt_name!\",\n  prompt_version as \"prompt_version!\",\n  prompt_result as \"prompt_result!\",\n  completion_tokens as \"completion_tokens!\",\n  prompt_tokens as \"prompt_tokens!\",\n  total_tokens as \"total_tokens!\",\n  created as \"created!\"\nfrom statement_predictions\nwhere statement_id = ? order by created desc",
+  "describe": {
+    "columns": [
+      {
+        "name": "statement_id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "ai_env!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "prompt_name!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "prompt_version!",
+        "ordinal": 3,
+        "type_info": "Int64"
+      },
+      {
+        "name": "prompt_result!",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "completion_tokens!",
+        "ordinal": 5,
+        "type_info": "Int64"
+      },
+      {
+        "name": "prompt_tokens!",
+        "ordinal": 6,
+        "type_info": "Int64"
+      },
+      {
+        "name": "total_tokens!",
+        "ordinal": 7,
+        "type_info": "Int64"
+      },
+      {
+        "name": "created!",
+        "ordinal": 8,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2c36f28b43d87b8c0cbc87289ab2ab158593567f55f117e54af99eae3b6b3a78"
+}

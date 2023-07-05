@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT statement_id, state, categories, created\n            FROM statement_flags\n            WHERE statement_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "statement_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "state",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "categories",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "created",
+        "ordinal": 3,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "28e7560c372f7d6b2148b3932b410a9e8e0a1aa5e809ba51be7b52417b3174d2"
+}

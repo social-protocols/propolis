@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 3, 1, 0)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "c3db6913d5adbc2e4b8c6d09e3fc3da8c0e3190413faea67fea2c0268212944e"
+}

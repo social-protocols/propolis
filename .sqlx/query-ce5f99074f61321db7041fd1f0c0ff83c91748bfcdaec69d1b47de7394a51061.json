@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select count(*) as subscription from subscriptions where user_id = ? and statement_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "subscription",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ce5f99074f61321db7041fd1f0c0ff83c91748bfcdaec69d1b47de7394a51061"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into subscriptions (user_id, statement_id) values (?, ?) on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "b0bfa8b55bcebabbd2abf5e60388a91fa92da050e135faa126d45e44a573c478"
+}

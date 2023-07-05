@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE statement_flags\n            SET state = ?, categories = ?\n            WHERE statement_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "be8828054bf9813472c1af0255675b2a382d760b9dbf597febbbc41a80258088"
+}

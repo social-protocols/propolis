@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO followups (statement_id, followup_id, target_yes, target_no) VALUES (?, ?, ?, ?)\n         on conflict(statement_id, followup_id) do update\n         set target_yes = min(1, target_yes + excluded.target_yes),\n             target_no  = min(1, target_no  + excluded.target_no )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "759358773931c1ee6b54cd55371dc58486311a952f08d9080c9bc2661aef78a8"
+}

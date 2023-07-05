@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update statements set text = 'The world is round.' where id = 2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "595d91c1a56ea07bb6d16cce529d71bd79e58a27872dfbbf61180f0dfaa2c810"
+}

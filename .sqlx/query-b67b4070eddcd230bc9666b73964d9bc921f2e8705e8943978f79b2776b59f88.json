@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "select s.id as statement_id, s.text as statement_text, v.created as vote_timestamp, vote from vote_history v\n            join statements s on s.id = v.statement_id\n            where user_id = ? and vote != 0\n            order by v.created desc\n            limit ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "statement_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "statement_text",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "vote_timestamp",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "vote",
+        "ordinal": 3,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b67b4070eddcd230bc9666b73964d9bc921f2e8705e8943978f79b2776b59f88"
+}
