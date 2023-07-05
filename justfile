@@ -25,6 +25,9 @@ reset-db:
 migrate:
 	sqlx migrate run
 
+schema-diff:
+  find migrations | entr -cnr bash -c "sqlx database drop -y && sqlx database create && sqlx migrate run && scripts/sorted_schema > schema.sql && git diff --color-words -- schema.sql | cat"
+
 seed:
   URL=http://localhost:8000 scripts/seed
 
@@ -47,7 +50,7 @@ fix:
   echo "Make sure no other compilers are running at the same time (e.g. just develop)"
   sqlx migrate run
   cargo sqlx prepare --merged
-  sqlite3 -init /dev/null data/data.sqlite '.schema' > schema.sql
+  scripts/sorted_schema > schema.sql
   cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo fmt
