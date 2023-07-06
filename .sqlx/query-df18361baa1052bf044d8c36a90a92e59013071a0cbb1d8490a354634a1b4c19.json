@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into queue(user_id, statement_id) values (3, 2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "df18361baa1052bf044d8c36a90a92e59013071a0cbb1d8490a354634a1b4c19"
+}

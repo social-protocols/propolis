@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select vote from votes where user_id = ? and statement_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "vote",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "75fe5c149645183d120fd6b07c2d1cc50fdf28f46198928d6eacdcca07ad38e8"
+}

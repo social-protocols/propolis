@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into vote_history(user_id, statement_id, vote) values (3, 2, 1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "7562dcadedb4dde3d7a7621d1ec7e7639922ef38b69ee9ddbc4b4275c0370c38"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO statement_predictions\n                (statement_id, ai_env, prompt_name, prompt_version,\n                 prompt_result, completion_tokens, prompt_tokens, api_key_id)\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "6c965651617ff5355303d5372fa876eb70077ea26500dcc1de58cc846ba90391"
+}

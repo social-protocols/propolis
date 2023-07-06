@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "insert into statements(id, text) values (2, 'The world is flat.')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "b3c4ee79151299edd314d6cf740816e8c2c587bc5492be3f5a9add6bed90cd36"
+}

@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, hash, note FROM api_keys WHERE hash = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "hash",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "note",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e99fbce93ea1971be57e4557b829636145e1c0fa993544de9916e251d51ea3a3"
+}

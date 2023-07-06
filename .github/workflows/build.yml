@@ -46,7 +46,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install tools
-        run: cargo install sqlx-cli --version 0.6.2
+        run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
         uses: HatsuneMiku3939/direnv-action@c8e21f81441f7d259ec1e2a1eb5256ad1a1e6bd4 # pin@v1
@@ -63,7 +63,7 @@ jobs:
           cmp -s /tmp/current_schema.sql schema.sql
 
       - name: Validate sqlx offline mode data
-        run: cargo sqlx prepare --check --merged
+        run: cargo sqlx prepare --check --workspace -- --all-targets --all-features
 
       - name: cargo clippy (no features)
         # clippy also includes all warnings from cargo check

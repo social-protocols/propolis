@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO alternatives (statement_id, alternative_id) VALUES (?, ?)\n         on conflict(statement_id, alternative_id) do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6f942cf713ff1257b8684a0bc9954d37917f89855291f17de4649d3e03cd47e1"
+}

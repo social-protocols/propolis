@@ -31,9 +31,9 @@ schema-diff:
 seed:
   URL=http://localhost:8000 scripts/seed
 
-# Create sqlx-data.json file for sqlx offline mode
+# Create ./.sqlx folder for sqlx offline mode
 prepare-sqlx-offline-mode:
-	cargo sqlx prepare --merged
+	cargo sqlx prepare --workspace -- --all-targets --all-features
 
 # Run server
 start:
@@ -49,14 +49,14 @@ test:
 fix:
   echo "Make sure no other compilers are running at the same time (e.g. just develop)"
   sqlx migrate run
-  cargo sqlx prepare --merged
+  just prepare-sqlx-offline-mode
   scripts/sorted_schema > schema.sql
   cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo fmt
 
 install-fix-hook:
-	echo "just fix > /dev/null 2>&1; git add sqlx-data.json schema.sql > /dev/null" > .git/hooks/pre-commit
+	echo "just fix > /dev/null 2>&1; git add .sqlx schema.sql > /dev/null" > .git/hooks/pre-commit
 	chmod +x .git/hooks/pre-commit
 
 # Run wrk HTTP benchmark against server running on localhost

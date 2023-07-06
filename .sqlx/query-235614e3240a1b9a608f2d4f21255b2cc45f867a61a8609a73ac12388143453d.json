@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select count(*) from queue where user_id = 17 and statement_id = 4",
+  "describe": {
+    "columns": [
+      {
+        "name": "count(*)",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "235614e3240a1b9a608f2d4f21255b2cc45f867a61a8609a73ac12388143453d"
+}

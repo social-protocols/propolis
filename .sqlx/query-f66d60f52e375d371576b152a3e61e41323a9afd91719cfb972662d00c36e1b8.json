@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO statement_flags\n            (statement_id, state, categories)\n            VALUES (?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "f66d60f52e375d371576b152a3e61e41323a9afd91719cfb972662d00c36e1b8"
+}

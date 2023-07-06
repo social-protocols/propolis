@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select followup_id from followups where statement_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "followup_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9d9cc8b6aa02305b9c83ae238781fe1e81416c8ccec717b62a14268a37f6462a"
+}

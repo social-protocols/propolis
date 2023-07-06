@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "update followups set target_no = 1 where statement_id = 2 and followup_id = 3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "05311b61323b7b4d6937cf6bd33a9eeae301e86fa351719252beabc7ca511e97"
+}

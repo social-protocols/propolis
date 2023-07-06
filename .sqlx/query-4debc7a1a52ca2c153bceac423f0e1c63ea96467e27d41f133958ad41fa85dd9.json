@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "select subscriptions from statement_stats where statement_id = 2",
+  "describe": {
+    "columns": [
+      {
+        "name": "subscriptions",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4debc7a1a52ca2c153bceac423f0e1c63ea96467e27d41f133958ad41fa85dd9"
+}

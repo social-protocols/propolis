@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id,text FROM statements WHERE\nid NOT IN\n  (SELECT statement_id\n   FROM statement_predictions\n   WHERE\n     prompt_name = ? AND\n     prompt_version = ?\n) AND\n-- id must not be flagged\nid NOT IN\n(SELECT statement_id\n   FROM statement_flags\n)\nLIMIT ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "text",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "fc91196f2395dfad1783ee837bc1ea234f22814bbc07b0ccafd66197b20d5fde"
+}
