@@ -122,6 +122,7 @@ impl AiEnv for OpenAiEnv {
         }
 
         let result = ChatCompletion::builder(self.model, messages.to_owned())
+            .temperature(0.0)
             .create()
             .await?
             .unwrap();
