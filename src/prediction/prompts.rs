@@ -301,7 +301,9 @@ num|category|label1|label2|label3|tag1|tag2|tag3
 2|personal|extraversion:s|openness:w|agreeableness:s|clubs:s|friendship:s|socializing:w
 ```",
                 ),
-                AiMessage::user(stmts_s.to_string().as_str()),
+                AiMessage::user(
+                    format!("```csv\n{stmts_s}```").as_str()
+                ),
                 // In case we get issues with the assistant not starting with the CSV data properly,
                 // it might work to start it properly ourselves like this:
 //                 AiMessage::assistant(
