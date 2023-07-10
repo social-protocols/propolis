@@ -57,6 +57,16 @@ impl Vote {
     pub fn from(vote: i64) -> Result<Vote> {
         FromPrimitive::from_i64(vote).ok_or(anyhow!("Unknown vote value: {}", vote))
     }
+
+    /// Returns a factor that you can use in formulas. Maps ItDepends to 0.
+    pub fn to_factor(self) -> i64 {
+        match self {
+            Vote::No => -1,
+            Vote::Skip => 0,
+            Vote::Yes => 1,
+            Vote::ItDepends => 0,
+        }
+    }
 }
 
 #[derive(Serialize, sqlx::FromRow)]

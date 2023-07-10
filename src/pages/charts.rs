@@ -2,6 +2,10 @@ use anyhow::Result;
 
 use maud::{html, Markup, PreEscaped};
 use serde_json::json;
+
+#[cfg(feature = "with_predictions")]
+use serde_json::Value;
+
 use sqlx::SqlitePool;
 
 use crate::{db::statement_stats, structs::StatementStats};
@@ -81,76 +85,6 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
     }
 }
 
-#[cfg(feature = "with_predictions")]
-/// Yield code for a radar chart displaying the most common ideologies of a user
-pub fn ideologies_radar_chart(
-    ideologies_map: &std::collections::HashMap<String, crate::db::UserIdeologyStats>,
-) -> Result<Markup> {
-    use std::collections::HashMap;
-
-    use crate::db::UserIdeologyStats;
-    let mut hash_vec: Vec<(&String, &crate::db::UserIdeologyStats)> =
-        ideologies_map.iter().collect();
-    hash_vec.sort_unstable_by_key(|item| (((item.1.votes_weight * -100_f64) as i64), item.0));
-    let hash_vec: Vec<&(&String, &UserIdeologyStats)> = hash_vec.iter().take(5).collect();
-
-    let mut data: Vec<HashMap<&str, String>> = vec![];
-    for &(
-        ideology,
-        crate::db::UserIdeologyStats {
-            votes_cast,
-            votes_weight,
-        },
-    ) in hash_vec
-    {
-        data.push(HashMap::from([
-            ("x", ideology.into()),
-            ("y", votes_weight.to_string()),
-            ("total", votes_cast.to_string()),
-        ]));
-    }
-    let data_json = json!(data);
-    Ok(apex_chart(
-        format!(
-            r#"
-                {{
-          series: [{{
-          name: 'Weighted votes',
-          data: {data_json},
-        }},
-],
-          chart: {{
-          height: 350,
-          type: 'radar',
-        }},
-        title: {{
-          text: 'Ideologies'
-        }},
-        xaxis: {{
-          type: 'category'
-        }},
-        yaxis: {{
-          tickAmount: 4,
-          labels: {{
-            formatter: function(val, i) {{
-              return (Math.round(val * 100) / 100).toFixed(2);
-            }}
-          }}
-        }},
-        tooltip: {{
-          y: {{
-            formatter: function(value, {{ series, seriesIndex, dataPointIndex, w }}) {{
-              var data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
-              return (Math.round(value * 100) / 100).toFixed(2) + " (Score: " + data['total'] + ")";
-            }}
-          }}
-        }}
-        }}"#,
-        )
-        .as_str(),
-    ))
-}
-
 pub fn apex_chart(options: &str) -> Markup {
     let uuid = uuid::Uuid::new_v4();
     let chart_id = format!("chart-{uuid}");
@@ -174,4 +108,80 @@ pub fn apex_chart(options: &str) -> Markup {
             "##)))
         }
     }
+}
+
+#[cfg(feature = "with_predictions")]
+pub fn weighted_user_chart(title: &str, data_json: Value) -> Markup {
+    apex_chart(
+        format!(
+            r#"
+                {{
+          series: [{{
+          name: 'Weighted votes',
+          data: {data_json},
+        }},
+],
+          chart: {{
+          background: 'transparent',
+          height: 350,
+          type: 'radar',
+        }},
+        title: {{
+          text: '{title}'
+        }},
+        xaxis: {{
+          type: 'category'
+        }},
+        yaxis: {{
+          tickAmount: 4,
+          labels: {{
+            formatter: function(val, i) {{
+              return (Math.round(val * 100) / 100).toFixed(2);
+            }}
+          }}
+        }},
+        tooltip: {{
+          y: {{
+            formatter: function(value, {{ series, seriesIndex, dataPointIndex, w }}) {{
+              var data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+              return (Math.round(value * 100) / 100).toFixed(2) + " (Score: " + data['total'] + ")";
+            }}
+          }}
+        }}
+        }}"#,
+        )
+        .as_str(),
+    )
+}
+
+#[cfg(feature = "with_predictions")]
+/// Yield code for a radar chart displaying the weighted stats
+pub fn user_radar_chart(
+    title: &str,
+    weights_map: &std::collections::HashMap<String, crate::db::UserStat>,
+) -> Result<Markup> {
+    use std::collections::HashMap;
+
+    use crate::db::UserStat;
+    let mut hash_vec: Vec<(&String, &crate::db::UserStat)> = weights_map.iter().collect();
+    hash_vec.sort_unstable_by_key(|item| (((item.1.votes_weight * -100_f64) as i64), item.0));
+    let hash_vec: Vec<&(&String, &UserStat)> = hash_vec.iter().take(5).collect();
+
+    let mut data: Vec<HashMap<&str, String>> = vec![];
+    for &(
+        ideology,
+        crate::db::UserStat {
+            votes_cast,
+            votes_weight,
+        },
+    ) in hash_vec
+    {
+        data.push(HashMap::from([
+            ("x", ideology.into()),
+            ("y", votes_weight.to_string()),
+            ("total", votes_cast.to_string()),
+        ]));
+    }
+    let data_json = json!(data);
+    Ok(weighted_user_chart(title, data_json))
 }
