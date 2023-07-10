@@ -169,6 +169,10 @@ pub fn apex_chart(options: &str) -> Markup {
             (PreEscaped(format!(r##"
             (() => {{
                 var options = {options};
+
+                if (window.propolisDarkMode) {{
+                    options.theme = {{"mode": "dark"}};
+                }}
                 var elem = document.querySelector("#{chart_id}")
                 elem.innerHTML = ""; // avoid rendering twice
                 new ApexCharts(elem, options).render();
