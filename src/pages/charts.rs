@@ -95,9 +95,7 @@ pub fn ideologies_radar_chart(
     use crate::db::UserIdeologyStats;
     let mut hash_vec: Vec<(&String, &crate::db::UserIdeologyStats)> =
         ideologies_map.iter().collect();
-    hash_vec.sort_unstable_by_key(|item| {
-        (((item.1.votes_weight * -100_f64) as i64), item.0)
-    });
+    hash_vec.sort_unstable_by_key(|item| (((item.1.votes_weight * -100_f64) as i64), item.0));
     let hash_vec: Vec<&(&String, &UserIdeologyStats)> = hash_vec.iter().take(5).collect();
 
     let mut data: Vec<HashMap<&str, String>> = vec![];
