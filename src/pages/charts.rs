@@ -91,16 +91,17 @@ pub fn ideologies_radar_chart(
     ideologies_map: &std::collections::HashMap<String, crate::db::UserIdeologyStats>,
 ) -> Result<Markup> {
     use std::collections::HashMap;
+
+    use crate::db::UserIdeologyStats;
     let mut hash_vec: Vec<(&String, &crate::db::UserIdeologyStats)> =
         ideologies_map.iter().collect();
-    hash_vec.sort_by(|a, b| {
-        b.1.votes_weight
-            .partial_cmp(&a.1.votes_weight)
-            .unwrap_or(std::cmp::Ordering::Equal)
+    hash_vec.sort_unstable_by_key(|item| {
+        (((item.1.votes_weight * -100_f64) as i64), item.0)
     });
+    let hash_vec: Vec<&(&String, &UserIdeologyStats)> = hash_vec.iter().take(5).collect();
 
     let mut data: Vec<HashMap<&str, String>> = vec![];
-    for (
+    for &(
         ideology,
         crate::db::UserIdeologyStats {
             votes_cast,
