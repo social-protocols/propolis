@@ -7,6 +7,7 @@ use sqlx::{
 };
 use std::str::FromStr;
 
+use crate::DatabaseCodeAsset;
 use crate::{
     highlight::{HIGHLIGHT_BEGIN, HIGHLIGHT_END},
     structs::{SearchResultStatement, Statement, VoteHistoryItem},
@@ -372,6 +373,31 @@ pub async fn setup_db(opts: &DatabaseOpts) -> SqlitePool {
             .run(&sqlite_pool)
             .await
             .expect("Unable to migrate");
+
+        println!("Dropping all existing triggers...");
+        let existing_triggers = sqlx::query_scalar::<_, String>(
+            "select name from sqlite_master where type = 'trigger'",
+        )
+        .fetch_all(&sqlite_pool)
+        .await
+        .unwrap();
+        for trigger in existing_triggers {
+            println!("drop trigger {trigger}");
+            sqlx::query(&format!("drop trigger {trigger}"))
+                .execute(&sqlite_pool)
+                .await
+                .unwrap_or_else(|msg| panic!("Unable to drop trigger: {trigger}, {msg}"));
+        }
+        for path in DatabaseCodeAsset::iter() {
+            println!("loading database code: {path}");
+            let file = DatabaseCodeAsset::get(path.into_owned().as_str()).unwrap();
+            let sql = std::str::from_utf8(file.data.as_ref()).unwrap();
+            sqlx::query(sql)
+                .execute(&sqlite_pool)
+                .await
+                .expect("Unable to load database code: {path}");
+        }
+        println!("Database migrations successful.");
     }
 
     for option in [

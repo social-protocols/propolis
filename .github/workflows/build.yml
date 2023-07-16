@@ -54,11 +54,11 @@ jobs:
       - name: Migrate database
         run: |
           sqlx database create
-          sqlx migrate run
+          scripts/migrate
 
       - name: Validate current schema
         run: |
-          scripts/sorted_schema > /tmp/current_schema.sql
+          scripts/dump_schema > /tmp/current_schema.sql
           git diff --no-index --ws-error-highlight=all --color=always /tmp/current_schema.sql schema.sql
           cmp -s /tmp/current_schema.sql schema.sql
 
