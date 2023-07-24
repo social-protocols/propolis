@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail
+set -Eeuo pipefail
+# cd to script location
+cd "$(dirname "${BASH_SOURCE[0]}")"
+cd ..
+
+echo "Dropping all existing triggers..."
+sqlite3 --init /dev/null data/data.sqlite "select name from sqlite_master where type = 'trigger'" | while read -r trigger; do
+    echo "dropping trigger \"$trigger\""; sqlite3 --init /dev/null data/data.sqlite "drop trigger \"$trigger\""
+done
+
+# for every sql file in database_code
+find database-code -type f -name '*.sql' | while read -r file; do
+    echo "Importing database code from $file..."
+    sqlite3 --init /dev/null data/data.sqlite < "$file"
+done

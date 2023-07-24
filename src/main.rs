@@ -54,6 +54,13 @@ use crate::pages::vote::vote_post;
 #[folder = "static/"]
 struct StaticAsset;
 
+// embed database code, like triggers into release binary
+#[cfg(feature = "embed_migrations")]
+#[derive(RustEmbed)]
+#[folder = "database-code"]
+#[include = "*.sql"]
+struct DatabaseCodeAsset;
+
 #[tokio::main]
 async fn main() {
     let opts = ProgramOpts::parse();

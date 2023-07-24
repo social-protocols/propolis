@@ -14,19 +14,19 @@ drop-db:
 # Create and migrate database
 create-db:
 	sqlx database create
-	sqlx migrate run
+	scripts/migrate
 
 # Delete, recreate and migrate database
 reset-db:
-	sqlx database drop
+	sqlx database drop -y
 	sqlx database create
-	sqlx migrate run
+	scripts/migrate
 
 migrate:
-	sqlx migrate run
+	scripts/migrate
 
 schema-diff:
-  find migrations | entr -cnr bash -c "sqlx database drop -y && sqlx database create && sqlx migrate run && scripts/sorted_schema > schema.sql && git diff --color-words -- schema.sql | cat"
+  find migrations | entr -cnr bash -c "sqlx database drop -y && sqlx database create && scripts/migrate && scripts/dump_schema > schema.sql && git diff --color-words -- schema.sql | cat"
 
 seed:
   URL=http://localhost:8000 scripts/seed
@@ -48,9 +48,9 @@ test:
 
 fix:
   echo "Make sure no other compilers are running at the same time (e.g. just develop)"
-  sqlx migrate run
-  just prepare-sqlx-offline-mode
-  scripts/sorted_schema > schema.sql
+  scripts/migrate
+  scripts/dump_schema > schema.sql
+  cargo sqlx prepare --merged
   cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo fmt

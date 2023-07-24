@@ -13,5 +13,6 @@ export LC_ALL="en_US.UTF-8"
 sqlite3 --init /dev/null data/data.sqlite '.schema' \
  | sed ':a;N;$!ba;s/\n/<<NEWLINE>>/g' \
  | sed 's/;<<NEWLINE>>CREATE/;\nCREATE/g' \
+ | grep -v '^CREATE TRIGGER' \
  | sort \
  | sed 's/<<NEWLINE>>/\n/g'
