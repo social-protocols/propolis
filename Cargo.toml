@@ -31,7 +31,7 @@ sqlx = { version = "0.7", features = ["sqlite", "macros", "runtime-tokio"] }
 tracing = "0.1.37"
 tokio = { version = "1.29.1", features = ["full"] }
 num-derive = "0.3.3"
-num-traits = "0.2.15"
+num-traits = "0.2.16"
 
 [dependencies]
 # local deps
