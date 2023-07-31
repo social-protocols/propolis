@@ -16,7 +16,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["with_predictions"]
+default = ["with_predictions", "embed_migrations"]
 embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
@@ -53,7 +53,7 @@ csv = "1.2.2"
 function_name = "0.3.0"
 futures = "0.3.28"
 http = "0.2.9"
-maud = { version = "0.25.0", features = ["axum"] } # https://github.com/lambda-fairy/maud/issues/366
+maud = { version = "0.25.0", features = ["axum"] }
 mime_guess = "2.0.4"
 num-derive = { workspace = true }
 num-traits = { workspace = true }
@@ -66,7 +66,11 @@ sqlx = { workspace = true }
 timediff = "0.2.3"
 tokio = { workspace = true }
 tower-cookies = "0.9.0"
-tower-http = { version = "0.4.1", features = ["fs", "compression-gzip", "trace"] }
+tower-http = { version = "0.4.1", features = [
+    "fs",
+    "compression-gzip",
+    "trace",
+] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 uuid = { version = "1.4.0", features = ["v4", "fast-rng"] }
