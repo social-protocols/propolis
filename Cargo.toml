@@ -21,7 +21,7 @@ embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
 [workspace.dependencies]
-anyhow = "1.0.71"
+anyhow = "1.0.72"
 async-std = "1.12.0"
 async-trait = "0.1.71"
 db = { path = "lib/db" }
