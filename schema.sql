@@ -1,4 +1,5 @@
 CREATE INDEX queue_statement_id on queue (user_id, created, statement_id);
+CREATE INDEX subscriptions_idx_statement_id ON subscriptions(statement_id);
 CREATE INDEX vote_history_statement_id on vote_history (user_id, created, statement_id);
 CREATE TABLE alternatives (
   statement_id integer not null references statements (id) on delete cascade on update cascade,
@@ -82,19 +83,6 @@ CREATE TABLE statements (
   text text not null,
   created integer not null default (strftime('%s', 'now')) -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
 ) strict;
-CREATE TABLE statement_stats(
-  statement_id int not null primary key references statements(id) on delete cascade on update cascade,
-  yes_votes int not null default 0,
-  no_votes int not null default 0,
-  skip_votes int not null default 0,
-  itdepends_votes int not null default 0,
-  subscriptions int not null default 0,
-  -- computed fields
-  total_votes generated always as (yes_votes + no_votes + skip_votes + itdepends_votes) virtual,
-  participation generated always as (cast(total_votes - skip_votes as real) / (total_votes)) virtual,
-  polarization generated always as (1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)) virtual,
-  votes_per_subscription generated always as (cast(total_votes - skip_votes as real) / (subscriptions)) virtual
-);
 CREATE TABLE subscriptions (
   user_id integer not null references users(id) on delete cascade on update cascade,
   statement_id integer not null references statements(id) on delete cascade on update cascade,
@@ -182,20 +170,8 @@ CREATE TRIGGER statements_au AFTER UPDATE ON statements BEGIN
   DELETE FROM statements_fts WHERE id = old.id;
   insert into statements_fts(id, text) values (new.id, new.text);
 END;
-CREATE TRIGGER subscriptions_ad AFTER DELETE ON subscriptions
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET subscriptions = statement_stats.subscriptions - 1
-   WHERE statement_id = old.statement_id;
-END;
 CREATE TRIGGER subscriptions_ai AFTER INSERT ON subscriptions
 BEGIN
-  --  update stats
-  INSERT INTO statement_stats (statement_id, subscriptions)
-    VALUES (new.statement_id, 1)
-    on CONFLICT (statement_id)
-    do UPDATE SET subscriptions = statement_stats.subscriptions + 1;
   -- add follow-ups to queue
   INSERT INTO queue (user_id, statement_id)
     SELECT new.user_id, followup_id
@@ -233,43 +209,40 @@ BEGIN
         OR (new.vote = -1 AND target_no  = 1)
       );
 END;
-CREATE TRIGGER votes_ad AFTER DELETE ON votes
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET yes_votes = statement_stats.yes_votes - (old.vote = 1),
-     no_votes = statement_stats.no_votes - (old.vote = -1),
-     skip_votes = statement_stats.skip_votes - (old.vote = 0),
-     itdepends_votes = statement_stats.itdepends_votes - (old.vote = 2)
-   WHERE statement_id = old.statement_id;
-END;
-CREATE TRIGGER votes_ai AFTER INSERT ON votes
-BEGIN
-  -- update stats
-  INSERT INTO statement_stats (statement_id, yes_votes, no_votes, skip_votes, itdepends_votes)
-  VALUES (
-    new.statement_id,
-    (new.vote = 1),
-    (new.vote = -1),
-    (new.vote = 0),
-    (new.vote = 2)
-  )
-  on CONFLICT (statement_id)
-  do UPDATE SET
-    yes_votes = statement_stats.yes_votes + (new.vote = 1),
-    no_votes = statement_stats.no_votes + (new.vote = -1),
-    skip_votes = statement_stats.skip_votes + (new.vote = 0),
-    itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2);
-END;
-CREATE TRIGGER votes_au AFTER UPDATE ON votes
-BEGIN
-  -- update stats
-  UPDATE statement_stats
-   SET yes_votes = statement_stats.yes_votes + (new.vote = 1) - (old.vote = 1),
-     no_votes = statement_stats.no_votes + (new.vote = -1) - (old.vote = -1),
-     skip_votes = statement_stats.skip_votes + (new.vote = 0) - (old.vote = 0),
-     itdepends_votes = statement_stats.itdepends_votes + (new.vote = 2) - (old.vote = 2)
-   WHERE statement_id = old.statement_id;
-END;
+CREATE VIEW statement_stats AS
+WITH counted_votes as (
+    SELECT
+        id as statement_id
+        , coalesce(sum(vote = 1), 0) as yes_votes
+        , coalesce(sum(vote = -1), 0) as no_votes
+        , coalesce(sum(vote = 0), 0) as skip_votes
+        , coalesce(sum(vote = 2), 0) as itdepends_votes
+    from statements
+    left outer join votes
+    on statements.id = votes.statement_id
+    group by statement_id
+)
+, counted_votes_subscriptions as (
+    select
+        counted_votes.*
+        , count(all user_id) as subscriptions
+    from counted_votes
+    left outer join subscriptions
+    using(statement_id)
+    group by statement_id
+)
+, cte as (
+    select
+        *
+        , (yes_votes + no_votes + skip_votes + itdepends_votes) as total_votes
+    from counted_votes_subscriptions
+)
+select
+    *
+    , coalesce((cast(total_votes - skip_votes as real) / (total_votes)), 0) as participation
+    , coalesce((1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)), 0) as polarization
+    , coalesce((cast(total_votes - skip_votes as real) / (subscriptions)), 0) as votes_per_subscription
+from cte
+/* statement_stats(statement_id,yes_votes,no_votes,skip_votes,itdepends_votes,subscriptions,total_votes,participation,polarization,votes_per_subscription) */;
 CREATE VIRTUAL TABLE statements_fts USING fts5(id UNINDEXED, text)
 /* statements_fts(id,text) */;

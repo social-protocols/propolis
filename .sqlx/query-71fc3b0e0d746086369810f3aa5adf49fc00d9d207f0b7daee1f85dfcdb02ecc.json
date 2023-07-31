@@ -6,12 +6,12 @@
       {
         "name": "yes_votes",
         "ordinal": 0,
-        "type_info": "Int64"
+        "type_info": "Int"
       },
       {
         "name": "no_votes",
         "ordinal": 1,
-        "type_info": "Int64"
+        "type_info": "Int"
       }
     ],
     "parameters": {
