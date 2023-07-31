@@ -6,11 +6,22 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 cd ..
 
 
+export TMP=$(mktemp -d)
+export DATABASE_FILE="$TMP/data.sqlite"
+export DATABASE_URL="sqlite://$DATABASE_FILE"
+
 # The locale specified by the environment affects sort order.
 export LC_ALL="en_US.UTF-8"
 
+
+# Apply all migrations to a temporary database.
+# redirect stdout to stderr, so it doesn't appear in the final schema
+sqlx database create 1>&2
+sqlx migrate run 1>&2
+
+# Then dump the schema and sort it.
 # The overall effect of this command sequence is to sort SQL CREATE commands while preserving the original formatting and line breaks within each command.
-sqlite3 --init /dev/null data/data.sqlite '.schema' \
+sqlite3 --init /dev/null $DATABASE_FILE '.schema' \
  | sed ':a;N;$!ba;s/\n/<<NEWLINE>>/g' \
  | sed 's/;<<NEWLINE>>CREATE/;\nCREATE/g' \
  | sort \

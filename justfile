@@ -25,8 +25,12 @@ reset-db:
 migrate:
 	sqlx migrate run
 
+# watch migrations and show diff of schema.sql
 schema-diff:
-  find migrations | entr -cnr bash -c "sqlx database drop -y && sqlx database create && sqlx migrate run && scripts/sorted_schema > schema.sql && git diff --color-words -- schema.sql | cat"
+  scripts/schema-diff
+
+update-schema:
+  scripts/sorted_schema > schema.sql
 
 seed:
   URL=http://localhost:8000 scripts/seed
@@ -50,7 +54,7 @@ fix:
   echo "Make sure no other compilers are running at the same time (e.g. just develop)"
   sqlx migrate run
   just prepare-sqlx-offline-mode
-  scripts/sorted_schema > schema.sql
+  just update-schema
   cargo fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo clippy --fix --allow-dirty --allow-staged --workspace --all-targets --all-features
   cargo fmt
@@ -69,8 +73,8 @@ benchmark-ab:
 
 # delete local database, download production database
 download-prod-db:
-  rm -f data/data.sqlite
-  rm -f data/data.sqlite-shm
-  rm -f data/data.sqlite-wal
+  rm -f "$DATABASE_FILE"
+  rm -f "$DATABASE_FILE"-shm
+  rm -f "$DATABASE_FILE"-wal
   flyctl ssh console -C "sqlite3 /data/data.sqlite '.backup /data/backup.sqlite'"
-  flyctl ssh sftp get data/backup.sqlite data/data.sqlite || true
+  flyctl ssh sftp get data/backup.sqlite "$DATABASE_FILE" || true
