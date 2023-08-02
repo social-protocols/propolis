@@ -1,5 +1,6 @@
 sqlite-vector-version = 1fdc48a773808392fe0776b66c4ac0aa2d18a068
 
+.DELETE_ON_ERROR:
 
 vector0.so: sqlite-vector 
 	cd sqlite-vector && cmake .
