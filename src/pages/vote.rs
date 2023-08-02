@@ -9,7 +9,6 @@ use axum::response::Redirect;
 use axum::response::Response;
 use axum::{response::IntoResponse, Extension, Form};
 use http::StatusCode;
-use maud::html;
 use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
