@@ -79,7 +79,7 @@ pub async fn statement_page(
     Ok(base.content(content).page_meta_opt(page_meta).into())
 }
 
-async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, AppError> {
+pub async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Markup, AppError> {
     let history_items = match maybe_user {
         Some(user) => user.vote_history(20, pool).await?,
         None => Vec::new(),

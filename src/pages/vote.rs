@@ -15,6 +15,7 @@ use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
 use super::base::BaseTemplate;
+use super::statement::history;
 
 pub async fn next_statement_id(
     existing_user: Option<User>,
@@ -28,6 +29,7 @@ pub async fn next_statement_id(
 
 pub async fn vote(
     existing_user: Option<User>,
+    maybe_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
     base: BaseTemplate,
 ) -> Result<Response, AppError> {
@@ -36,8 +38,7 @@ pub async fn vote(
     Ok(match statement_id {
         Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
         None => base
-            .content(html! {
-            "No more questions to vote on."})
+            .content(history(&maybe_user, &pool).await?)
             .render()
             .into_response(),
     })
