@@ -1,11 +1,6 @@
 CREATE INDEX queue_statement_id on queue (user_id, created, statement_id);
 CREATE INDEX subscriptions_idx_statement_id ON subscriptions(statement_id);
 CREATE INDEX vote_history_statement_id on vote_history (user_id, created, statement_id);
-CREATE TABLE alternatives (
-  statement_id integer not null references statements (id) on delete cascade on update cascade,
-  alternative_id integer not null references statements (id) on delete cascade on update cascade,
-  primary key (statement_id, alternative_id)
-);
 CREATE TABLE api_keys (
   id integer not null primary key,
   hash text not null,
@@ -38,6 +33,10 @@ CREATE TABLE queue (
   created integer not null default (strftime('%s', 'now')), -- https://stackoverflow.com/questions/11556546/sqlite-storing-default-timestamp-as-unixepoch
   primary key (user_id, statement_id) on conflict ignore
 ) strict, without rowid;
+CREATE TABLE relation_types (
+    id integer primary key,
+    name text not null
+);
 CREATE TABLE _sqlx_migrations (
     version BIGINT PRIMARY KEY,
     description TEXT NOT NULL,
@@ -78,6 +77,13 @@ CREATE TABLE statement_predictions (
   created integer not null default (strftime('%s', 'now')), api_key_id integer not null references api_keys (id),
   primary key (statement_id, prompt_name, prompt_version)
 ) strict;
+CREATE TABLE statement_relations (
+    statement_id integer not null references statements(id),
+    related_statement_id integer not null references statements(id),
+    relation_type integer not null references relation_types(id),
+    created_at timestamp not null default current_timestamp,
+    primary key (statement_id, related_statement_id, relation_type)
+);
 CREATE TABLE statements (
   id integer not null primary key, -- rowid
   text text not null,
@@ -216,7 +222,6 @@ WITH counted_votes as (
         , coalesce(sum(vote = 1), 0) as yes_votes
         , coalesce(sum(vote = -1), 0) as no_votes
         , coalesce(sum(vote = 0), 0) as skip_votes
-        , coalesce(sum(vote = 2), 0) as itdepends_votes
     from statements
     left outer join votes
     on statements.id = votes.statement_id
@@ -234,15 +239,18 @@ WITH counted_votes as (
 , cte as (
     select
         *
-        , (yes_votes + no_votes + skip_votes + itdepends_votes) as total_votes
+        , (yes_votes + no_votes) as total_votes
     from counted_votes_subscriptions
 )
 select
     *
-    , coalesce((cast(total_votes - skip_votes as real) / (total_votes)), 0) as participation
-    , coalesce((1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes - skip_votes)), 0) as polarization
-    , coalesce((cast(total_votes - skip_votes as real) / (subscriptions)), 0) as votes_per_subscription
+    , coalesce((cast(total_votes as real) / (total_votes + skip_votes)), 0) as participation
+    -- polarization: 1 = 50% yes and 50% no, 0 = 100% yes or 100% no
+    , coalesce((1.0 - cast((abs(yes_votes - no_votes)) as real) / (total_votes)), 0) as polarization
+    , coalesce((cast(total_votes as real) / (subscriptions)), 0) as votes_per_subscription
 from cte
-/* statement_stats(statement_id,yes_votes,no_votes,skip_votes,itdepends_votes,subscriptions,total_votes,participation,polarization,votes_per_subscription) */;
+/* statement_stats(statement_id,yes_votes,no_votes,skip_votes,subscriptions,total_votes,participation,polarization,votes_per_subscription) */;
+CREATE VIEW vote_stats as select statement_id, vote, count(*) as vote_count from votes group by statement_id, vote
+/* vote_stats(statement_id,vote,vote_count) */;
 CREATE VIRTUAL TABLE statements_fts USING fts5(id UNINDEXED, text)
 /* statements_fts(id,text) */;
