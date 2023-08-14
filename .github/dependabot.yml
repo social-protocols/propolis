@@ -20,10 +20,10 @@ updates:
       - "actions"
       - "dependencies"
 
-  - package-ecosystem: "gitsubmodule"
+  - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
     labels:
-      - "git-submodule"
+      - "docker"
       - "dependencies"
