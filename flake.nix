@@ -18,7 +18,7 @@
     toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
   in {
     devShells.${system}.default = with pkgs; pkgs.mkShell {
-      packages = [
+      buildInputs = [
         toolchain
 
         # We want the unwrapped version, "rust-analyzer" (wrapped) comes with nixpkgs' toolchain
