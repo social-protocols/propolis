@@ -45,13 +45,12 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
 
     // expect updated stats
     let stats = sqlx::query!(
-        "select yes_votes, no_votes, itdepends_votes from statement_stats where statement_id = 2"
+        "select yes_votes, no_votes from statement_stats where statement_id = 2"
     )
     .fetch_one(&pool)
     .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 1);
-    assert_eq!(stats.itdepends_votes, 0);
 
     //////////////////////////////
     // add vote by other user
@@ -64,13 +63,12 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
 
     // expect updated stats
     let stats = sqlx::query!(
-        "select yes_votes, no_votes, itdepends_votes from statement_stats where statement_id = 2"
+        "select yes_votes, no_votes from statement_stats where statement_id = 2"
     )
     .fetch_one(&pool)
     .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 2);
-    assert_eq!(stats.itdepends_votes, 0);
 
     //////////////////////////////
     // add other vote by other user
@@ -83,13 +81,12 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
 
     // expect updated stats
     let stats = sqlx::query!(
-        "select yes_votes, no_votes, itdepends_votes from statement_stats where statement_id = 2"
+        "select yes_votes, no_votes from statement_stats where statement_id = 2"
     )
     .fetch_one(&pool)
     .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 2);
-    assert_eq!(stats.itdepends_votes, 1);
 
     Ok(())
 }

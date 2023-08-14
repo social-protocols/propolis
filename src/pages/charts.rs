@@ -11,7 +11,6 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
         total_votes,
         yes_votes,
         no_votes,
-        itdepends_votes,
         ..
     } = statement_stats(statement_id, pool).await?;
     if total_votes == 0 {
@@ -23,7 +22,6 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                 {{
                   "labels": [
                     "Yes",
-                    "It depends",
                     "No"
                   ],
                   "chart": {{
@@ -45,7 +43,6 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                   }},
                   "colors": [
                     "#16a34a",
-                    "#64748b",
                     "#dc2626",
                   ],
                   "tooltip": {{ "enabled": false }},
@@ -58,7 +55,6 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                     "style": {{
                       "colors": [
                         "#16a34a",
-                        "#64748b",
                         "#dc2626",
                       ],
                     }},
@@ -78,7 +74,7 @@ pub async fn yes_no_pie_chart(statement_id: i64, pool: &SqlitePool) -> Result<Ma
                   }},
                   "series": {}
                 }}"##,
-                json!([yes_votes, itdepends_votes, no_votes]),
+                json!([yes_votes, no_votes]),
             )
             .as_str(),
         ))
