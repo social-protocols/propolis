@@ -1,5 +1,5 @@
 use super::base::BaseTemplate;
-use crate::db::{add_alternative, add_followup, get_statement, search_statement};
+use crate::db::{add_followup, get_statement, search_statement};
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
 };
@@ -105,7 +105,8 @@ pub async fn itdepends_create(
         }
     };
 
-    add_alternative(form_data.target_id, alternative_statement_id, &pool).await?;
+    // FIXME: Figure out what to do instead
+    // add_alternative(form_data.target_id, alternative_statement_id, &pool).await?;
     add_followup(target_segment, alternative_statement_id, &pool).await?;
 
     Ok(Redirect::to("/"))

@@ -465,20 +465,3 @@ pub async fn get_followups(statement_id: i64, pool: &SqlitePool) -> Result<Vec<i
     .fetch_all(pool)
     .await?)
 }
-
-pub async fn add_alternative(
-    statement_id: i64,
-    alternative_id: i64,
-    pool: &SqlitePool,
-) -> Result<()> {
-    sqlx::query!(
-        "INSERT INTO alternatives (statement_id, alternative_id) VALUES (?, ?)
-         on conflict(statement_id, alternative_id) do nothing",
-        statement_id,
-        alternative_id,
-    )
-    .execute(pool)
-    .await?;
-
-    Ok(())
-}

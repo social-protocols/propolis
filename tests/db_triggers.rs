@@ -44,11 +44,10 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
     assert_eq!(current_vote, -1);
 
     // expect updated stats
-    let stats = sqlx::query!(
-        "select yes_votes, no_votes from statement_stats where statement_id = 2"
-    )
-    .fetch_one(&pool)
-    .await?;
+    let stats =
+        sqlx::query!("select yes_votes, no_votes from statement_stats where statement_id = 2")
+            .fetch_one(&pool)
+            .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 1);
 
@@ -62,11 +61,10 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
         .await?;
 
     // expect updated stats
-    let stats = sqlx::query!(
-        "select yes_votes, no_votes from statement_stats where statement_id = 2"
-    )
-    .fetch_one(&pool)
-    .await?;
+    let stats =
+        sqlx::query!("select yes_votes, no_votes from statement_stats where statement_id = 2")
+            .fetch_one(&pool)
+            .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 2);
 
@@ -80,11 +78,10 @@ async fn update_current_vote_and_stats(pool: SqlitePool) -> sqlx::Result<()> {
         .await?;
 
     // expect updated stats
-    let stats = sqlx::query!(
-        "select yes_votes, no_votes from statement_stats where statement_id = 2"
-    )
-    .fetch_one(&pool)
-    .await?;
+    let stats =
+        sqlx::query!("select yes_votes, no_votes from statement_stats where statement_id = 2")
+            .fetch_one(&pool)
+            .await?;
     assert_eq!(stats.yes_votes, 0);
     assert_eq!(stats.no_votes, 2);
 
