@@ -39,14 +39,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v22
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Install Rust Toolchain
+      #   uses: dtolnay/rust-toolchain@stable
 
       - name: Rust build cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install tools
-        run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
+      # - name: Install tools
+      #   run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
         uses: HatsuneMiku3939/direnv-action@9aff8709e886e58b1fb29b17334e094ea5ace74f # pin@v1
