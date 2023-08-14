@@ -3,7 +3,6 @@
 pub mod base;
 pub mod charts;
 pub mod index;
-pub mod itdepends;
 pub mod merge;
 pub mod new_statement;
 pub mod options;

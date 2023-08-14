@@ -69,12 +69,5 @@ pub async fn vote_post(
 
             Ok((StatusCode::OK, [("HX-Location", redirect_url)]))
         }
-        Vote::ItDepends => Ok((
-            StatusCode::OK,
-            [(
-                "HX-Location",
-                format!("/statement/{}/itdepends", vote_form.statement_id),
-            )],
-        )),
     }
 }

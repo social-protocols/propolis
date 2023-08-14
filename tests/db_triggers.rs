@@ -255,48 +255,6 @@ async fn vote_adds_no_followup_to_queue(pool: SqlitePool) -> sqlx::Result<()> {
     Ok(())
 }
 
-#[sqlx::test]
-async fn vote_adds_itdepends_followup_to_queue(pool: SqlitePool) -> sqlx::Result<()> {
-    sqlx::query!("insert into users(id, secret) values (17, 'abc')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (2, 'The world is flat.')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (3, 'The universe is flat.')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 3, 1, 0)")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (4, 'The world is round.')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 4, 0, 1)")
-        .execute(&pool)
-        .await?;
-
-    //////////////////////////////
-    // add it-depends vote
-    sqlx::query!("insert into vote_history(user_id, statement_id, vote) values (17, 2, 2)")
-        .execute(&pool)
-        .await?;
-
-    // expect both followup statements in queue
-    let count =
-        sqlx::query_scalar!("select count(*) from queue where user_id = 17 and statement_id = 3")
-            .fetch_one(&pool)
-            .await?;
-    assert_eq!(count, 1);
-    let count =
-        sqlx::query_scalar!("select count(*) from queue where user_id = 17 and statement_id = 4")
-            .fetch_one(&pool)
-            .await?;
-    assert_eq!(count, 1);
-
-    Ok(())
-}
-
 //adding a followups, puts the followup in the queue for yes voters
 #[sqlx::test]
 async fn followup_adds_yes_followup_to_queue(pool: SqlitePool) -> sqlx::Result<()> {
@@ -378,51 +336,6 @@ async fn followup_adds_no_followup_to_queue(pool: SqlitePool) -> sqlx::Result<()
             .fetch_one(&pool)
             .await?;
     assert_eq!(count, 0);
-    let count =
-        sqlx::query_scalar!("select count(*) from queue where user_id = 17 and statement_id = 4")
-            .fetch_one(&pool)
-            .await?;
-    assert_eq!(count, 1);
-
-    Ok(())
-}
-
-// adding a followup, puts the followup in the queue for it-depends voters
-#[sqlx::test]
-async fn followup_adds_it_depends_followup_to_queue(pool: SqlitePool) -> sqlx::Result<()> {
-    sqlx::query!("insert into users(id, secret) values (17, 'abc')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (2, 'The world is flat.')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (3, 'The universe is flat.')")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into statements(id, text) values (4, 'The world is round.')")
-        .execute(&pool)
-        .await?;
-
-    //////////////////////////////
-    // add it-depends vote
-    sqlx::query!("insert into vote_history(user_id, statement_id, vote) values (17, 2, 2)")
-        .execute(&pool)
-        .await?;
-
-    // add followup
-    sqlx::query!("insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 3, 1, 0)")
-        .execute(&pool)
-        .await?;
-    sqlx::query!("insert into followups(statement_id, followup_id, target_yes, target_no) values (2, 4, 0, 1)")
-        .execute(&pool)
-        .await?;
-
-    // expect both followup statements in queue
-    let count =
-        sqlx::query_scalar!("select count(*) from queue where user_id = 17 and statement_id = 3")
-            .fetch_one(&pool)
-            .await?;
-    assert_eq!(count, 1);
     let count =
         sqlx::query_scalar!("select count(*) from queue where user_id = 17 and statement_id = 4")
             .fetch_one(&pool)

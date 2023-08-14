@@ -39,9 +39,6 @@ use std::net::SocketAddr;
 
 use crate::db::setup_db;
 use crate::opts::ProgramOpts;
-use crate::pages::itdepends::itdepends;
-use crate::pages::itdepends::itdepends_completions;
-use crate::pages::itdepends::itdepends_create;
 use crate::pages::new_statement::create_statement;
 use crate::pages::new_statement::new_statement_completions;
 use crate::pages::subscribe::subscribe;
@@ -88,9 +85,6 @@ async fn main() {
         .route("/merge/:secret", post(merge_post))
         .route("/new", get(new_statement))
         .route("/new/completions", post(new_statement_completions))
-        .route("/statement/:id/itdepends", get(itdepends))
-        .route("/statement/:id/itdepends", post(itdepends_create))
-        .route("/itdepends_completions", post(itdepends_completions))
         .route("/create", post(create_statement))
         .route("/options", get(options))
         .route("/subscriptions", get(subscriptions))
