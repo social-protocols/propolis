@@ -51,7 +51,6 @@ pub enum Vote {
     No = -1,
     Skip = 0,
     Yes = 1,
-    ItDepends = 2,
 }
 
 impl Vote {

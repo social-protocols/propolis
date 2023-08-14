@@ -44,7 +44,6 @@ pub async fn statement_page(
                     button class="text-white bg-green-600 px-4 py-1 rounded" name="vote" value="Yes" { "YES" }
                     button class="text-white bg-red-600 px-4 py-1 rounded" name="vote" value="No" { "NO" }
                     button class="px-4 py-1" name="vote" value="Skip" { "skip / I don't know" }
-                    // button class="text-white bg-slate-500 px-4 py-1 rounded ml-auto" name="vote" value="ItDepends" { "IT DEPENDS" }
                 }
             }
             @match user_vote {
