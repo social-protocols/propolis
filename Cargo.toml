@@ -21,7 +21,7 @@ embed_migrations = []
 with_predictions = ["dep:ai_prompt"]
 
 [workspace.dependencies]
-anyhow = "1.0.72"
+anyhow = "1.0.75"
 async-std = "1.12.0"
 async-trait = "0.1.73"
 db = { path = "lib/db" }
@@ -48,7 +48,7 @@ async-trait = { workspace = true }
 axum = { version = "0.6.20", features = ["headers", "macros"] }
 base64 = "0.21.2"
 chrono = "0.4.26"
-clap = { version = "4.3.21", features = ["env", "derive"] }
+clap = { version = "4.3.23", features = ["env", "derive"] }
 csv = "1.2.2"
 function_name = "0.3.0"
 futures = "0.3.28"
