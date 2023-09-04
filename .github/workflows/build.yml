@@ -49,7 +49,7 @@ jobs:
         run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
-        uses: HatsuneMiku3939/direnv-action@c32f86055f08c3dfbaa31d04c230e00e5e3bc323 # pin@v1
+        uses: HatsuneMiku3939/direnv-action@ba6277bf8d24739f1e0dc11216d0be0a5ebc459e # pin@v1
 
       - name: Migrate database
         run: |
