@@ -15,7 +15,7 @@ use crate::{
     structs::{SearchResultStatement, Statement, VoteHistoryItem},
 };
 use crate::{
-    opts::DatabaseOpts,
+    opts::DatabaseArgs,
     structs::{StatementStats, TargetSegment, User, Vote},
 };
 
@@ -401,7 +401,7 @@ pub async fn top_statements(pool: &SqlitePool) -> Result<Vec<Statement>> {
 
 /// Create db connection & configure it
 //TODO: move to own file
-pub async fn setup_db(opts: &DatabaseOpts) -> SqlitePool {
+pub async fn setup_db(opts: &DatabaseArgs) -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
 
     // if embed_migrations is enabled, we create the database if it doesn't exist

@@ -5,9 +5,9 @@ use maud::{html, Markup, DOCTYPE};
 use tower_cookies::Cookies;
 
 use crate::{
+    http_static::StaticAsset,
     structs::{PageMeta, User},
     util::base_url,
-    StaticAsset,
 };
 
 fn base(

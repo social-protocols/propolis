@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use propolis_datas::embedding::Embedding;
 use rand::seq::SliceRandom;
 use tracing::log::error;
 
-use crate::opts::PredictionOpts;
+use crate::opts::PredictionArgs;
 use crate::prediction::embedding::{EmbeddingsRunner, StatementSelector};
 
 use propolis_datas::apikey::{ApiKey, TransientApiKey};
@@ -158,7 +158,7 @@ impl ApiKeySelector {
     }
 
     /// Create an instance, creating keys in the DB (for stats only) if necessary
-    pub async fn create(opts: &PredictionOpts, pool: &mut SqlitePool) -> anyhow::Result<Self> {
+    pub async fn create(opts: &PredictionArgs, pool: &mut SqlitePool) -> anyhow::Result<Self> {
         let mut keys: HashMap<String, ApiKey> = HashMap::new();
         let mut raw_keys: Vec<String> = opts.openai_api_keys.to_owned();
         raw_keys.append(Self::collect_numbered_openai_env_keys().as_mut());
@@ -190,7 +190,7 @@ impl ApiKeySelector {
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
-pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
+pub async fn run(opts: &crate::opts::PredictionArgs, pool: &mut SqlitePool) -> Result<()> {
     let key_selector = ApiKeySelector::create(opts, pool)
         .await
         .expect("Unable to setup key selection.");
