@@ -7,7 +7,7 @@ use axum::Extension;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 
-use super::base::BaseTemplate;
+use super::base_template::BaseTemplate;
 
 #[cfg(feature = "with_predictions")]
 pub async fn ideology_stats(user: User, pool: &SqlitePool) -> Result<Markup, AppError> {

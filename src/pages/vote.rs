@@ -13,7 +13,7 @@ use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-use super::base::BaseTemplate;
+use super::base_template::BaseTemplate;
 use super::statement::history;
 
 pub async fn next_statement_id(

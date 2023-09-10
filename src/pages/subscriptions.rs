@@ -1,4 +1,4 @@
-use super::base::BaseTemplate;
+use super::base_template::BaseTemplate;
 
 use crate::error::AppError;
 use crate::pages::statement_ui::{

@@ -1,4 +1,4 @@
-use super::base::BaseTemplate;
+use super::base_template::BaseTemplate;
 
 use crate::structs::User;
 use crate::{auth::change_auth_cookie, error::AppError};

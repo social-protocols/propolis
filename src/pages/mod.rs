@@ -1,6 +1,6 @@
 //! One file per page
 
-pub mod base;
+pub mod base_template;
 pub mod charts;
 pub mod index;
 pub mod merge;

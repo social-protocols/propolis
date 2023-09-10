@@ -1,4 +1,4 @@
-use super::base::{warning_dialog, BaseTemplate};
+use super::base_template::BaseTemplate;
 use crate::error::AppError;
 use crate::structs::User;
 use crate::util::base_url;
@@ -63,4 +63,13 @@ pub async fn options(
             ))
             .into()),
     }
+}
+
+pub fn warning_dialog(msg: &str, caption: Option<&str>) -> Markup {
+    html!(
+        div.warn.card {
+            p { (caption.unwrap_or("Warning")) }
+            p { (msg) }
+        }
+    )
 }

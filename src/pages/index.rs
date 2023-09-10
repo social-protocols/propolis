@@ -10,7 +10,7 @@ use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-use super::base::BaseTemplate;
+use super::base_template::BaseTemplate;
 
 pub async fn index(
     maybe_user: Option<User>,

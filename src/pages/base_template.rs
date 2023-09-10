@@ -10,7 +10,7 @@ use crate::{
     util::base_url,
 };
 
-fn base(
+fn render_base_template(
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
@@ -97,16 +97,6 @@ fn base(
     }
 }
 
-/// Presents a warning dialog to the user
-pub fn warning_dialog(msg: &str, caption: Option<&str>) -> Markup {
-    html!(
-        div.warn.card {
-            p { (caption.unwrap_or("Warning")) }
-            p { (msg) }
-        }
-    )
-}
-
 #[derive(Clone)]
 pub struct BaseTemplate {
     pub user: Option<User>,
@@ -140,7 +130,7 @@ impl BaseTemplate {
     }
     /// Render BaseTemplate into markup
     pub fn render(self) -> Markup {
-        base(
+        render_base_template(
             self.title,
             &self.user,
             self.content,
