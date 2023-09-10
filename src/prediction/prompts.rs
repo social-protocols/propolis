@@ -132,7 +132,7 @@ pub struct ScoredValue {
 }
 
 pub fn is_valid_value(s: &str) -> bool {
-    !vec!["none", "null", "-", ""].contains(&s.trim())
+    !["none", "null", "-", ""].contains(&s.trim())
 }
 
 impl TryFrom<&str> for ScoredValue {
