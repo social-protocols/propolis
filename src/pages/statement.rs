@@ -3,8 +3,8 @@ use crate::{
     db::{get_followups, get_statement},
     error::AppError,
     pages::statement_ui::{
-        small_statement_content, small_statement_piechart, small_statement_vote,
-        small_statement_vote_fetch,
+        inline_statement_content, inline_statement_piechart, inline_statement_vote,
+        inline_statement_vote_fetch,
     },
     structs::{PageMeta, Statement, User, Vote},
     util::base_url,
@@ -67,8 +67,8 @@ pub async fn statement_page(
                     (statement.text)
                 }
                 @if user_vote.is_some() {
-                    (small_statement_piechart(statement.id, &pool).await?)
-                    (small_statement_vote(user_vote)?)
+                    (inline_statement_piechart(statement.id, &pool).await?)
+                    (inline_statement_vote(user_vote)?)
                 }
             }
             form hx-post="/vote" {
@@ -89,9 +89,9 @@ pub async fn statement_page(
                     @for statement_id in followups {
                         // TODO: different columns depending on vote-dependent follow up
                         div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                            (small_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
-                            (small_statement_piechart(statement_id, &pool).await?)
-                            (small_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
+                            (inline_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
+                            (inline_statement_piechart(statement_id, &pool).await?)
+                            (inline_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
                         }
                     }
                 }
@@ -127,9 +127,9 @@ pub async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Mar
                 text: item.statement_text,
             };
             div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                (small_statement_content(&statement, None, true, maybe_user, pool).await?)
-                (small_statement_piechart(item.statement_id, pool).await?)
-                (small_statement_vote(Some(Vote::from(item.vote)?))?)
+                (inline_statement_content(&statement, None, true, maybe_user, pool).await?)
+                (inline_statement_piechart(item.statement_id, pool).await?)
+                (inline_statement_vote(Some(Vote::from(item.vote)?))?)
             }
         }
     })

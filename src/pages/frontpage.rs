@@ -1,5 +1,5 @@
 use crate::pages::statement_ui::{
-    small_statement_content, small_statement_piechart, small_statement_vote_fetch,
+    inline_statement_content, inline_statement_piechart, inline_statement_vote_fetch,
 };
 use crate::structs::User;
 use crate::{db, error::AppError};
@@ -37,8 +37,8 @@ pub async fn frontpage(
             h2 class="mb-4 text-xl" { "Controversial Questions" }
             @for statement in top_statements.iter() {
                 div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                    (small_statement_content(statement, None, true, &maybe_user, &pool).await?)
-                    (small_statement_piechart(statement.id, &pool).await?)
+                    (inline_statement_content(statement, None, true, &maybe_user, &pool).await?)
+                    (inline_statement_piechart(statement.id, &pool).await?)
                 }
             }
         }
@@ -61,9 +61,9 @@ pub async fn search_results(
     Ok(html! {
         @for search_result_statement in &statements {
             div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                (small_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
-                (small_statement_piechart(search_result_statement.id, &pool).await?)
-                (small_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
+                (inline_statement_content(&search_result_statement.statement_highlighted(), None, true, &maybe_user, &pool).await?)
+                (inline_statement_piechart(search_result_statement.id, &pool).await?)
+                (inline_statement_vote_fetch(search_result_statement.id, &maybe_user, &pool).await?)
             }
         }
     })
