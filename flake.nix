@@ -44,6 +44,7 @@
               # deployemnt
               flyctl
               docker
+              earthly
             ];
           };
           buildRust = with pkgs; pkgs.mkShellNoCC {
