@@ -26,8 +26,6 @@ use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-use crate::pages::prediction::prediction_page;
-
 pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
     let mut app = Router::new();
 
@@ -49,7 +47,10 @@ pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
 
     #[cfg(feature = "with_predictions")]
     {
-        app = app.route("/prediction/:id", get(prediction_page));
+        app = app.route(
+            "/prediction/:id",
+            get(crate::pages::prediction::prediction_page),
+        );
     }
 
     let apiv0 = Router::new()

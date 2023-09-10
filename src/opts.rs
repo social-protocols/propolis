@@ -31,7 +31,7 @@ pub struct PredictionArgs {
 }
 #[cfg(not(feature = "with_predictions"))]
 #[derive(Parser, Clone, Debug)]
-pub struct PredictionOpts {}
+pub struct PredictionArgs {}
 
 #[derive(Parser, Clone, Debug)]
 pub struct DatabaseArgs {

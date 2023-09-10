@@ -15,9 +15,10 @@ pub mod runner;
 
 #[cfg(not(feature = "with_predictions"))]
 pub mod runner {
+    use anyhow::Result;
     use sqlx::SqlitePool;
 
-    pub async fn run(_opts: &crate::opts::PredictionOpts, _pool: &SqlitePool) -> Result<()> {
+    pub async fn run(_opts: &crate::opts::PredictionArgs, _pool: &SqlitePool) -> Result<()> {
         Ok(())
     }
 }
