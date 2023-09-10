@@ -4,15 +4,15 @@ use sqlx::{
 };
 use std::str::FromStr;
 
-use crate::opts::DatabaseArgs;
+use crate::command_line_args::DatabaseArgs;
 
-pub async fn setup_database(opts: &DatabaseArgs) -> SqlitePool {
+pub async fn setup_database(args: &DatabaseArgs) -> SqlitePool {
     // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
 
     // if embed_migrations is enabled, we create the database if it doesn't exist
     let create_database_if_missing = cfg!(feature = "embed_migrations");
 
-    let connection_options = SqliteConnectOptions::from_str(&opts.database_url)
+    let connection_options = SqliteConnectOptions::from_str(&args.database_url)
         .unwrap()
         .create_if_missing(create_database_if_missing)
         .journal_mode(SqliteJournalMode::Wal)

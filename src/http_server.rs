@@ -69,7 +69,7 @@ pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
         .fallback_service(get(not_found));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8000));
-    info!("http server listening on {}", addr);
+    info!("Http server listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.nest("/api/v0", apiv0).into_make_service())
         .await?;

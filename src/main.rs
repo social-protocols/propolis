@@ -1,10 +1,10 @@
 mod api;
 mod auth;
+mod command_line_args;
 mod db;
 mod db_setup;
 mod error;
 mod highlight;
-mod opts;
 mod pages;
 mod prediction;
 
@@ -22,7 +22,7 @@ use anyhow::{Context, Result};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use crate::db_setup::setup_database;
-use crate::opts::CommandLineArgs;
+use crate::command_line_args::CommandLineArgs;
 
 #[tokio::main]
 async fn main() -> Result<()> {

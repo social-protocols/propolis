@@ -18,7 +18,7 @@ pub mod runner {
     use anyhow::Result;
     use sqlx::SqlitePool;
 
-    pub async fn run(_opts: &crate::opts::PredictionArgs, _pool: &SqlitePool) -> Result<()> {
+    pub async fn run(_args: &crate::opts::PredictionArgs, _pool: &SqlitePool) -> Result<()> {
         Ok(())
     }
 }
