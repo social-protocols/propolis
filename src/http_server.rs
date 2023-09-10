@@ -5,9 +5,9 @@ use crate::http_static::static_handler;
 use crate::pages;
 use crate::pages::new_statement::create_statement;
 use crate::pages::new_statement::new_statement_completions;
+use crate::pages::statement::statement_frontpage;
 use crate::pages::subscribe::subscribe;
 use crate::pages::user::profile::profile_page;
-use crate::pages::vote::vote;
 use crate::pages::vote::vote_post;
 use anyhow::Result;
 use axum::routing::post;
@@ -32,10 +32,10 @@ pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
     app = app
         .route("/", get(frontpage))
         .route("/search", post(search_results))
-        .route("/vote", get(vote))
-        .route("/vote", post(vote_post))
         .route("/subscribe", post(subscribe))
         .route("/user", get(profile_page))
+        .route("/statement", get(statement_frontpage))
+        .route("/statement/vote", post(vote_post))
         .route("/statement/:id", get(statement_page))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))

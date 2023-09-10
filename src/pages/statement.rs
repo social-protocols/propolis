@@ -15,6 +15,39 @@ use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
 
+use crate::db::random_statement_id;
+use axum::response::Response;
+use axum::response::{IntoResponse, Redirect};
+
+use anyhow::Result;
+
+pub async fn next_statement_id(
+    existing_user: Option<User>,
+    pool: &SqlitePool,
+) -> Result<Option<i64>> {
+    Ok(match existing_user {
+        Some(user) => user.next_statement_for_user(pool).await?,
+        None => random_statement_id(pool).await?,
+    })
+}
+
+pub async fn statement_frontpage(
+    existing_user: Option<User>,
+    maybe_user: Option<User>,
+    Extension(pool): Extension<SqlitePool>,
+    base: BaseTemplate,
+) -> Result<Response, AppError> {
+    let statement_id = next_statement_id(existing_user, &pool).await?;
+
+    Ok(match statement_id {
+        Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
+        None => base
+            .content(history(&maybe_user, &pool).await?)
+            .render()
+            .into_response(),
+    })
+}
+
 pub async fn statement_page(
     Path(statement_id): Path<i64>,
     maybe_user: Option<User>,
