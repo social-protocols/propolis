@@ -48,7 +48,7 @@ async-trait = { workspace = true }
 axum = { version = "0.6.20", features = ["headers", "macros"] }
 base64 = "0.21.3"
 chrono = "0.4.26"
-clap = { version = "4.3.23", features = ["env", "derive"] }
+clap = { version = "4.4.2", features = ["env", "derive"] }
 csv = "1.2.2"
 function_name = "0.3.0"
 futures = "0.3.28"
@@ -70,7 +70,7 @@ tower-http = { version = "0.4.3", features = ["fs", "compression-gzip", "trace"]
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
-aho-corasick = "1.0.4" # search strings for multiple patterns at the same time
+aho-corasick = "1.0.5" # search strings for multiple patterns at the same time
 once_cell = "1.18.0" # for lazy global variables
 
 [profile.dev.package.sqlx-macros]
