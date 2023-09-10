@@ -1,6 +1,7 @@
 mod api;
 mod auth;
 mod db;
+mod db_setup;
 mod error;
 mod highlight;
 mod opts;
@@ -20,7 +21,7 @@ use anyhow::{Context, Result};
 
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
-use crate::db::setup_db;
+use crate::db_setup::setup_database;
 use crate::opts::CommandLineArgs;
 
 #[tokio::main]
@@ -28,9 +29,9 @@ async fn main() -> Result<()> {
     init_tracing();
 
     let command_line_args = CommandLineArgs::parse();
-    let sqlite_pool = setup_db(&command_line_args.database).await;
-
+    let sqlite_pool = setup_database(&command_line_args.database).await;
     let mut sqlite_pool_prediction_runner = sqlite_pool.clone();
+
     tokio::select! {
         res = start_http_server(sqlite_pool.clone()) => {
             res.context("http server crashed").unwrap();
