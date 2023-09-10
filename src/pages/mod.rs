@@ -3,9 +3,7 @@
 pub mod base_template;
 pub mod charts;
 pub mod frontpage;
-pub mod merge;
 pub mod new_statement;
-pub mod options;
 #[cfg(feature = "with_predictions")]
 pub mod prediction;
 pub mod statement;

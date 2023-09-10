@@ -1,13 +1,11 @@
-use crate::error::AppError;
 use crate::structs::User;
+use crate::{error::AppError, pages::base_template::BaseTemplate};
 use anyhow::Result;
 
 use axum::Extension;
 
 use maud::{html, Markup};
 use sqlx::SqlitePool;
-
-use super::base_template::BaseTemplate;
 
 #[cfg(feature = "with_predictions")]
 pub async fn ideology_stats(user: User, pool: &SqlitePool) -> Result<Markup, AppError> {
@@ -28,13 +26,13 @@ pub async fn ideology_stats(_user: User, _pool: &SqlitePool) -> Result<Markup, A
     Ok(html! {})
 }
 
-pub async fn user_page(
+pub async fn profile_page(
     user: User,
     Extension(pool): Extension<SqlitePool>,
     base: BaseTemplate,
 ) -> Result<Markup, AppError> {
     Ok(base
-        .title("User page")
+        .title("Profile")
         .content(ideology_stats(user, &pool).await?)
         .into())
 }

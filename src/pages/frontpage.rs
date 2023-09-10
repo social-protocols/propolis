@@ -10,7 +10,7 @@ use maud::{html, Markup};
 use serde::Deserialize;
 use sqlx::SqlitePool;
 
-use super::base_template::BaseTemplate;
+use crate::pages::base_template::BaseTemplate;
 
 pub async fn frontpage(
     maybe_user: Option<User>,

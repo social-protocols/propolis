@@ -6,7 +6,7 @@ use crate::pages;
 use crate::pages::new_statement::create_statement;
 use crate::pages::new_statement::new_statement_completions;
 use crate::pages::subscribe::subscribe;
-use crate::pages::user::user_page;
+use crate::pages::user::profile::profile_page;
 use crate::pages::vote::vote;
 use crate::pages::vote::vote_post;
 use anyhow::Result;
@@ -15,11 +15,11 @@ use axum::Extension;
 use axum::{routing::get, Router};
 use http::StatusCode;
 use pages::frontpage::{frontpage, search_results};
-use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
-use pages::options::options;
 use pages::statement::statement_page;
 use pages::subscriptions::subscriptions;
+use pages::user::merge::{merge, merge_post};
+use pages::user::options::options;
 use sqlx::SqlitePool;
 use tower_cookies::CookieManagerLayer;
 use tower_http::compression::CompressionLayer;
@@ -35,7 +35,7 @@ pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
         .route("/vote", get(vote))
         .route("/vote", post(vote_post))
         .route("/subscribe", post(subscribe))
-        .route("/user", get(user_page))
+        .route("/user", get(profile_page))
         .route("/statement/:id", get(statement_page))
         .route("/merge/:secret", get(merge))
         .route("/merge/:secret", post(merge_post))

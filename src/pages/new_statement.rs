@@ -1,6 +1,6 @@
-use super::base_template::BaseTemplate;
 use crate::db::{add_followup, get_statement};
 use crate::error::AppError;
+use crate::pages::base_template::BaseTemplate;
 use crate::pages::statement_ui::{
     small_statement_content, small_statement_piechart, small_statement_vote_fetch,
 };

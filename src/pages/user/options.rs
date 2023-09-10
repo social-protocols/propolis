@@ -1,5 +1,5 @@
-use super::base_template::BaseTemplate;
 use crate::error::AppError;
+use crate::pages::base_template::BaseTemplate;
 use crate::structs::User;
 use crate::util::base_url;
 use maud::{html, Markup};

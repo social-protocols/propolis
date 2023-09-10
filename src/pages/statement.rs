@@ -1,4 +1,4 @@
-use super::base_template::BaseTemplate;
+use crate::pages::base_template::BaseTemplate;
 use crate::{
     db::{get_followups, get_statement},
     error::AppError,

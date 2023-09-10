@@ -13,8 +13,8 @@ use serde::Deserialize;
 use sqlx::SqlitePool;
 use tower_cookies::Cookies;
 
-use super::base_template::BaseTemplate;
-use super::statement::history;
+use crate::pages::base_template::BaseTemplate;
+use crate::pages::statement::history;
 
 pub async fn next_statement_id(
     existing_user: Option<User>,
