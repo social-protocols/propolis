@@ -12,7 +12,7 @@ use sqlx::SqlitePool;
 
 use super::base_template::BaseTemplate;
 
-pub async fn index(
+pub async fn frontpage(
     maybe_user: Option<User>,
     Extension(pool): Extension<SqlitePool>,
     base: BaseTemplate,

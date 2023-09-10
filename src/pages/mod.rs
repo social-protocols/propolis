@@ -2,7 +2,7 @@
 
 pub mod base_template;
 pub mod charts;
-pub mod index;
+pub mod frontpage;
 pub mod merge;
 pub mod new_statement;
 pub mod options;

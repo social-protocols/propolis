@@ -14,7 +14,7 @@ use axum::routing::post;
 use axum::Extension;
 use axum::{routing::get, Router};
 use http::StatusCode;
-use pages::index::{index, search_results};
+use pages::frontpage::{frontpage, search_results};
 use pages::merge::{merge, merge_post};
 use pages::new_statement::new_statement;
 use pages::options::options;
@@ -30,7 +30,7 @@ pub async fn start_http_server(sqlite_pool: SqlitePool) -> Result<()> {
     let mut app = Router::new();
 
     app = app
-        .route("/", get(index))
+        .route("/", get(frontpage))
         .route("/search", post(search_results))
         .route("/vote", get(vote))
         .route("/vote", post(vote_post))
