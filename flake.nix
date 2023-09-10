@@ -2,56 +2,56 @@
 
 {
   inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+
+    # derive the correct compiler versions from rust-toolchain.toml
     rust-overlay.url = "github:oxalica/rust-overlay";
+
+    # for `flake-utils.lib.eachSystem`
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    rust-overlay,
-  }: let
-    system = "x86_64-linux";
-    pkgs = import nixpkgs {
-      inherit system;
-      overlays = [rust-overlay.overlays.default];
-    };
-    toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-  in {
-    devShells.${system}.default = with pkgs; pkgs.mkShell {
-      buildInputs = [
-        toolchain
+  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust-overlay.overlays.default ];
+          config.allowUnfree = false;
+        };
 
-        # We want the unwrapped version, "rust-analyzer" (wrapped) comes with nixpkgs' toolchain
-        rust-analyzer-unwrapped
+        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        rustPkgs = [ rustToolchain ] ++ (with pkgs; [ openssl pkg-config cmake sqlite cargo-chef ]);
+        rustDevPkgs = rustPkgs ++ (with pkgs; [ cargo-watch rust-analyzer ]);
+      in
+      {
+        devShells = {
+          default = with pkgs; pkgs.mkShellNoCC {
+            buildInputs = rustDevPkgs ++ [
+              git
+              just
+              jq
+              sqlx-cli
+              sqlite-interactive
+              nodePackages.browser-sync # dev hot reloading
+              process-compose # orchestrate non-containerized processes
+              entr # file watching
 
-        cargo
-        cargo-watch
+              # http benchmarking
+              wrk
+              apacheHttpd # apache bench
 
-        git
-        just
-        jq
-        sqlx-cli
-        sqlite-interactive
-        nodePackages.browser-sync # dev hot reloading
-        process-compose # orchestrate non-containerized processes
-        entr # file watching
-
-        # required to build openssl-sys, which openai uses
-        pkg-config
-        openssl
-        cmake
-        
-        # http benchmarking
-        wrk
-        apacheHttpd # apache bench
-
-        # deployemnt
-        flyctl
-        docker
-
-        # building sqlite-vector
-        sqlite
-      ];
-    };
-  };
+              # deployemnt
+              flyctl
+              docker
+            ];
+          };
+          buildRust = with pkgs; pkgs.mkShellNoCC {
+            buildInputs = rustPkgs;
+          };
+        };
+      }
+    );
 }
+
+
