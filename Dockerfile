@@ -4,7 +4,7 @@
 
 
 # install cargo-chef and toolchain, to be reused in other stages
-FROM rust:1.71-bookworm as chef
+FROM rust:1.72-bookworm as chef
 RUN cargo install cargo-chef
 RUN rustup install stable # should match the channel in rust-toolchain.toml
 WORKDIR app
