@@ -31,7 +31,7 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # https://github.com/actions/checkout/issues/626
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
@@ -115,7 +115,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # https://github.com/actions/checkout/issues/626
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
@@ -151,7 +151,7 @@ jobs:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       timeout-minutes: 30
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
 
         # - name: Docker Buildx
         #   id: buildx
