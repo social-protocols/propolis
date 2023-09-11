@@ -64,7 +64,6 @@ impl Vote {
             Vote::No => -1,
             Vote::Skip => 0,
             Vote::Yes => 1,
-            Vote::ItDepends => 0,
         }
     }
 }
