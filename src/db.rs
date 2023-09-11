@@ -7,6 +7,9 @@ use sqlx::{
 };
 use std::str::FromStr;
 
+#[cfg(feature = "with_predictions")]
+use std::collections::HashMap;
+
 use crate::{
     highlight::{HIGHLIGHT_BEGIN, HIGHLIGHT_END},
     structs::{SearchResultStatement, Statement, VoteHistoryItem},
@@ -17,8 +20,8 @@ use crate::{
 };
 
 #[cfg(feature = "with_predictions")]
-pub struct UserIdeologyStats {
-    /// Total votes cast for this ideology. Disagree votes count towards negative
+pub struct UserStat {
+    /// Total votes cast for this ideology / bfp trait. Disagree votes count towards negative
     pub votes_cast: i64,
     /// A normalized weight across all votes and all ideologies for this user
     pub votes_weight: f64,
@@ -129,47 +132,87 @@ impl User {
         Ok(())
     }
 
-    /// Return a hashmap with weighted ideologies
+    /// Returns a HashMap of BFP Trait ⇒ Votecount for user
     #[cfg(feature = "with_predictions")]
-    pub async fn ideology_stats_map(
-        &self,
-        pool: &SqlitePool,
-    ) -> Result<std::collections::HashMap<String, UserIdeologyStats>> {
-        use std::collections::HashMap;
-
+    pub async fn bfp_traits_votes(&self, pool: &SqlitePool) -> Result<HashMap<String, i64>> {
         use crate::prediction::prompts::Score;
-
         let vhist = self.vote_history(1000, pool).await?;
         let mut votes: HashMap<String, i64> = HashMap::new();
-        for item in vhist {
+        for VoteHistoryItem {
+            statement_id,
+            statement_text,
+            vote_timestamp: _,
+            vote,
+        } in vhist
+        {
             let stmt = Statement {
-                id: item.statement_id,
-                text: item.statement_text,
+                id: statement_id,
+                text: statement_text,
+            };
+            if let Some(crate::prediction::prompts::StatementMeta::Personal {
+                tags: _,
+                bfp_traits,
+            }) = stmt.get_meta(pool).await?
+            {
+                for bfpt_val in bfp_traits {
+                    let score: i64 = match bfpt_val.score {
+                        Score::Strong => 1,
+                        _ => continue,
+                    };
+                    let factor = Vote::from(vote)?.to_factor();
+                    votes
+                        .entry(bfpt_val.value)
+                        .and_modify(|i| *i += score * factor)
+                        .or_insert(1);
+                }
+            }
+        }
+        Ok(votes)
+    }
+
+    /// Returns a HashMap of Ideology ⇒ Votecount for user
+    #[cfg(feature = "with_predictions")]
+    pub async fn ideology_votes(&self, pool: &SqlitePool) -> Result<HashMap<String, i64>> {
+        use crate::prediction::prompts::Score;
+        let vhist = self.vote_history(1000, pool).await?;
+        let mut votes: HashMap<String, i64> = HashMap::new();
+        for VoteHistoryItem {
+            statement_id,
+            statement_text,
+            vote_timestamp: _,
+            vote,
+        } in vhist
+        {
+            let stmt = Statement {
+                id: statement_id,
+                text: statement_text,
             };
             if let Some(crate::prediction::prompts::StatementMeta::Politics {
                 tags: _,
                 ideologies,
             }) = stmt.get_meta(pool).await?
             {
-                for i in ideologies {
-                    let score: i64 = match i.score {
+                for ideology_val in ideologies {
+                    let score: i64 = match ideology_val.score {
                         Score::Strong => 1,
-                        Score::Weak => continue,
-                        _ => 0,
+                        _ => continue,
                     };
-                    let dir: i64 = match Vote::from(item.vote)? {
-                        Vote::No => -1,
-                        Vote::Yes => 1,
-                        _ => 0,
-                    };
+                    let factor = Vote::from(vote)?.to_factor();
                     votes
-                        .entry(i.value)
-                        .and_modify(|i| *i += score * dir)
+                        .entry(ideology_val.value)
+                        .and_modify(|i| *i += score * factor)
                         .or_insert(1);
                 }
             }
         }
+        Ok(votes)
+    }
 
+    #[cfg(feature = "with_predictions")]
+    pub async fn stats_map(
+        &self,
+        votes: &HashMap<String, i64>,
+    ) -> Result<HashMap<String, UserStat>> {
         let mut sorted_vec: Vec<(&String, &i64)> = votes.iter().collect();
         sorted_vec.sort_by(|a, b| b.1.cmp(a.1));
         let largest_value = sorted_vec.first().map(|i| *i.1).unwrap_or(0);
@@ -181,12 +224,12 @@ impl User {
         //   a larger amplitude
         let smallest_value = sorted_vec.last().map(|i| *i.1).unwrap_or(0);
 
-        let weighted_hmap: HashMap<String, UserIdeologyStats> = votes
+        let weighted_hmap: HashMap<String, UserStat> = votes
             .iter()
             .map(|(k, v)| {
                 (
                     k.to_owned(),
-                    UserIdeologyStats {
+                    UserStat {
                         votes_cast: *v,
                         votes_weight: (*v - smallest_value) as f64
                             / ((largest_value - smallest_value) as f64).max(1.0),
@@ -195,6 +238,22 @@ impl User {
             })
             .collect();
         Ok(weighted_hmap)
+    }
+
+    /// Return a hashmap with weighted ideologies
+    #[cfg(feature = "with_predictions")]
+    pub async fn ideology_stats_map(&self, pool: &SqlitePool) -> Result<HashMap<String, UserStat>> {
+        let votes = self.ideology_votes(pool).await?;
+
+        self.stats_map(&votes).await
+    }
+
+    /// Return a hashmap with weighted bfp traits
+    #[cfg(feature = "with_predictions")]
+    pub async fn bfp_traits_map(&self, pool: &SqlitePool) -> Result<HashMap<String, UserStat>> {
+        let votes = self.bfp_traits_votes(pool).await?;
+
+        self.stats_map(&votes).await
     }
 
     /// Returns all votes taken by a [User]

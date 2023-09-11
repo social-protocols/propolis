@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -e
+
+# Taken from a paper on bfp traits
+
+statements=$(cat <<-END
+
+{"text": "I see myself as someone who Warms up quickly to others."}
+{"text": "I see myself as someone who Prefers to be alone."}
+{"text": "I see myself as someone who Is always on the go."}
+{"text": "I see myself as someone who Can talk others into doing things."}
+{"text": "I see myself as someone who Seeks quiet."}
+{"text": "I see myself as someone who Is assertive and takes charge."}
+{"text": "I see myself as someone who Holds back from expressing my opinions."}
+{"text": "I see myself as someone who Enjoys being part of a group."}
+{"text": "I see myself as someone who Lets things proceed at their own pace."}
+{"text": "I see myself as someone who Often feels blue."}
+{"text": "I see myself as someone who Is not easily bothered by things."}
+{"text": "I see myself as someone who Becomes stressed out easily."}
+{"text": "I see myself as someone who Becomes overwhelmed by emotions."}
+{"text": "I see myself as someone who Is calm, even in tense situations."}
+{"text": "I see myself as someone who Is afraid that I will do the wrong thing."}
+{"text": "I see myself as someone who Keeps my cool."}
+{"text": "I see myself as someone who Does things I later regret."}
+{"text": "I see myself as someone who Does not have a good imagination."}
+{"text": "I see myself as someone who Loves to read challenging material."}
+{"text": "I see myself as someone who Is interested in many things."}
+{"text": "I see myself as someone who Tries to understand myself."}
+{"text": "I see myself as someone who Is not interested in abstract ideas."}
+{"text": "I see myself as someone who Believes in the importance of art."}
+{"text": "I see myself as someone who Prefers to stick with things that I know."}
+{"text": "I see myself as someone who Tends to vote for conservative political candidates."}
+{"text": "I see myself as someone who Suspects hidden motives in others."}
+{"text": "I see myself as someone who Trusts others."}
+{"text": "I see myself as someone who Contradicts others."}
+{"text": "I see myself as someone who Values cooperation over competition."}
+{"text": "I see myself as someone who Is easy to satisfy."}
+{"text": "I see myself as someone who Thinks highly of myself."}
+{"text": "I see myself as someone who Is concerned about others."}
+{"text": "I see myself as someone who Puts people under pressure."}
+{"text": "I see myself as someone who Completes tasks successfully."}
+{"text": "I see myself as someone who Often makes last‐minute plans."}
+{"text": "I see myself as someone who Excels in what I do."}
+{"text": "I see myself as someone who Often forgets to put things back in their proper place."}
+{"text": "I see myself as someone who Postpones decisions."}
+{"text": "I see myself as someone who Works hard."}
+{"text": "I see myself as someone who Pays my bills on time."}
+{"text": "I see myself as someone who Doesn’t see the consequences of things"}
+END
+)
+
+echo "$statements" | jq -s -r '.[] | .text' |
+while read text; do
+    echo "$text"
+    curl --data-urlencode "typed_statement=$text" "$URL"/create
+done
+
+
