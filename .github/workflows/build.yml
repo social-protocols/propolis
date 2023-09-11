@@ -31,7 +31,7 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # https://github.com/actions/checkout/issues/626
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
@@ -49,7 +49,7 @@ jobs:
         run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
-        uses: HatsuneMiku3939/direnv-action@c32f86055f08c3dfbaa31d04c230e00e5e3bc323 # pin@v1
+        uses: HatsuneMiku3939/direnv-action@ba6277bf8d24739f1e0dc11216d0be0a5ebc459e # pin@v1
 
       - name: Migrate database
         run: |
@@ -115,7 +115,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # https://github.com/actions/checkout/issues/626
           # This is correct, because we're using a merge queue which only merges when built against the latest target branch.
@@ -151,7 +151,7 @@ jobs:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       timeout-minutes: 30
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
 
         # - name: Docker Buildx
         #   id: buildx
