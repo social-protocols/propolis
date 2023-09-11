@@ -3,7 +3,6 @@ use axum::{
     http::{header, StatusCode, Uri},
     response::{IntoResponse, Response},
 };
-use http::HeaderValue;
 
 use crate::StaticAsset;
 
@@ -38,10 +37,11 @@ where
                 let mime = mime_guess::from_path(path).first_or_octet_stream();
                 Response::builder()
                     .header(header::CONTENT_TYPE, mime.as_ref())
-                    .header(
-                        header::CACHE_CONTROL,
-                        HeaderValue::from_static("public, max-age=604800"),
-                    )
+                    // TODO: cache busting
+                    // .header(
+                    //     header::CACHE_CONTROL,
+                    //     HeaderValue::from_static("public, max-age=604800"),
+                    // )
                     .body(body)
                     .unwrap()
             }

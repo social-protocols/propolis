@@ -4,6 +4,8 @@
 .cargo-built
 .envrc.private
 
+static/css/tailwind.css
+
 node_modules/
 /test-results/
 /playwright-report/

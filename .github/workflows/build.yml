@@ -62,6 +62,9 @@ jobs:
           git diff --no-index --ws-error-highlight=all --color=always /tmp/current_schema.sql schema.sql
           cmp -s /tmp/current_schema.sql schema.sql
 
+      - name: Validate Tailwind styles
+        run: cmp -s <(false) static/css/tailwind.css
+
       - name: Validate sqlx offline mode data
         run: cargo sqlx prepare --check --workspace -- --all-targets --all-features
 
