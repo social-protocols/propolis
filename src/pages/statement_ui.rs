@@ -11,7 +11,7 @@ use sqlx::SqlitePool;
 use crate::util::human_relative_time;
 use std::fmt::Write;
 
-pub async fn small_statement_content(
+pub async fn inline_statement_content(
     statement: &Statement,
     timestamp: Option<i64>,
     show_controls: bool,
@@ -49,7 +49,7 @@ pub async fn small_statement_content(
     })
 }
 
-pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
+pub async fn inline_statement_piechart(statement_id: i64, pool: &SqlitePool) -> Result<Markup> {
     Ok(html! {
         div class="py-2" {
             (yes_no_pie_chart(statement_id, pool).await?)
@@ -57,7 +57,7 @@ pub async fn small_statement_piechart(statement_id: i64, pool: &SqlitePool) -> R
     })
 }
 
-pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
+pub fn inline_statement_vote(vote: Option<Vote>) -> Result<Markup> {
     let vote_color = match vote {
         Some(Vote::Yes) => "bg-green-600",
         Some(Vote::No) => "bg-red-600",
@@ -76,7 +76,7 @@ pub fn small_statement_vote(vote: Option<Vote>) -> Result<Markup> {
     })
 }
 
-pub async fn small_statement_vote_fetch(
+pub async fn inline_statement_vote_fetch(
     statement_id: i64,
     maybe_user: &Option<User>,
     pool: &SqlitePool,
@@ -85,11 +85,11 @@ pub async fn small_statement_vote_fetch(
         Some(user) => user.get_vote(statement_id, pool).await?,
         None => None,
     };
-    small_statement_vote(vote)
+    inline_statement_vote(vote)
 }
 
 #[cfg(not(feature = "with_predictions"))]
-pub async fn small_statement_predictions(
+pub async fn inline_statement_predictions(
     _statement: &Statement,
     _pool: &SqlitePool,
 ) -> Result<Markup> {
@@ -97,7 +97,7 @@ pub async fn small_statement_predictions(
 }
 
 #[cfg(feature = "with_predictions")]
-pub async fn small_statement_predictions(
+pub async fn inline_statement_predictions(
     statement: &Statement,
     pool: &SqlitePool,
 ) -> Result<Markup> {

@@ -1,11 +1,9 @@
 //! One file per page
 
-pub mod base;
+pub mod base_template;
 pub mod charts;
-pub mod index;
-pub mod merge;
+pub mod frontpage;
 pub mod new_statement;
-pub mod options;
 #[cfg(feature = "with_predictions")]
 pub mod prediction;
 pub mod statement;

@@ -4,11 +4,15 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use http::HeaderValue;
-
-use crate::StaticAsset;
+use rust_embed::RustEmbed;
 
 // static file serving inspired by:
 // https://github.com/pyrossh/rust-embed/blob/fe35dbdc8373817ea84e4962db18ad37e48b1522/examples/axum.rs
+
+// embed static files into release binary
+#[derive(RustEmbed)]
+#[folder = "static/"]
+pub struct StaticAsset;
 
 // We use a wildcard matcher ("/dist/*file") to match against everything
 // within our defined assets directory. This is the directory on our Asset

@@ -1,22 +1,15 @@
 //! Database access via sqlx
 
 use anyhow::Result;
-use sqlx::{
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
-    SqlitePool,
-};
-use std::str::FromStr;
+use sqlx::SqlitePool;
 
+use crate::structs::{StatementStats, TargetSegment, User, Vote};
 #[cfg(feature = "with_predictions")]
 use std::collections::HashMap;
 
 use crate::{
     highlight::{HIGHLIGHT_BEGIN, HIGHLIGHT_END},
     structs::{SearchResultStatement, Statement, VoteHistoryItem},
-};
-use crate::{
-    opts::DatabaseOpts,
-    structs::{StatementStats, TargetSegment, User, Vote},
 };
 
 #[cfg(feature = "with_predictions")]
@@ -397,52 +390,6 @@ pub async fn statement_stats(statement_id: i64, pool: &SqlitePool) -> Result<Sta
 
 pub async fn top_statements(pool: &SqlitePool) -> Result<Vec<Statement>> {
     Ok(sqlx::query_as::<_,Statement>("select stats.statement_id as id, s.text as text from statement_stats stats join statements s on s.id = stats.statement_id order by polarization desc, polarization asc limit 10").fetch_all(pool).await?)
-}
-
-/// Create db connection & configure it
-//TODO: move to own file
-pub async fn setup_db(opts: &DatabaseOpts) -> SqlitePool {
-    // high performance sqlite insert example: https://kerkour.com/high-performance-rust-with-sqlite
-
-    // if embed_migrations is enabled, we create the database if it doesn't exist
-    let create_database_if_missing = cfg!(feature = "embed_migrations");
-
-    let connection_options = SqliteConnectOptions::from_str(&opts.database_url)
-        .unwrap()
-        .create_if_missing(create_database_if_missing)
-        .journal_mode(SqliteJournalMode::Wal)
-        .synchronous(SqliteSynchronous::Normal)
-        .extension("sqlite-vector/vector0")
-        .busy_timeout(std::time::Duration::from_secs(30));
-
-    let sqlite_pool = SqlitePoolOptions::new()
-        .max_connections(8)
-        .acquire_timeout(std::time::Duration::from_secs(30))
-        .connect_with(connection_options)
-        .await
-        .unwrap();
-
-    #[cfg(feature = "embed_migrations")]
-    {
-        println!("Running database migrations...");
-        sqlx::migrate!("./migrations")
-            .run(&sqlite_pool)
-            .await
-            .expect("Unable to migrate");
-    }
-
-    for option in [
-        "pragma temp_store = memory;",
-        "pragma mmap_size = 30000000000;",
-        "pragma page_size = 4096;",
-    ] {
-        sqlx::query(option)
-            .execute(&sqlite_pool)
-            .await
-            .unwrap_or_else(|_| panic!("Unable to set option: {option}"));
-    }
-
-    sqlite_pool
 }
 
 pub async fn random_statement_id(pool: &SqlitePool) -> Result<Option<i64>> {

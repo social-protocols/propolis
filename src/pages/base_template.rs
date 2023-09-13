@@ -5,12 +5,12 @@ use maud::{html, Markup, DOCTYPE};
 use tower_cookies::Cookies;
 
 use crate::{
+    http_static::StaticAsset,
     structs::{PageMeta, User},
     util::base_url,
-    StaticAsset,
 };
 
-fn base(
+fn render_base_template(
     title: Option<String>,
     user: &Option<User>,
     content: Markup,
@@ -68,7 +68,7 @@ fn base(
                 nav class="px-5 py-3" {
                     ul class="flex gap-6" {
                         li { a href="/" data-testid="nav-home" { "Home" } }
-                        li { a href="/vote" data-testid="nav-home" { "Vote" } }
+                        li { a href="/statement" data-testid="nav-home" { "Vote" } }
                         li { a href="/new" data-testid="nav-add-statement" { "Ask Question" } }
                         li  class="mr-auto" { a href="/subscriptions" data-testid="nav-my-subscriptions" { "My Subscriptions" } }
                         // first 4 characters of user id
@@ -95,16 +95,6 @@ fn base(
             }
         }
     }
-}
-
-/// Presents a warning dialog to the user
-pub fn warning_dialog(msg: &str, caption: Option<&str>) -> Markup {
-    html!(
-        div.warn.card {
-            p { (caption.unwrap_or("Warning")) }
-            p { (msg) }
-        }
-    )
 }
 
 #[derive(Clone)]
@@ -140,7 +130,7 @@ impl BaseTemplate {
     }
     /// Render BaseTemplate into markup
     pub fn render(self) -> Markup {
-        base(
+        render_base_template(
             self.title,
             &self.user,
             self.content,

@@ -1,10 +1,10 @@
-use super::base::BaseTemplate;
+use crate::pages::base_template::BaseTemplate;
 use crate::{
     db::{get_followups, get_statement},
     error::AppError,
     pages::statement_ui::{
-        small_statement_content, small_statement_piechart, small_statement_vote,
-        small_statement_vote_fetch,
+        inline_statement_content, inline_statement_piechart, inline_statement_vote,
+        inline_statement_vote_fetch,
     },
     structs::{PageMeta, Statement, User, Vote},
     util::base_url,
@@ -14,6 +14,39 @@ use axum::{extract::Path, Extension};
 use http::HeaderMap;
 use maud::{html, Markup};
 use sqlx::SqlitePool;
+
+use crate::db::random_statement_id;
+use axum::response::Response;
+use axum::response::{IntoResponse, Redirect};
+
+use anyhow::Result;
+
+pub async fn next_statement_id(
+    existing_user: Option<User>,
+    pool: &SqlitePool,
+) -> Result<Option<i64>> {
+    Ok(match existing_user {
+        Some(user) => user.next_statement_for_user(pool).await?,
+        None => random_statement_id(pool).await?,
+    })
+}
+
+pub async fn statement_frontpage(
+    existing_user: Option<User>,
+    maybe_user: Option<User>,
+    Extension(pool): Extension<SqlitePool>,
+    base: BaseTemplate,
+) -> Result<Response, AppError> {
+    let statement_id = next_statement_id(existing_user, &pool).await?;
+
+    Ok(match statement_id {
+        Some(id) => Redirect::to(format!("/statement/{id}").as_str()).into_response(),
+        None => base
+            .content(history(&maybe_user, &pool).await?)
+            .render()
+            .into_response(),
+    })
+}
 
 pub async fn statement_page(
     Path(statement_id): Path<i64>,
@@ -34,8 +67,8 @@ pub async fn statement_page(
                     (statement.text)
                 }
                 @if user_vote.is_some() {
-                    (small_statement_piechart(statement.id, &pool).await?)
-                    (small_statement_vote(user_vote)?)
+                    (inline_statement_piechart(statement.id, &pool).await?)
+                    (inline_statement_vote(user_vote)?)
                 }
             }
             form hx-post="/vote" {
@@ -56,9 +89,9 @@ pub async fn statement_page(
                     @for statement_id in followups {
                         // TODO: different columns depending on vote-dependent follow up
                         div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                            (small_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
-                            (small_statement_piechart(statement_id, &pool).await?)
-                            (small_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
+                            (inline_statement_content(&get_statement(statement_id, &pool).await?, None, true, &maybe_user, &pool).await?)
+                            (inline_statement_piechart(statement_id, &pool).await?)
+                            (inline_statement_vote_fetch(statement_id, &maybe_user, &pool).await?)
                         }
                     }
                 }
@@ -94,9 +127,9 @@ pub async fn history(maybe_user: &Option<User>, pool: &SqlitePool) -> Result<Mar
                 text: item.statement_text,
             };
             div class="mb-5 rounded-lg shadow bg-white dark:bg-slate-700 flex" {
-                (small_statement_content(&statement, None, true, maybe_user, pool).await?)
-                (small_statement_piechart(item.statement_id, pool).await?)
-                (small_statement_vote(Some(Vote::from(item.vote)?))?)
+                (inline_statement_content(&statement, None, true, maybe_user, pool).await?)
+                (inline_statement_piechart(item.statement_id, pool).await?)
+                (inline_statement_vote(Some(Vote::from(item.vote)?))?)
             }
         }
     })

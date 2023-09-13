@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use propolis_datas::embedding::Embedding;
 use rand::seq::SliceRandom;
 use tracing::log::error;
 
-use crate::opts::PredictionOpts;
+use crate::command_line_args::PredictionArgs;
 use crate::prediction::embedding::{EmbeddingsRunner, StatementSelector};
 
 use propolis_datas::apikey::{ApiKey, TransientApiKey};
@@ -158,11 +158,11 @@ impl ApiKeySelector {
     }
 
     /// Create an instance, creating keys in the DB (for stats only) if necessary
-    pub async fn create(opts: &PredictionOpts, pool: &mut SqlitePool) -> anyhow::Result<Self> {
+    pub async fn create(args: &PredictionArgs, pool: &mut SqlitePool) -> anyhow::Result<Self> {
         let mut keys: HashMap<String, ApiKey> = HashMap::new();
-        let mut raw_keys: Vec<String> = opts.openai_api_keys.to_owned();
+        let mut raw_keys: Vec<String> = args.openai_api_keys.to_owned();
         raw_keys.append(Self::collect_numbered_openai_env_keys().as_mut());
-        if let Some(rk) = &opts.openai_api_key {
+        if let Some(rk) = &args.openai_api_key {
             raw_keys.push(rk.into());
         }
         for raw_key in raw_keys {
@@ -190,8 +190,8 @@ impl ApiKeySelector {
 /// Setup continuous prompt generation and runner in an async loop
 ///
 /// Will store prompt results in the db
-pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
-    let key_selector = ApiKeySelector::create(opts, pool)
+pub async fn run(args: &PredictionArgs, pool: &mut SqlitePool) -> Result<()> {
+    let key_selector = ApiKeySelector::create(args, pool)
         .await
         .expect("Unable to setup key selection.");
     let env = OpenAiEnv::from(OpenAiModel::Gpt35Turbo);
@@ -211,12 +211,12 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
     let mut erunner = EmbeddingsRunner {
         token_rate_limiter: RateLimiter::new(
-            opts.tokens_per_duration as f64,
-            Duration::from_secs(opts.tokens_seconds_per_duration),
+            args.tokens_per_duration as f64,
+            Duration::from_secs(args.tokens_seconds_per_duration),
         ),
         api_calls_rate_limiter: RateLimiter::new(
-            opts.api_calls_per_duration as f64,
-            Duration::from_secs(opts.api_calls_seconds_per_duration),
+            args.api_calls_per_duration as f64,
+            Duration::from_secs(args.api_calls_seconds_per_duration),
         ),
         env: &env,
     };
@@ -224,12 +224,12 @@ pub async fn run(opts: &crate::opts::PredictionOpts, pool: &mut SqlitePool) {
 
     let mut runner = PromptRunner {
         token_rate_limiter: RateLimiter::new(
-            opts.tokens_per_duration as f64,
-            Duration::from_secs(opts.tokens_seconds_per_duration),
+            args.tokens_per_duration as f64,
+            Duration::from_secs(args.tokens_seconds_per_duration),
         ),
         api_calls_rate_limiter: RateLimiter::new(
-            opts.api_calls_per_duration as f64,
-            Duration::from_secs(opts.api_calls_seconds_per_duration),
+            args.api_calls_per_duration as f64,
+            Duration::from_secs(args.api_calls_seconds_per_duration),
         ),
         env: &env,
     };

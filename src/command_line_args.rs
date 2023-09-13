@@ -2,7 +2,7 @@ use clap::Parser;
 
 #[cfg(feature = "with_predictions")]
 #[derive(Parser, Clone, Debug)]
-pub struct PredictionOpts {
+pub struct PredictionArgs {
     /// API key used for requests to openai
     /// Can also be passed via OPENAI_API_KEY_n
     #[arg(long, env)]
@@ -31,10 +31,10 @@ pub struct PredictionOpts {
 }
 #[cfg(not(feature = "with_predictions"))]
 #[derive(Parser, Clone, Debug)]
-pub struct PredictionOpts {}
+pub struct PredictionArgs {}
 
 #[derive(Parser, Clone, Debug)]
-pub struct DatabaseOpts {
+pub struct DatabaseArgs {
     /// URL to database
     #[arg(long, env, required = true)]
     pub database_url: String,
@@ -43,9 +43,9 @@ pub struct DatabaseOpts {
 /// Program options to be read via clap
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-pub struct ProgramOpts {
+pub struct CommandLineArgs {
     #[command(flatten)]
-    pub prediction: PredictionOpts,
+    pub prediction: PredictionArgs,
     #[command(flatten)]
-    pub database: DatabaseOpts,
+    pub database: DatabaseArgs,
 }
