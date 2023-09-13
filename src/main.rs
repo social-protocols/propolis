@@ -21,8 +21,8 @@ use anyhow::{Context, Result};
 
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
-use crate::db_setup::setup_database;
 use crate::command_line_args::CommandLineArgs;
+use crate::db_setup::setup_database;
 
 #[tokio::main]
 async fn main() -> Result<()> {
