@@ -49,7 +49,7 @@ jobs:
         run: cargo install sqlx-cli --version 0.7.0 --no-default-features --features sqlite
 
       - name: load envrc
-        uses: HatsuneMiku3939/direnv-action@5125e822ed891bfd72ceffc3d13873c59f2bdd74 # pin@v1
+        uses: HatsuneMiku3939/direnv-action@54c37053496c65ccc626496ddde66cd578698074 # pin@v1
 
       - name: Migrate database
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2 
+        uses: docker/setup-buildx-action@v3 
 
       - name: Docker Cache
         uses: actions/cache@v3
@@ -155,7 +155,7 @@ jobs:
 
         # - name: Docker Buildx
         #   id: buildx
-        #   uses: docker/setup-buildx-action@v2 
+        #   uses: docker/setup-buildx-action@v3 
 
         # - name: Docker Cache
         #   uses: actions/cache@v3
