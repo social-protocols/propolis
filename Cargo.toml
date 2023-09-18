@@ -47,7 +47,7 @@ async-std = { workspace = true }
 async-trait = { workspace = true }
 axum = { version = "0.6.20", features = ["headers", "macros"] }
 base64 = "0.21.4"
-chrono = "0.4.30"
+chrono = "0.4.31"
 clap = { version = "4.4.4", features = ["env", "derive"] }
 csv = "1.2.2"
 function_name = "0.3.0"
