@@ -93,7 +93,7 @@ jobs:
           sleep 3
           kill -0 $! || (cat /tmp/background_output && exit 1) # check if background process is still running
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 16
       - name: Install yarn dependencies
