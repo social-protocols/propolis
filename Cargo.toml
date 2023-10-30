@@ -51,7 +51,7 @@ chrono = "0.4.31"
 clap = { version = "4.4.6", features = ["env", "derive"] }
 csv = "1.3.0"
 function_name = "0.3.0"
-futures = "0.3.28"
+futures = "0.3.29"
 http = "0.2.9"
 maud = { version = "0.25.0", features = ["axum"] } # https://github.com/lambda-fairy/maud/issues/366
 mime_guess = "2.0.4"
