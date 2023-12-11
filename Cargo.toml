@@ -65,7 +65,7 @@ serde_json = { workspace = true }
 sqlx = { workspace = true }
 timediff = "0.2.3"
 tokio = { workspace = true }
-tower-cookies = "0.9.0"
+tower-cookies = "0.10.0"
 tower-http = { version = "0.4.4", features = ["fs", "compression-gzip", "trace"] }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
