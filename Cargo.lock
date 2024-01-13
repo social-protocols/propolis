@@ -1840,11 +1840,12 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "openai"
-version = "1.0.0-alpha.9"
+version = "1.0.0-alpha.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3121195a791b756b6aa719dbbe1990b8ba7f0d5fb2f15a80e88aa5d332c9b824"
+checksum = "deafc160713f659e9044729013c4b7de42e2e3efbe8c9c0b4f947c7f7ed70094"
 dependencies = [
  "anyhow",
+ "bytes",
  "derive_builder",
  "futures-util",
  "reqwest",
@@ -2265,6 +2266,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "once_cell",
  "percent-encoding",
